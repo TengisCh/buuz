@@ -102,7 +102,10 @@ fn no_undo_after_punctuation() {
 #[test]
 fn a_letter_clears_the_undo() {
     let mut c = composer();
-    type_keys(&mut c, &[Key::Char('b'), Key::Char('n'), Key::Space, Key::Char('a')]);
+    type_keys(
+        &mut c,
+        &[Key::Char('b'), Key::Char('n'), Key::Space, Key::Char('a')],
+    );
     let r = c.process_key(Key::Backspace);
     assert_eq!(r.delete_before, 0);
     assert!(!c.is_composing());
@@ -144,7 +147,10 @@ fn undo_puts_back_the_previous_word_gender() {
 #[test]
 fn reseeded_words_never_expand() {
     let mut c = composer();
-    type_keys(&mut c, &[Key::Char('b'), Key::Char('n'), Key::Left, Key::Right]);
+    type_keys(
+        &mut c,
+        &[Key::Char('b'), Key::Char('n'), Key::Left, Key::Right],
+    );
     assert_eq!(c.process_key(Key::Space).commit.as_deref(), Some("бн"));
 }
 

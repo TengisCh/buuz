@@ -186,7 +186,7 @@ Frozen Cyrillic letters still count as evidence for the gender of the word:
 ## 7. Abbreviations
 
 A short form expands to a whole word when you type a space or punctuation
-after it: `bn ` gives `байна ` and `bn.` gives `байна.`. The end of the text
+after it: `bn` and a space gives `байна` and a space, and `bn.` gives `байна.`. The end of the text
 does not expand, so `bn` alone stays `бн`; on the web converter (which
 converts the whole text again on every change) deleting the space therefore
 brings the abbreviation back. The built-in list is small and

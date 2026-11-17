@@ -50,7 +50,7 @@ Most letters are what you'd guess (`b` → б, `d` → д, `sain` → сайн).
 
 ✨ **Vowel harmony:** `o` and `u` pick о/ө and у/ү for you, so `geree` → гэрээ and `gar` → гар. It looks ahead in the word (`unee` → үнээ), writes ы after masculine words (`aaviin` → аавын) and lets `uu` follow the word before it (`irsen uu` → ирсэн үү). Type `ii'` to force ий. All of this can be switched off for the original behaviour.
 
-✂️ **Abbreviations:** short forms expand when you type a space or punctuation after them, so `bn ` → байна, `bnu ` → байна уу and `sn ` → сайн. On the web, deleting that space brings the abbreviation back; the upcoming desktop keyboards undo it with Backspace right after the space. On the web this is a checkbox that turns it off; the core has it off by default.
+✂️ **Abbreviations:** short forms expand when you type a space or punctuation after them, so `bn` → байна, `bnu` → байна уу and `sn` → сайн. On the web, deleting that space brings the abbreviation back; the upcoming desktop keyboards undo it with Backspace right after the space. On the web this is a checkbox that turns it off; the core has it off by default.
 
 ## 🥟 Why Buuz
 
