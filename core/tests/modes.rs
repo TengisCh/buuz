@@ -36,7 +36,15 @@ fn classic_mode_is_the_original_buuz() {
 
 #[test]
 fn both_modes_share_the_plain_letter_table() {
-    for w in ["sain baina", "geree", "gar", "shine", "wnen", "qvqr", "id'ye"] {
+    for w in [
+        "sain baina",
+        "geree",
+        "gar",
+        "shine",
+        "wnen",
+        "qvqr",
+        "id'ye",
+    ] {
         assert_eq!(smart(w), classic(w), "input {w:?}");
     }
 }
