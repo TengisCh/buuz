@@ -29,7 +29,8 @@ const mn = {
     "Buuz удахгүй Windows, macOS-ийн гар болж гарна. Энэ хуудастай яг ижил дүрмээр, хүссэн апп дотроо шууд бичнэ.",
   soon: "удахгүй",
   github: "GitHub дээр нээлттэй эх",
-  credit: "Buuz 2.0 бол Н.Одбаярын бүтээсэн Buuz-ийн үргэлжлэл.",
+  credit:
+    'Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.',
   switchTo: "EN",
   switchLabel: "Switch to English",
 };
@@ -57,7 +58,7 @@ const en: Record<Key, string> = {
     "Buuz is also coming as a keyboard for Windows and macOS, with the same rules as this page, so you can type straight into any app.",
   soon: "coming soon",
   github: "Open source on GitHub",
-  credit: "Buuz 2.0, a continuation of Buuz by Odbayar Nyamtseren.",
+  credit: 'Buuz 2.0 continues <a href="https://github.com/odbayar/buuz">Buuz</a> by Odbayar Nyamtseren.',
   switchTo: "МН",
   switchLabel: "Монгол хэл рүү шилжих",
 };
@@ -102,7 +103,7 @@ export function apply(lang: Lang): void {
   document
     .querySelector('meta[name="description"]')
     ?.setAttribute("content", t("description"));
-  // Text-only keys use textContent; the two keys with <kbd> markup are ours.
+  // Text-only keys use textContent; keys with markup (<kbd>, links) are ours.
   for (const el of document.querySelectorAll<HTMLElement>("[data-i18n]")) {
     el.textContent = t(el.dataset.i18n as Key);
   }
