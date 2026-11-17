@@ -1,0 +1,37 @@
+# Label set for TengisCh/buuz. Source of truth for names, colours and meaning.
+# GitHub creates a label automatically the first time an issue uses it (grey,
+# no description); recolour from this file in Settings > Labels if needed.
+# No workflow syncs this file on purpose, to keep Actions usage at zero.
+
+# Type: what kind of issue it is (one per issue)
+- {name: bug, color: d73a4a, description: "Something isn't working"}
+- {name: typing-rules, color: e99695, description: "A Latin input becomes the wrong Cyrillic"}
+- {name: enhancement, color: a2eeef, description: "New feature or request"}
+- {name: feedback, color: fbca04, description: "Ideas, impressions and suggestions from users"}
+- {name: documentation, color: 0075ca, description: "Improvements or additions to documentation"}
+- {name: question, color: d876e3, description: "Further information is requested"}
+- {name: epic, color: 3e4b9e, description: "Tracking issue that groups several issues"}
+
+# Area: which part of the monorepo (one or more)
+- {name: "area: core", color: c5def5, description: "Rust engine (core/), rules, composer"}
+- {name: "area: web", color: c5def5, description: "Web converter (web/)"}
+- {name: "area: windows", color: c5def5, description: "Windows input method (TSF)"}
+- {name: "area: macos", color: c5def5, description: "macOS input method (InputMethodKit)"}
+- {name: "area: mobile", color: c5def5, description: "Android or iOS keyboard"}
+
+# Priority: set by the maintainer during triage
+- {name: "priority: high", color: b60205, description: "Next up"}
+- {name: "priority: medium", color: ff9f1c, description: "Planned"}
+- {name: "priority: low", color: fef2c0, description: "Nice to have, later"}
+
+# Theme and status
+- {name: smart-typing, color: ffb648, description: "Autocorrect, completion, shortcuts, personal mappings"}
+- {name: needs-design, color: bfdadc, description: "Needs a UX or technical design before coding"}
+- {name: good first issue, color: 7057ff, description: "Good for newcomers"}
+- {name: help wanted, color: 008672, description: "Extra attention is needed"}
+- {name: accessibility, color: f143ab, description: "Barrier affecting people with disabilities"}
+
+# Resolution
+- {name: duplicate, color: cfd3d7, description: "This issue or pull request already exists"}
+- {name: invalid, color: e4e669, description: "This doesn't seem right"}
+- {name: wontfix, color: ffffff, description: "This will not be worked on"}

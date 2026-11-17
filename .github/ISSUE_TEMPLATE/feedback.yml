@@ -1,0 +1,17 @@
+name: Feedback
+description: Tell us what you like, what feels off, or anything else
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Your feedback
+      description: Mongolian or English are both fine. Please don't paste private text you typed.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where
+      multiple: true
+      options: [Windows, macOS, Web converter, Android, iOS, General]
