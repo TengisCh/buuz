@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 # Desktop app: onboarding, settings and menu (macOS + Windows)
 
-Status: **design proposal, November 2026.** Nothing here is built yet; the
+Status: **design agreed, November 2026** (decisions in §8). Nothing here is built yet; the
 apps wait for T's go-ahead. Mockups: [`design/desktop-onboarding/`](../design/desktop-onboarding/)
 (open `index.html`, or see `previews/`). Architecture: [`architecture.md`](architecture.md) §5.
 
@@ -124,8 +124,7 @@ Follows the portable config design in issue #8. Two cards:
 - 🔗 **Вэбээс илгээх**: on buuz.thetengis.com, a «Апп руу» button opens
   `buuz://import?cfg=buuz1:…`; the app shows a diff and asks to apply.
 - 📋 **Хуулж буулгах**: paste a `buuz1:…` string.
-The primary button reads **Алгасах / Skip** until something is imported. Hidden
-entirely until #8 ships.
+The primary button reads **Алгасах / Skip** until something is imported. **Not in v1:** hidden until #8 ships (decided, §8).
 
 ### 3.8 🎉 Done (`*-done.png`)
 Confetti + steam puff, «Бэлэн! 🎉», where to find Buuz
@@ -167,8 +166,7 @@ Menu items: header (🥟 Buuz 2.0, ● Идэвхтэй) · ✓ Монгол (Bu
 ⏸️ Энэ апп-д унтраах (per-app off) · 📖 Товчны хүснэгт · ⚙️ Тохиргоо… (⌘,) ·
 🔄 Шинэчлэл шалгах · 💬 Санал хүсэлт · (Windows) Гарах.
 
-If people ask for an always-visible icon (like Wispr's), add an optional
-menu-bar extra / tray icon in General, off by default.
+Decided: no always-visible icon (see §8).
 
 ## 6. Tone, motion and sound
 
@@ -193,11 +191,14 @@ menu-bar extra / tray icon in General, off by default.
 - Accessibility: full keyboard navigation, VoiceOver / Narrator labels on every
   icon-only element, focus ring in Khadag Blue.
 
-## 8. Open questions for T
+## 8. Decisions (T, 2026-11-17)
 
-1. Optional always-visible menu-bar/tray icon, or Input menu only (recommended)?
-2. Windows default: Win + Space (system) or Ctrl + Space (Buuz on/off)?
-3. Ship the import step in v1, or hide it until #8 is done (recommended)?
+1. **No extra menu-bar/tray icon.** Buuz's menu lives in the macOS Input menu
+   and on the Windows МОН indicator only.
+2. **Windows default switch key: ⊞ Win + Space.** Ctrl + Space (Buuz on/off)
+   stays available as an option.
+3. **Import step hidden in v1** until portable config (#8) ships; then it
+   appears between the vowel tip and Done.
 
 ## Sources
 
