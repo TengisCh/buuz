@@ -114,7 +114,7 @@ fn vowel_harmony_female_after_e_q_w() {
     eq("wu", "үү");
     eq("tuv", "тув");
     eq("tevu", "тэвү"); // "tevu": e makes the word female
-    eq("ö", "ö"); // non-ASCII passes through unchanged
+    eq("ö", "ө"); // umlauts are input for ө and ү
 }
 
 #[test]
@@ -264,4 +264,28 @@ fn expanded_rule_table_is_exported() {
     let t = buuz_core::export_rules();
     assert!(t.iter().any(|(f, to, m, _)| f == "Sh" && to == "Ш" && *m));
     assert!(t.iter().any(|(f, to, _, fm)| f == "o" && to == "ө" && *fm));
+}
+
+#[test]
+fn umlaut_input() {
+    for (i, o) in [
+        ("hün", "хүн"),
+        ("ögöh", "өгөх"),
+        ("Ünee", "Үнээ"),
+        ("öndör", "өндөр"),
+        ("Öndör", "Өндөр"),
+        ("ÖNDÖR", "ӨНДӨР"),
+        ("ögoh", "өгөх"),
+        ("hüühed", "хүүхэд"),
+        ("öi", "өй"),
+        ("Üi", "Үй"),
+        ("üI", "үЙ"),
+        ("ü", "ү"),
+    ] {
+        eq(i, o);
+    }
+    assert!(buuz_core::is_input_char('ü'));
+    assert!(buuz_core::is_input_char('Ö'));
+    assert!(!buuz_core::is_input_char('ä'));
+    assert!(Composer::new().wants_key(Key::Char('ö')));
 }

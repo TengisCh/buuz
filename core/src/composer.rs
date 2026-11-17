@@ -56,9 +56,9 @@ pub struct KeyOutcome {
 }
 
 /// True for characters that start/extend a composition: ASCII letters,
-/// `'` and `"`.
+/// `'`, `"` and the umlauts `ö ü Ö Ü` (typed for ө and ү).
 pub fn is_input_char(ch: char) -> bool {
-    ch == '\'' || ch == '"' || ch.is_ascii_alphabetic()
+    ch == '\'' || ch == '"' || ch.is_ascii_alphabetic() || matches!(ch, 'ö' | 'ü' | 'Ö' | 'Ü')
 }
 
 /// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.

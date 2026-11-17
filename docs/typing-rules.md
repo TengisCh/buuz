@@ -18,8 +18,8 @@ Source: [`core/src/rules.rs`](../core/src/rules.rs) (the table) and
    **commits** the word and is then passed to the app unchanged.
 
 Word characters are the ASCII letters `a`–`z`, `A`–`Z` and the two sign keys
-`'` and `"`. Anything else (including `ö`, `ü` and Cyrillic letters) ends the
-word. A word can hold at most 50 keys.
+`'` and `"`, plus the umlauts `ö`, `ü`, `Ö`, `Ü` (see below). Anything else
+(including Cyrillic letters) ends the word. A word can hold at most 50 keys.
 
 ## 2. Matching: longest rule first
 
@@ -66,8 +66,8 @@ To force one form regardless of the word:
 
 | Keys | Result |
 | --- | --- |
-| `q`, `o'`, `'o` | ө |
-| `w`, `u'`, `'u` | ү |
+| `q`, `ö`, `o'`, `'o` | ө |
+| `w`, `ü`, `u'`, `'u` | ү |
 | `o"`, `"o` | о |
 | `u"`, `"u` | у |
 
@@ -87,7 +87,7 @@ whether it decides the word's gender.
 
 - **Make the word masculine:** `a`, `ya`, `yo`, `yu`, `o"`, `u"` (and `o`, `u`
   once the word is already masculine).
-- **Make the word feminine:** `e`, `ye`, `q`, `w`, `o'`, `u'`.
+- **Make the word feminine:** `e`, `ye`, `q`, `w`, `ö`, `ü`, `o'`, `u'`.
 - **Neutral:** `i`, `ii`, `iii`, `y`, all consonants and signs.
 
 The engine walks the word **left to right**, starting in **masculine** mode.
@@ -144,7 +144,6 @@ round trips are exact.
 ## 8. Planned changes
 
 - [#7](https://github.com/TengisCh/buuz/issues/7) smarter vowel harmony
-- [#9](https://github.com/TengisCh/buuz/issues/9) accept `ö` and `ü`
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults
 - [#3](https://github.com/TengisCh/buuz/issues/3) custom key mappings

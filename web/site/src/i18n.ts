@@ -23,7 +23,7 @@ const mn = {
     "Бүх зүйл таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.",
   howTo: "Яаж бичих вэ?",
   howToBody:
-    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г ашиглаарай.",
+    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай.",
   appTitle: "Ямар ч апп дээр монголоор бич",
   appBody:
     "Buuz удахгүй Windows, macOS-ийн гар болж гарна. Энэ хуудастай яг ижил дүрмээр, хүссэн апп дотроо шууд бичнэ.",
@@ -59,7 +59,7 @@ const mn = {
   faq1q: "Латин кирилл хөрвүүлэгч үнэгүй юу?",
   faq1a: "Тийм, үнэгүй бөгөөд нээлттэй эх. Бүртгүүлэх, нэвтрэх шаардлагагүй.",
   faq2q: "Ө, Ү үсгийг яаж бичих вэ?",
-  faq2a: "<kbd>q</kbd> нь ө, <kbd>w</kbd> нь ү болно. <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
+  faq2a: "<kbd>q</kbd>, <kbd>ö</kbd> нь ө, <kbd>w</kbd>, <kbd>ü</kbd> нь ү болно. <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
   faq3q: "Бичсэн зүйл маань хаа нэгтээ илгээгдэх үү?",
   faq3a: "Үгүй. Хөрвүүлэлт бүхэлдээ таны төхөөрөмж дээр ажиллана, бичсэн текст хаашаа ч илгээгдэхгүй.",
   faq4q: "Утсан дээр ашиглаж болох уу?",
@@ -109,7 +109,7 @@ const en: Record<Key, string> = {
     "Everything runs on your device. What you type is never sent anywhere.",
   howTo: "How to type",
   howToBody:
-    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> for ө and ү.",
+    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү.",
   appTitle: "Type Mongolian in every app",
   appBody:
     "Buuz is also coming as a keyboard for Windows and macOS, with the same rules as this page, so you can type straight into any app.",
@@ -144,7 +144,7 @@ const en: Record<Key, string> = {
   faq1q: "Is the Latin to Cyrillic converter free?",
   faq1a: "Yes, it is free and open source. No sign-up or login.",
   faq2q: "How do I type Ө and Ү?",
-  faq2a: "<kbd>q</kbd> gives ө and <kbd>w</kbd> gives ү. <kbd>o</kbd> and <kbd>u</kbd> choose о/ө and у/ү by vowel harmony: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
+  faq2a: "<kbd>q</kbd> or <kbd>ö</kbd> gives ө and <kbd>w</kbd> or <kbd>ü</kbd> gives ү. <kbd>o</kbd> and <kbd>u</kbd> choose о/ө and у/ү by vowel harmony: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
   faq3q: "Is what I type sent anywhere?",
   faq3a: "No. Conversion runs entirely on your device and the text never leaves it.",
   faq4q: "Can I use it on my phone?",
