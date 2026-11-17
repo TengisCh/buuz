@@ -36,5 +36,18 @@
       ]
     }
   ],
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "buuz(-alpha|-tengis-projects|-git-main-tengis-projects)?\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://buuz.thetengis.com/:path*",
+      "permanent": true
+    }
+  ]
 }
