@@ -3,7 +3,9 @@
 # no description); recolour from this file in Settings > Labels if needed.
 # No workflow syncs this file on purpose, to keep Actions usage at zero.
 
-# Type: what kind of issue it is (one per issue)
+# Type: what kind of issue it is (one per issue). Feature requests use
+# "enhancement" (GitHub's default, which contributor tools recognise).
+# "feature-request" and "idea" are retired: delete them in Settings > Labels.
 - {name: bug, color: d73a4a, description: "Something isn't working"}
 - {name: typing-rules, color: e99695, description: "A Latin input becomes the wrong Cyrillic"}
 - {name: enhancement, color: a2eeef, description: "New feature or request"}
@@ -11,18 +13,19 @@
 - {name: documentation, color: 0075ca, description: "Improvements or additions to documentation"}
 - {name: question, color: d876e3, description: "Further information is requested"}
 - {name: epic, color: 3e4b9e, description: "Tracking issue that groups several issues"}
+- {name: research, color: 5319e7, description: "Investigation or survey; result is a write-up, not code"}
 
 # Area: which part of the monorepo (one or more)
-- {name: "area: core", color: c5def5, description: "Rust engine (core/), rules, composer"}
-- {name: "area: web", color: c5def5, description: "Web converter (web/)"}
-- {name: "area: windows", color: c5def5, description: "Windows input method (TSF)"}
-- {name: "area: macos", color: c5def5, description: "macOS input method (InputMethodKit)"}
-- {name: "area: mobile", color: c5def5, description: "Android or iOS keyboard"}
+- {name: "area:core", color: c5def5, description: "Rust engine (core/), rules, composer"}
+- {name: "area:web", color: c5def5, description: "Web converter (web/)"}
+- {name: "area:windows", color: c5def5, description: "Windows input method (TSF)"}
+- {name: "area:macos", color: c5def5, description: "macOS input method (InputMethodKit)"}
+- {name: "area:mobile", color: c5def5, description: "Android or iOS keyboard"}
 
 # Priority: set by the maintainer during triage
-- {name: "priority: high", color: b60205, description: "Next up"}
-- {name: "priority: medium", color: ff9f1c, description: "Planned"}
-- {name: "priority: low", color: fef2c0, description: "Nice to have, later"}
+- {name: "priority:high", color: b60205, description: "Next up"}
+- {name: "priority:medium", color: ff9f1c, description: "Planned"}
+- {name: "priority:low", color: fef2c0, description: "Nice to have, later"}
 
 # Theme and status
 - {name: smart-typing, color: ffb648, description: "Autocorrect, completion, shortcuts, personal mappings"}
