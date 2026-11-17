@@ -1,57 +1,44 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
-# Buuz 2.0 brand concepts
+# Buuz 2.0 brand (v2)
 
-Original, hand-built SVG dumpling mascots (not derived from any other logo). Status: **concepts, awaiting a pick**.
+Status: **four options, awaiting a pick.** The first round (v1) is archived in `v1/`.
 
-- `concepts/` — four icon concepts, each as `-icon.svg` (app-icon tile) and `-mark.svg` (transparent mascot). Open `concepts/index.html` for the size sheet.
-- `ui-mock.html` — look-and-feel mock of the web converter in the recommended direction.
-- `generate-concepts.py` — regenerates the SVGs (`python3 generate-concepts.py concepts`).
+- [`brief.md`](brief.md): research on what buuz means and what the app does, and how the brand follows from it.
+- `icons/`: each option as `<slug>-icon.svg` (app icon, 128 px and up) and `<slug>-small.svg` (16-32 px glyph).
+- `previews/options-sheet.png`: all four options at 300, 128, 64, 32 and 16 px, in a dark tray and a browser tab.
+- `previews/brand-sheet.png`: wordmark options, palette, type and the web converter's look.
+- `generate.py` writes the SVGs; `render.js` renders the previews (needs Playwright):
+  `python3 brand/generate.py brand/icons && node brand/render.js brand/icons brand/previews`
 
-## Concepts
+## Options
 
-| # | Name | Idea |
-|---|------|------|
-| 1 | Classic Buuz | Cream dumpling, orange tile, steam, small face. The mascot. **Recommended.** |
-| 2 | Steamer Pal | Dumpling peeking out of a bamboo steamer, blue tile. Most story, busier at 16px. |
-| 3 | Cyrillic Б | No face, Б on the belly, deep blue tile. Most grown-up, ties to the IME. |
-| 4 | Jelly Pop | Pink clay look, sparkly eyes, lilac tile. Most kawaii. |
+| | Name | Idea | 16 px |
+|---|---|---|---|
+| A | Buuz Buddy | The mascot: a real buuz with spiral pleats, open steam hole, happy face, on ember orange. Evolution of v1 #1. | simplified buuz |
+| B | Keycap | The product: the buuz sitting on a keyboard key with the legends B and Б. | Б on a key |
+| C | Rosette | The mark: a buuz seen from above, spiral pleats around the hole. Calm, geometric, works as a logo anywhere. | rosette |
+| D | Steam Б | The magic: steam rising from the buuz becomes a Cyrillic Б. | Б |
 
-## Recommendation
-
-Use **1 (Classic Buuz)** as the mascot and app icon, and borrow **3's Б** as a small-size and tray/menu-bar glyph (a face is unreadable at 16px, a Б is not). Keep the dumpling's pleated top: it is the buuz silhouette and survives small sizes.
+Recommendation: **A as the app icon and mascot, with D's Б as the 16 px tray and favicon glyph.** A carries the warmth and cuteness; at 16 px a face is unreadable, while a Б is crisp and says what the app does.
 
 ## Palette
 
 | Token | Hex | Use |
-|-------|-----|-----|
-| Cream | `#FFF6E8` | page background |
-| Dough | `#FFE9C7` | cards, chips, mascot body |
-| Steam Orange | `#FF6A45` | primary brand, highlights |
-| Amber | `#FFB35C` | gradient start, warm accents |
-| Khökh Blue | `#2F4BFF` | primary buttons, links (nod to Mongolian "sky blue") |
-| Ink | `#2B1B17` | text (warm near-black, never pure black) |
-| Blush | `#FF8FA3` | cheeks, small delights |
-| Muted | `#8A6F60` | secondary text |
+|---|---|---|
+| Dough | `#FFF3E0` | page, cards |
+| Ember | `#FF6A3D` | brand, hero output, mascot tile |
+| Amber | `#FFB648` | gradient start, warm accents |
+| Khadag Blue | `#2E6BFF` | the one primary action, links |
+| Night | `#1E1838` | text; dark-mode background |
+| Filling | `#8C4A2B` | tiny accents |
+| Blush | `#FF8E8E` | cheeks, small delights |
+| Steam | `#FFFFFF` | highlights, motion |
 
-Dark mode: Ink `#1B1410` background, Dough text, same orange and blue.
+## Type
 
-## Typography
+Nunito (900 headlines, 700 UI), rounded and warm, with full Mongolian Cyrillic (Ө ө Ү ү, checked in the brand sheet). JetBrains Mono for key hints. Both OFL.
 
-- Display and UI: **Nunito** (900 for headlines, 700 for UI). Friendly rounded forms, full Cyrillic support, OFL licensed.
-- Alternative display: **Baloo 2** for a chunkier, more playful headline.
-- Mono (code, key hints): **JetBrains Mono**.
-- All three are open source and cover Mongolian Cyrillic (ө, ү included). Verify before shipping.
+## Open questions
 
-## Look and feel
-
-- Soft, chunky and tactile: big radii (24-32px), a solid "pressed" bottom edge on buttons and cards instead of blurry shadows.
-- Warm cream canvas, one orange hero surface (the Cyrillic output), blue for the one primary action.
-- Mascot reacts: blinks while idle, steam puffs when text converts, a happy bounce on copy.
-- Playful copy, plain behaviour: instant, no sign-up, text stays on the device.
-- Never copy Bun's look: ours is a pleated Mongolian buuz, warm palette, no shared shapes.
-
-## Open questions for the owner
-
-1. Which concept (or mix)?
-2. Wordmark: lowercase `buuz` as in the mock, or `Buuz 2.0`?
-3. Should the Mongolian script (Бууз) appear next to the Latin name in the logo lockup?
+1. Which option (or mix)?
+2. Wordmark: `buuz`, `Buuz 2.0`, or bilingual `buuz бууз`?
