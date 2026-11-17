@@ -272,3 +272,9 @@ for (const tab of tabs) {
     }
   });
 }
+
+// Footer links on other pages point to /?feedback=1 to open the panel here.
+if (new URLSearchParams(location.search).has("feedback")) {
+  history.replaceState(null, "", location.pathname);
+  openPanel();
+}

@@ -240,3 +240,22 @@ a.button.mail { width: 100%; justify-content: center; }
   .pane:last-child .actions { justify-content: space-between; flex-direction: row-reverse; }
   .fab { width: 52px; height: 52px; }
 }
+
+/* ---------- Simple pages: privacy, cookies, 404 ---------- */
+.doc { max-width: 46rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.doc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.doc-top .f-logo { font-size: 1.6rem; }
+.doc h1 { font-size: clamp(2rem, 5vw, 2.6rem); font-weight: 900; letter-spacing: -0.02em; margin: 0 0 0.25rem; line-height: 1.15; }
+.doc .updated { color: var(--muted); margin: 0 0 1.5rem; }
+.doc .tldr { background: var(--card); border-radius: 20px; padding: 1rem 1.25rem; box-shadow: 0 4px 0 var(--press); font-size: 1.05rem; margin: 0 0 2rem; }
+.doc h2 { font-size: 1.25rem; font-weight: 900; margin: 2rem 0 0.5rem; }
+.doc p, .doc li { color: var(--fg); font-weight: 600; }
+.doc ul { padding-left: 1.2rem; }
+.doc li { margin: 0.35rem 0; }
+.doc table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem; font-size: 0.95rem; }
+.doc th, .doc td { text-align: left; padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc th { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.doc code { font: 600 0.9em "JetBrains Mono", ui-monospace, monospace; background: var(--card); padding: 0.1em 0.4em; border-radius: 6px; }
+.notfound { text-align: center; padding-top: 3rem; }
+.notfound img { width: 140px; height: 140px; filter: drop-shadow(0 12px 20px rgba(120, 50, 10, 0.25)); }
+.notfound .actions-row { display: flex; justify-content: center; margin-top: 1.5rem; }
