@@ -6,6 +6,7 @@ import "./style.css";
 import init, { convert } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { setupLang, t } from "./i18n";
+import phrases from "./phrases.json";
 
 setupLang();
 
@@ -96,7 +97,57 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+// Typewriter placeholder: while the Latin box is empty, a fun phrase types
+// itself, pauses, deletes, and the next one starts. The Cyrillic box shows the
+// live conversion as its placeholder. It only ever touches placeholders, so it
+// sits still the moment there is real text, and resumes when the box is empty.
+const pool = (phrases as [string, string][]).map(([l]) => l);
+for (let i = pool.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [pool[i], pool[j]] = [pool[j], pool[i]];
+}
+function showGhost(text: string, caret: boolean): void {
+  latin.placeholder = text + (caret ? "|" : "");
+  cyr.placeholder = ready ? convert(text) : "";
+}
+function typewriter(): void {
+  let p = 0;
+  let chars: string[] = [];
+  let n = 0;
+  let phase: "type" | "hold" | "erase" | "gap" = "type";
+  let blinks = 0;
+  const next = (ms: number) => window.setTimeout(step, ms);
+  function step(): void {
+    if (latin.value !== "" || document.hidden) return void next(600);
+    if (chars.length === 0) chars = Array.from(pool[p % pool.length]);
+    switch (phase) {
+      case "type":
+        n++;
+        showGhost(chars.slice(0, n).join(""), true);
+        if (n >= chars.length) { phase = "hold"; blinks = 0; }
+        return void next(55 + Math.random() * 70);
+      case "hold":
+        showGhost(chars.join(""), blinks % 2 === 1);
+        if (++blinks > 5) phase = "erase";
+        return void next(420);
+      case "erase":
+        n = Math.max(0, n - 1);
+        showGhost(chars.slice(0, n).join(""), true);
+        if (n === 0) phase = "gap";
+        return void next(28);
+      case "gap":
+        p++;
+        chars = [];
+        phase = "type";
+        return void next(350);
+    }
+  }
+  step();
+}
+
 init({ module_or_path: wasmUrl }).then(() => {
   ready = true;
   render(); // text typed while the module was loading
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) showGhost(pool[0], false);
+  else typewriter();
 });

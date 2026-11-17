@@ -31,3 +31,9 @@ test("long paste stays fast", () => {
   convert(text);
   assert.ok(performance.now() - t < 200, "280k chars should convert in well under 200 ms");
 });
+
+// Every typewriter phrase on the page must convert exactly as written.
+const phrases = JSON.parse(await readFile(new URL("../src/phrases.json", import.meta.url), "utf8"));
+for (const [latin, cyrillic] of phrases) {
+  test(`phrase ${JSON.stringify(latin)}`, () => assert.equal(convert(latin), cyrillic));
+}
