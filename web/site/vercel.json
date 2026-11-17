@@ -36,7 +36,7 @@
       ]
     }
   ],
-  "cleanUrls": true,
+  "cleanUrls": false,
   "redirects": [
     {
       "source": "/:path*",
@@ -48,6 +48,16 @@
       ],
       "destination": "https://buuz.thetengis.com/:path*",
       "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
+      "source": "/cookies",
+      "destination": "/cookies.html"
     }
   ]
 }
