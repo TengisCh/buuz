@@ -1,31 +1,20 @@
 /* Buuz 2.0 brand: see brand/README.md for the palette and type. */
 :root {
-  --bg: #fff3e0;          /* Dough */
-  --card: #ffffff;
+  /* Light only, on purpose: white page, sunny yellow, one blue action.
+     Cues from bun.sh (white + warm cream + yellow) and mongoltype.mn (blue + yellow). */
+  --bg: #ffffff;
+  --card: #fffaf1;        /* warm cream surface */
   --fg: #1e1838;          /* Night */
-  --muted: #7a6455;
-  --line: #f0dfc8;
-  --press: #ebd7bc;       /* the solid "pressed" edge under cards */
-  --ember: #ff6a3d;
+  --muted: #6f5f55;
+  --line: #f3e6d2;
+  --press: #eedcc2;       /* the solid "pressed" edge under cards */
+  --sun: #ffd84d;
   --amber: #ffb648;
-  --ember-press: #d9502b;
+  --ember: #ff6a3d;
+  --sun-press: #e9a52f;
   --accent: #2e6bff;      /* Khadag Blue: the one primary action */
   --accent-press: #1638b8;
   --accent-fg: #fff;
-  --out-fg: #fff;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1e1838;
-    --card: #2a2350;
-    --fg: #fff3e0;
-    --muted: #b9add6;
-    --line: #3a3168;
-    --press: #140f2b;
-    --ember-press: #a63a1d;
-    --accent: #5b8cff;
-    --accent-press: #2343b8;
-  }
 }
 * { box-sizing: border-box; }
 body {
@@ -34,7 +23,8 @@ body {
   color: var(--fg);
   font: 600 17px/1.5 "Nunito Variable", Nunito, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+main { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+@media (min-width: 900px) { main { padding: 2.5rem 2rem 4rem; } }
 
 /* Wordmark: mascot + "Buuz" + an ember 2.0 */
 .wordmark {
@@ -42,7 +32,7 @@ main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
   margin: 0; font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; line-height: 1;
 }
 .wordmark sup { font-size: 0.45em; color: var(--ember); font-weight: 900; align-self: flex-start; margin: 0.1em 0 0 -0.5rem; }
-.mascot { width: 56px; height: 56px; filter: drop-shadow(0 6px 10px rgba(120, 50, 10, 0.25)); transform-origin: 50% 100%; }
+.mascot { width: 56px; height: 56px; filter: drop-shadow(0 6px 10px rgba(120, 50, 10, 0.2)); transform-origin: 50% 100%; }
 .mascot.puff { animation: puff 0.45s ease-out; }
 .mascot.hop { animation: hop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes puff { 0% { transform: scale(1, 1); } 35% { transform: scale(1.08, 0.92); } 100% { transform: scale(1, 1); } }
@@ -67,19 +57,21 @@ textarea {
 }
 textarea::placeholder { color: var(--muted); opacity: 0.85; }
 /* On the orange output a white placeholder vanishes: use a deep ember-brown instead (about 4.6:1). */
-#cyr::placeholder { color: #7a2a10; opacity: 0.8; }
+#cyr::placeholder { color: #6b4a12; opacity: 0.75; }
+textarea#latin { background: var(--card); box-shadow: inset 0 0 0 2px var(--line), 0 5px 0 var(--press); }
 #cyr {
-  background: linear-gradient(160deg, #ff8f3d, var(--ember));
-  color: var(--out-fg);
-  box-shadow: 0 6px 0 var(--ember-press);
+  background: linear-gradient(160deg, var(--sun), var(--amber));
+  color: var(--fg);
+  box-shadow: 0 6px 0 var(--sun-press);
 }
 textarea:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
-.out-head { display: flex; justify-content: space-between; align-items: end; margin: 1.25rem 0 0.4rem; }
-.out-head label { margin: 0; }
-.actions { display: flex; gap: 0.5rem; }
+.converter { display: grid; gap: 1.25rem; }
+@media (min-width: 900px) { .converter { grid-template-columns: 1fr 1fr; gap: 1.75rem; } textarea { min-height: 15rem; } }
+.actions { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; margin-top: 0.85rem; }
+.pane:first-child .actions { justify-content: flex-start; }
 button {
   font: inherit; font-weight: 800; cursor: pointer;
   padding: 0.5rem 1.15rem; border-radius: 999px; min-height: 44px;
@@ -90,8 +82,8 @@ button {
 button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); }
 button.primary { background: var(--accent); color: var(--accent-fg); box-shadow: 0 4px 0 var(--accent-press); }
 button.primary:active { box-shadow: 0 1px 0 var(--accent-press); }
-.status { min-height: 1.5rem; margin: 0.5rem 0 0; color: var(--ember); font-weight: 800; }
-.privacy { color: var(--muted); font-size: 0.95rem; margin: 0.5rem 0 1.5rem; }
+.status { margin: 0; color: var(--ember); font-weight: 800; }
+.privacy { color: var(--muted); font-size: 0.95rem; margin: 1.25rem 0 1.5rem; }
 .cheat, .get-app {
   background: var(--card);
   border-radius: 24px; padding: 1rem 1.25rem; margin-bottom: 1.1rem;

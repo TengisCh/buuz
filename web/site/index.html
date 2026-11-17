@@ -8,11 +8,10 @@
       name="description"
       content="Латинаар бичихэд шууд кирилл болно. Үнэгүй, бичсэн зүйл тань хаашаа ч илгээгдэхгүй."
     />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="theme-color" content="#FFF3E0" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1E1838" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FFFFFF" />
     <script type="module" src="/src/main.ts"></script>
     <script>
       window.va =
@@ -34,27 +33,31 @@
       </header>
 
       <section class="converter" aria-label="Converter">
-        <label for="latin" data-i18n="latin">Латин</label>
-        <textarea
-          id="latin"
-          rows="6"
-          placeholder="sain baina uu"
-          autocomplete="off"
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-          autofocus
-        ></textarea>
-
-        <div class="out-head">
-          <label for="cyr" data-i18n="cyr">Кирилл</label>
+        <div class="pane">
+          <label for="latin" data-i18n="latin">Латин</label>
+          <textarea
+            id="latin"
+            rows="7"
+            placeholder="sain baina uu"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
+            autofocus
+          ></textarea>
           <div class="actions">
             <button id="clear" type="button" class="ghost" data-i18n="clear">Цэвэрлэх</button>
+          </div>
+        </div>
+
+        <div class="pane">
+          <label for="cyr" data-i18n="cyr">Кирилл</label>
+          <textarea id="cyr" lang="mn" rows="7" placeholder="сайн байна уу" readonly aria-live="polite"></textarea>
+          <div class="actions">
+            <p id="status" class="status" role="status"></p>
             <button id="copy" type="button" class="primary" data-i18n="copy">Хуулах</button>
           </div>
         </div>
-        <textarea id="cyr" lang="mn" rows="6" placeholder="сайн байна уу" readonly aria-live="polite"></textarea>
-        <p id="status" class="status" role="status"></p>
       </section>
 
       <p class="privacy" data-i18n="privacy">
