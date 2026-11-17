@@ -19,3 +19,8 @@ xcuserdata/
 node_modules/
 dist/
 pkg/
+
+# Secrets and personal agent settings
+.env
+.env.*
+.claude/settings.local.json

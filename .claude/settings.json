@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "autoCompactWindow": 400000,
+  "permissions": {
+    "allow": [
+      "Bash(cargo fmt *)",
+      "Bash(cargo clippy *)",
+      "Bash(cargo test *)",
+      "Bash(cargo build *)",
+      "Bash(cargo check *)",
+      "Bash(npm ci *)",
+      "Bash(npm ci)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm test)",
+      "Bash(npm audit *)",
+      "Bash(npm ls *)",
+      "Bash(tools/lint/node_modules/.bin/markdownlint-cli2 *)",
+      "Bash(tools/lint/node_modules/.bin/markdownlint-cli2)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh issue view *)",
+      "Bash(gh issue list *)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm add *)",
+      "Bash(npm update *)",
+      "Bash(npx *)",
+      "Bash(cargo add *)",
+      "Bash(cargo install *)",
+      "Bash(cargo update *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Bash(npm publish *)",
+      "Bash(cargo publish *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(vercel env *)"
+    ]
+  }
+}

@@ -8,6 +8,10 @@ on:
     paths: ["web/**", "core/**", ".github/workflows/web.yml"]
   workflow_dispatch:
 
+# Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).
+permissions:
+  contents: read
+
 concurrency:
   group: web-${{ github.ref }}
   cancel-in-progress: true
@@ -20,13 +24,15 @@ jobs:
       run:
         working-directory: web/site
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: web/site/package-lock.json
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: web/wasm
       - run: npm ci

@@ -1,0 +1,29 @@
+# Dependency updates. `cooldown` waits 7 days after a release before proposing
+# it, so a hijacked package is usually caught and yanked before it reaches us.
+# Security updates ignore the cooldown and arrive right away.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/web/site", "/tools/lint"]
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: cargo
+    directories: ["/core", "/web/wasm"]
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    groups:
+      cargo-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }
+    groups:
+      actions:
+        patterns: ["*"]
