@@ -58,11 +58,44 @@ function render(): void {
   cyr.value = ready ? convert(latin.value) : "";
 }
 
+const toast = document.getElementById("toast") as HTMLElement;
+const clearX = document.getElementById("clear-x") as HTMLButtonElement;
+const copyX = document.getElementById("copy-x") as HTMLButtonElement;
+
+// Phones: Google Translate-style. Both boxes grow with their text (capped), so
+// input, result and the copy button stay above the on-screen keyboard.
+const phone = matchMedia("(max-width: 640px)");
+function fit(): void {
+  for (const el of [latin, cyr]) {
+    el.rows = phone.matches ? 2 : 7;
+    if (!phone.matches) {
+      el.style.height = "";
+      continue;
+    }
+    el.style.height = "auto";
+    const cap = Math.round((window.visualViewport?.height ?? innerHeight) * (el === latin ? 0.3 : 0.32));
+    el.style.height = Math.min(el.scrollHeight + 2, Math.max(cap, 96)) + "px";
+  }
+  clearX.hidden = latin.value === "";
+}
+phone.addEventListener("change", fit);
+window.visualViewport?.addEventListener("resize", () => {
+  fit();
+  // Keep the toast just above the keyboard.
+  const vv = window.visualViewport!;
+  toast.style.bottom = Math.max(16, innerHeight - vv.height - vv.offsetTop + 16) + "px";
+});
+
 let statusTimer: number | undefined;
 function say(msg: string): void {
   status.textContent = msg;
+  toast.textContent = "✓ " + msg;
+  toast.classList.add("show");
   window.clearTimeout(statusTimer);
-  statusTimer = window.setTimeout(() => (status.textContent = ""), 1800);
+  statusTimer = window.setTimeout(() => {
+    status.textContent = "";
+    toast.classList.remove("show");
+  }, 1800);
 }
 
 async function copy(): Promise<void> {
@@ -81,15 +114,19 @@ async function copy(): Promise<void> {
 
 latin.addEventListener("input", () => {
   render();
+  fit();
   syncCaret();
   if (!mascot.classList.contains("puff")) animate("puff");
 });
 mascot.addEventListener("animationend", () => mascot.classList.remove("puff", "hop"));
 copyBtn.addEventListener("click", () => void copy());
+copyX.addEventListener("click", () => void copy());
+clearX.addEventListener("click", () => clearBtn.click());
 clearBtn.addEventListener("click", () => {
   latin.value = "";
   render();
   syncCaret();
+  fit();
   latin.focus();
 });
 document.addEventListener("keydown", (e) => {
@@ -157,6 +194,7 @@ function typewriter(): void {
 init({ module_or_path: wasmUrl }).then(() => {
   ready = true;
   render(); // text typed while the module was loading
+  fit();
   if (reducedMotion) showGhost(pool[0], false);
   else typewriter();
 });
