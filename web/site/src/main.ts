@@ -148,10 +148,25 @@ for (let i = pool.length - 1; i > 0; i--) {
 }
 // While the demo types, hide the real caret so there's only one cursor.
 // The moment there is real text, the native caret comes back.
+// While the box has focus the ghost text is hidden entirely: it is distracting
+// when you are about to type. It comes back on blur if the box is still empty.
+let focused = document.activeElement === latin;
 function syncCaret(): void {
-  latin.classList.toggle("demo", latin.value === "" && !reducedMotion);
+  latin.classList.toggle("demo", latin.value === "" && !reducedMotion && !focused);
 }
+latin.addEventListener("focus", () => {
+  focused = true;
+  latin.placeholder = "";
+  cyr.placeholder = "";
+  syncCaret();
+});
+latin.addEventListener("blur", () => {
+  focused = false;
+  syncCaret();
+  if (reducedMotion && latin.value === "" && ready) showGhost(pool[0], false);
+});
 function showGhost(text: string, caret: boolean): void {
+  if (focused) return;
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
   cyr.placeholder = ready ? convert(text) : "";
@@ -164,7 +179,7 @@ function typewriter(): void {
   let blinks = 0;
   const next = (ms: number) => window.setTimeout(step, ms);
   function step(): void {
-    if (latin.value !== "" || document.hidden) return void next(600);
+    if (latin.value !== "" || document.hidden || focused) return void next(600);
     if (chars.length === 0) chars = Array.from(pool[p % pool.length]);
     switch (phase) {
       case "type":
