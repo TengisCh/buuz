@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
     paths: ["web/**", "core/**", ".github/workflows/web.yml"]
+  # Every PR, no path filter: "build" is a required check on main, and a
+  # required check that never starts would block docs-only PRs forever.
   pull_request:
-    paths: ["web/**", "core/**", ".github/workflows/web.yml"]
   workflow_dispatch:
 
 # Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).
