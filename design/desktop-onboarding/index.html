@@ -221,9 +221,11 @@ kbd, .key { font: 700 15px "JetBrains Mono", monospace; background: #fff; color:
 <div id="root"></div>
 <script>
 const P = new URLSearchParams(location.search);
-const OS = P.get('os') || 'mac';
-const L = P.get('lang') || 'mn';
-const ONE = P.get('screen');
+// URL params are untrusted: accept only known values.
+const OS = P.get('os') === 'win' ? 'win' : 'mac';
+const L = P.get('lang') === 'en' ? 'en' : 'mn';
+const ALL = ['welcome', 'privacy', 'enable', 'enable-done', 'shortcut', 'try', 'harmony', 'import', 'done', 'home', 'typing', 'menu'];
+const ONE = ALL.includes(P.get('screen')) ? P.get('screen') : null;
 const ICON = '../../brand/icons/buuz-buddy-icon.svg';
 const SMALL = '../../brand/icons/buuz-buddy-small.svg';
 
@@ -497,7 +499,6 @@ S.menu = () => {
     <div class="dropdown">${items}</div><div class="caption">${T.mCaption}</div>`;
 };
 
-const ALL = ['welcome', 'privacy', 'enable', 'enable-done', 'shortcut', 'try', 'harmony', 'import', 'done', 'home', 'typing', 'menu'];
 const list = ONE ? [ONE] : ALL;
 document.documentElement.lang = L;
 document.getElementById('root').innerHTML = (ONE ? '' : '<div class="gallery">') +
