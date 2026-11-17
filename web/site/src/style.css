@@ -126,6 +126,11 @@ button.icon .sun { display: none; }
 :root[data-theme="dark"] button.icon .sun { display: block; }
 :root[data-theme="dark"] button.icon .moon { display: none; }
 
+/* "Smart vowels" switch inside the cheat sheet */
+.smart { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; margin-top: 0.9rem; cursor: pointer; }
+.smart input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+.hint { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }
+
 /* "How to type": grouped columns that read top-to-bottom */
 .keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem 1.5rem; margin: 1rem 0 0.75rem; }
 .keys h3 { margin: 0 0 0.4rem; font-size: 0.8rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }

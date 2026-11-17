@@ -65,6 +65,7 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("I",   "И",  ALL),
     ("II",  "ИЙ", ALL),
     ("III", "Ы",  ALL),
+    ("II'", "ИЙ", ALL),
     ("J",   "Ж",  ALL),
     ("K",   "К",  ALL),
     ("KH",  "Х",  ALL),
@@ -131,6 +132,14 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("'",    "ь", X_M | X_F),
     ("''",   "Ь", X_M | X_F),
 ];
+
+/// Consonants after which a masculine word keeps ий instead of ы (smart `ii`):
+/// ж ч ш щ ь ъ, the front г, and к, й.
+pub(crate) const KEEP_II: &[char] = &['ж', 'ч', 'ш', 'щ', 'ь', 'ъ', 'г', 'к', 'й'];
+
+/// Masculine и-final stems typed as `...ii...`: the и is part of the stem, so
+/// the suffix keeps ий (салхийг, таксийг, компанийг).
+pub(crate) const II_FINAL_STEMS: &[&str] = &["салх", "такс", "компан"];
 
 /// One expanded conversion rule.
 #[derive(Debug, Clone)]

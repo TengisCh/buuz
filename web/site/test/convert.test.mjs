@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import init, { convert } from "../src/wasm/buuz.js";
+import init, { convert, convert_with } from "../src/wasm/buuz.js";
 
 await init({ module_or_path: await readFile(new URL("../src/wasm/buuz_bg.wasm", import.meta.url)) });
 
@@ -20,12 +20,22 @@ const cases = [
   ["shine", "шинэ"],
   ["chi", "чи"],
   ["yo", "ё"],
+  ["unee", "үнээ"],
+  ["irsen uu", "ирсэн үү"],
+  ["aaviin", "аавын"],
   ["", ""],
   ["hello, 123!\nsain", "хэллө, 123!\nсайн"],
 ];
 for (const [input, expected] of cases) {
   test(JSON.stringify(input), () => assert.equal(convert(input), expected));
 }
+
+test("classic mode keeps the original left-to-right rules", () => {
+  assert.equal(convert_with("unee", false), "унээ");
+  assert.equal(convert_with("aaviin", false), "аавийн");
+  assert.equal(convert_with("irsen uu", false), "ирсэн уу");
+  assert.equal(convert_with("unee", true), "үнээ");
+});
 
 test("long paste stays fast", () => {
   const text = "sain baina uu ".repeat(20000);

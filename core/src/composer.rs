@@ -20,7 +20,7 @@
 //! [`Composer`] and renders [`Composer::preedit`] / [`Composer::cursor`],
 //! inserting any text returned as `commit`.
 
-use crate::rules::{rules, X_F, X_M, X_MF, X_MM};
+use crate::rules::{rules, to_lower, Rule, II_FINAL_STEMS, KEEP_II, X_F, X_M, X_MF, X_MM};
 
 /// Maximum number of raw input characters in one composition (as original).
 pub const MAX_COMP_LEN: usize = 50;
@@ -38,6 +38,9 @@ pub enum Key {
     End,
     /// Modifier keys that must not end a composition (Shift, CapsLock).
     Modifier,
+    /// A space: like `Other` (commits and passes through), but the composer
+    /// remembers the previous word's gender for the particle `uu`/`ү`.
+    Space,
     /// Anything else (space, Enter, Tab, digits, punctuation, Esc...).
     /// Ends the composition and is passed through to the application.
     Other,
@@ -61,51 +64,229 @@ pub fn is_input_char(ch: char) -> bool {
     ch == '\'' || ch == '"' || ch.is_ascii_alphabetic() || matches!(ch, 'ö' | 'ü' | 'Ö' | 'Ü')
 }
 
-/// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.
-fn read_to_comp(read: &[char]) -> Vec<char> {
-    let rs = rules();
-    let mut word = X_M;
-    let mut out = Vec::with_capacity(read.len());
-    let mut i = 0;
-    'outer: while i < read.len() {
-        for &len in &rs.lengths {
-            if len > read.len() - i {
-                continue;
+/// Behaviour switches for a [`Composer`].
+///
+/// The fields are public, so build a value with struct-update syntax to stay
+/// source-compatible when options are added:
+///
+/// ```
+/// use buuz_core::Options;
+/// let opts = Options { smart_vowels: false, ..Default::default() };
+/// # let _ = opts;
+/// ```
+#[derive(Debug, Clone)]
+pub struct Options {
+    /// Smart vowel harmony: look ahead for the word's gender (`unee` -> үнээ),
+    /// choose ий or ы (`aaviin` -> аавын) and let the particle уу/үү follow the
+    /// previous word. `false` is the original Buuz behaviour.
+    pub smart_vowels: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Options { smart_vowels: true }
+    }
+}
+
+impl Options {
+    /// The original left-to-right behaviour, with every smart rule off.
+    pub fn classic() -> Self {
+        Options {
+            smart_vowels: false,
+        }
+    }
+}
+
+/// One matched rule position in the raw keys (scratch data of `read_to_comp`).
+#[derive(Debug, Clone)]
+pub(crate) struct Token {
+    start: usize,
+    len: usize,
+    cands: &'static [Rule],
+}
+
+/// What `read_to_comp` needs to know besides the raw keys.
+#[derive(Debug, Clone, Copy)]
+struct Context {
+    smart: bool,
+    /// Gender of the word before a space, if the last key was a space.
+    prev_gender: Option<u8>,
+}
+
+/// True if the lowercased keys of `tok` are exactly `pat` (lower case ASCII).
+fn token_is(read: &[char], tok: &Token, pat: &str) -> bool {
+    let keys = &read[tok.start..tok.start + tok.len];
+    keys.len() == pat.len() && keys.iter().zip(pat.chars()).all(|(&k, p)| to_lower(k) == p)
+}
+
+/// The gender this token proves for the word, if any.
+fn evidence(read: &[char], tokens: &[Token], idx: usize) -> Option<u8> {
+    let tok = &tokens[idx];
+    // `ye` (е) is mostly a loanword vowel and says nothing about the word.
+    if token_is(read, tok, "ye") {
+        return None;
+    }
+    for rule in tok.cands {
+        if rule.flags & X_MF != 0 {
+            // An explicit ү right after г is the suffix -гүй (болохгүй).
+            let explicit_u = rule.to.first().map(|&c| to_lower(c)) == Some('ү');
+            if explicit_u && idx > 0 && token_is(read, &tokens[idx - 1], "g") {
+                return None;
             }
-            if let Some(cands) = rs.get(&read[i..i + len]) {
-                for rule in cands {
-                    if word & rule.flags == word {
-                        if rule.flags & X_MF != 0 {
-                            word = X_F;
-                        } else if rule.flags & X_MM != 0 {
-                            word = X_M;
-                        }
-                        out.extend_from_slice(&rule.to);
-                        i += len;
-                        continue 'outer;
-                    }
+            return Some(X_F);
+        }
+        if rule.flags & X_MM != 0 {
+            return Some(X_M);
+        }
+    }
+    None
+}
+
+fn is_vowel(c: char) -> bool {
+    matches!(
+        to_lower(c),
+        'а' | 'э' | 'и' | 'о' | 'ө' | 'у' | 'ү' | 'ы' | 'е' | 'ё' | 'ю' | 'я'
+    )
+}
+
+fn is_cyrillic_consonant(c: char) -> bool {
+    matches!(c, 'а'..='я' | 'ё' | 'ө' | 'ү') && !is_vowel(c)
+}
+
+/// Should this `ii` become ы? See docs/typing-rules.md, section 4.
+fn ii_is_y(out: &[char], word: u8) -> bool {
+    if word != X_M || !out.iter().any(|&c| is_vowel(c)) {
+        return false;
+    }
+    let prev = match out.last() {
+        Some(&c) => to_lower(c),
+        None => return false,
+    };
+    if !is_cyrillic_consonant(prev) || KEEP_II.contains(&prev) {
+        return false;
+    }
+    !II_FINAL_STEMS.iter().any(|stem| {
+        out.len() == stem.chars().count()
+            && out.iter().zip(stem.chars()).all(|(&c, s)| to_lower(c) == s)
+    })
+}
+
+/// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.
+/// Returns the text and the gender the word leaves for a following particle.
+fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<char>, u8) {
+    let rs = rules();
+    // Pass 0: split the keys into longest-match tokens.
+    tokens.clear();
+    let mut i = 0;
+    while i < read.len() {
+        let mut len = 1;
+        let mut cands: &'static [Rule] = &[];
+        for &l in &rs.lengths {
+            if l <= read.len() - i {
+                if let Some(c) = rs.get(&read[i..i + l]) {
+                    len = l;
+                    cands = c;
+                    break;
                 }
             }
         }
-        out.push(read[i]);
-        i += 1;
+        tokens.push(Token {
+            start: i,
+            len,
+            cands,
+        });
+        i += len;
     }
-    out
+    // Pass 1: the word's gender from the first (and last) deciding vowel.
+    let mut initial = X_M;
+    let mut last_ev = None;
+    if ctx.smart {
+        let mut first_ev = None;
+        for idx in 0..tokens.len() {
+            if let Some(g) = evidence(read, tokens, idx) {
+                first_ev.get_or_insert(g);
+                last_ev = Some(g);
+            }
+        }
+        let particle = read.iter().all(|&c| to_lower(c) == 'u') && read.len() <= 2;
+        initial = match ctx.prev_gender {
+            Some(g) if particle => g,
+            _ => first_ev.unwrap_or(X_M),
+        };
+    }
+    // Pass 2: convert left to right, starting from that gender.
+    let mut word = initial;
+    let mut out = Vec::with_capacity(read.len());
+    for tok in tokens.iter() {
+        let chosen = tok.cands.iter().find(|r| word & r.flags == word);
+        match chosen {
+            Some(rule) => {
+                if rule.flags & X_MF != 0 {
+                    word = X_F;
+                } else if rule.flags & X_MM != 0 {
+                    word = X_M;
+                }
+                if ctx.smart && token_is(read, tok, "ii") && ii_is_y(&out, word) {
+                    let upper = rule.to[0] != to_lower(rule.to[0]);
+                    out.push(if upper { 'Ы' } else { 'ы' });
+                } else {
+                    out.extend_from_slice(&rule.to);
+                }
+            }
+            None => out.extend_from_slice(&read[tok.start..tok.start + tok.len]),
+        }
+    }
+    (out, last_ev.unwrap_or(initial))
 }
 
 /// Stateful composition buffer.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Composer {
     /// Raw input; becomes the Cyrillic text after cursor movement.
     read: Vec<char>,
     comp: Vec<char>,
     /// Cursor position within `comp`, in characters.
     cursor: usize,
+    opts: Options,
+    /// Particle gender of the current composition (set by `recompose`).
+    word_gender: u8,
+    /// Gender of the word before the last space, if the last key was a space.
+    prev_gender: Option<u8>,
+    /// Scratch buffer reused across keystrokes.
+    tokens: Vec<Token>,
+}
+
+impl Default for Composer {
+    fn default() -> Self {
+        Self::with_options(Options::default())
+    }
 }
 
 impl Composer {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn with_options(opts: Options) -> Self {
+        Composer {
+            read: Vec::new(),
+            comp: Vec::new(),
+            cursor: 0,
+            opts,
+            word_gender: X_M,
+            prev_gender: None,
+            tokens: Vec::new(),
+        }
+    }
+
+    /// Change the options; takes effect from the next recomposition.
+    pub fn set_options(&mut self, opts: Options) {
+        self.opts = opts;
+    }
+
+    /// Forget the previous word (the particle `uu` then stays masculine).
+    pub fn clear_context(&mut self) {
+        self.prev_gender = None;
     }
 
     pub fn is_composing(&self) -> bool {
@@ -144,8 +325,15 @@ impl Composer {
         }
     }
 
-    /// Commit the composition (e.g. on focus loss or Space/Enter).
+    /// Commit the composition (e.g. on focus loss). Also forgets the previous
+    /// word, since the next key may land in a different place.
     pub fn commit(&mut self) -> Option<String> {
+        self.prev_gender = None;
+        self.take_composition()
+    }
+
+    /// Hand out the composition and reset the buffer; keeps the context.
+    fn take_composition(&mut self) -> Option<String> {
         if self.comp.is_empty() {
             return None;
         }
@@ -157,6 +345,7 @@ impl Composer {
     /// Discard the composition without inserting anything.
     pub fn cancel(&mut self) {
         self.reset();
+        self.prev_gender = None;
     }
 
     pub fn reset(&mut self) {
@@ -166,7 +355,13 @@ impl Composer {
     }
 
     fn recompose(&mut self) {
-        self.comp = read_to_comp(&self.read);
+        let ctx = Context {
+            smart: self.opts.smart_vowels,
+            prev_gender: self.prev_gender,
+        };
+        let (comp, gender) = read_to_comp(&self.read, ctx, &mut self.tokens);
+        self.comp = comp;
+        self.word_gender = gender;
     }
 
     fn comp_to_read(&mut self) {
@@ -184,7 +379,16 @@ impl Composer {
         let mut out = KeyOutcome::default();
         if !self.wants_key(key) {
             // Not ours: finish any composition, let the key through.
-            out.commit = self.commit();
+            let gender = self.word_gender;
+            out.commit = self.take_composition();
+            // A space right after a word hands that word's gender to the next
+            // one; repeated spaces keep it; any other key forgets it.
+            match key {
+                Key::Space if out.commit.is_some() => self.prev_gender = Some(gender),
+                // Shift/CapsLock alone must not break the context.
+                Key::Space | Key::Modifier => {}
+                _ => self.prev_gender = None,
+            }
             return out;
         }
         out.consumed = true;
@@ -244,11 +448,19 @@ impl Composer {
 /// Input characters compose; any other character ends the current word and
 /// is copied through (`"sain baina uu"` -> `"сайн байна уу"`).
 pub fn convert(input: &str) -> String {
-    let mut c = Composer::new();
+    convert_with(input, &Options::default())
+}
+
+/// Like [`convert`], with explicit [`Options`] (for example
+/// [`Options::classic`]).
+pub fn convert_with(input: &str, opts: &Options) -> String {
+    let mut c = Composer::with_options(opts.clone());
     let mut out = String::new();
     for ch in input.chars() {
         let key = if is_input_char(ch) {
             Key::Char(ch)
+        } else if ch == ' ' {
+            Key::Space
         } else {
             Key::Other
         };

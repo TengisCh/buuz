@@ -25,5 +25,7 @@
 mod composer;
 mod rules;
 
-pub use composer::{convert, is_input_char, Composer, Key, KeyOutcome, MAX_COMP_LEN};
+pub use composer::{
+    convert, convert_with, is_input_char, Composer, Key, KeyOutcome, Options, MAX_COMP_LEN,
+};
 pub use rules::export_rules;
