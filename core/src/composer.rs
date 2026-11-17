@@ -103,7 +103,18 @@ impl Default for Options {
 }
 
 impl Options {
-    /// The original left-to-right behaviour, with every smart rule off.
+    /// Smart mode with every smart feature on: smart vowels and the built-in
+    /// abbreviations. This is what the shells use by default; each feature can
+    /// still be switched off one by one.
+    pub fn smart() -> Self {
+        Options {
+            smart_vowels: true,
+            abbreviations: Some(Abbreviations::builtin()),
+        }
+    }
+
+    /// Classic mode: the original left-to-right Buuz behaviour, with every
+    /// smart rule off. New smart features must leave this output unchanged.
     pub fn classic() -> Self {
         Options {
             smart_vowels: false,

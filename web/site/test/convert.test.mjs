@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import init, { convert, convert_with } from "../src/wasm/buuz.js";
+import init, { convert, convert_classic, convert_with } from "../src/wasm/buuz.js";
 
 await init({ module_or_path: await readFile(new URL("../src/wasm/buuz_bg.wasm", import.meta.url)) });
 
@@ -29,6 +29,13 @@ const cases = [
 for (const [input, expected] of cases) {
   test(JSON.stringify(input), () => assert.equal(convert(input), expected));
 }
+
+test("the Classic switch turns every smart feature off", () => {
+  assert.equal(convert_classic("unee"), "унээ");
+  assert.equal(convert_classic("aaviin"), "аавийн");
+  assert.equal(convert_classic("bn uu "), "бн уу ");
+  assert.equal(convert_classic("sain baina uu"), "сайн байна уу");
+});
 
 test("classic mode keeps the original left-to-right rules", () => {
   assert.equal(convert_with("unee", false, false), "унээ");

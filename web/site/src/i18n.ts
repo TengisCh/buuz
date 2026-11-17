@@ -27,6 +27,11 @@ const mn = {
   abbreviations: "Товчлол (bn → байна)",
   abbreviationsHint:
     "Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.",
+  mode: "Горим",
+  modeSmart: "Ухаалаг (үндсэн)",
+  modeClassic: "Сонгодог (анхны Buuz)",
+  modeHint:
+    "Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.",
   smartVowels: "Ухаалаг эгшиг",
   smartVowelsHint:
     "Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.",
@@ -119,6 +124,11 @@ const en: Record<Key, string> = {
   abbreviations: "Abbreviations (bn → байна)",
   abbreviationsHint:
     "A short form expands when you type a space or punctuation after it (bn then a space gives байна). On this website, deleting that space brings the abbreviation back; in the upcoming desktop keyboards, Backspace right after the space undoes it. Turn the checkbox off to never expand.",
+  mode: "Mode",
+  modeSmart: "Smart (default)",
+  modeClassic: "Classic (original Buuz)",
+  modeHint:
+    "Smart mode adds the features below. Classic types exactly like the original Buuz, with every smart feature off.",
   smartVowels: "Smart vowels",
   smartVowelsHint:
     "Picks vowels by looking ahead in the word (unee gives үнээ, aaviin gives аавын). Turn off for the original Buuz rules.",

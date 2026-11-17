@@ -129,6 +129,11 @@ button.icon .sun { display: none; }
 /* Option switches (smart vowels, abbreviations) inside the cheat sheet */
 .toggle { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; margin-top: 0.9rem; cursor: pointer; }
 .toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+.mode, .features { border: 0; margin: 0; padding: 0; min-width: 0; }
+.mode { display: flex; flex-wrap: wrap; column-gap: 1.4rem; margin-top: 0.9rem; }
+.mode legend { font-weight: 800; padding: 0; }
+.features:disabled { opacity: 0.5; }
+.features:disabled .toggle { cursor: not-allowed; }
 .hint { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }
 
 /* "How to type": grouped columns that read top-to-bottom */
