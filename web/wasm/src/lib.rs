@@ -21,6 +21,7 @@ pub fn convert_with(input: &str, smart_vowels: bool, abbreviations: bool) -> Str
     let opts = buuz_core::Options {
         smart_vowels,
         abbreviations: abbreviations.then(buuz_core::Abbreviations::builtin),
+        ..Default::default()
     };
     buuz_core::convert_with(input, &opts)
 }

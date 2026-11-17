@@ -34,10 +34,12 @@ when a new concept appears; rename here first when a name changes.
 | --- | --- | --- |
 | Classic mode | The original 2009 Buuz behaviour, left to right, every smart feature off. Its output never changes | `Options::classic()` |
 | Smart mode | The default: classic rules plus the smart features, all on by default, each with its own switch | `Options::smart()` |
-| Smart feature | One opt-out improvement inside smart mode: smart vowels, abbreviations, later autocorrect and completion | fields of `Options` |
+| Smart feature | One opt-out improvement inside smart mode: smart vowels, abbreviations, keep Latin, later autocorrect and completion | fields of `Options` |
 | Smart vowels | Look-ahead vowel harmony, ий/ы and the particle rule | `Options::smart_vowels` |
 | Abbreviation | A short Latin key sequence expanded at commit (`bn` to байна). Backspace right after undoes it | `Abbreviations` |
 | Undo | Backspace right after an automatic change restores what was typed | `KeyOutcome::delete_before` |
+| Keep Latin | Esc while composing shows the raw Latin keys instead of Cyrillic; Esc again switches back | `Options::keep_latin`, `Key::Escape` |
+| Reopen | Backspace right after a word and a space puts the word back in the preedit with its raw keys | `Options::keep_latin` |
 | Portable config | The one settings file shared by web, Windows and macOS (issue #8) | |
 
 ## Project

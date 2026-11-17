@@ -231,7 +231,41 @@ word, so an entry never hides a word typed in full.
 Not done yet: a per-entry editor, suffix shortcuts, undo after punctuation.
 Background: [issue #5](https://github.com/TengisCh/buuz/issues/5).
 
-## 8. Cyrillic to Latin
+## 8. Keeping Latin and reopening a word
+
+Chat is full of English, names and links. Two keys keep them in Latin
+without switching the keyboard off. Both are smart-mode only
+(`Options::keep_latin`, off in `Options::classic()`), and both are for the
+desktop keyboards: the website converts the whole text, not keystrokes.
+
+- **Esc while composing** shows the raw Latin keys: `ok` shows `ок`, Esc
+  shows `ok`, and a space or punctuation commits `ok`. Esc again brings the
+  Cyrillic back, so nothing typed is lost. Case stays as typed (`GitHub`).
+  Typing on, Backspace and Delete keep the Latin view. A Latin word never
+  expands as an abbreviation. It gives no evidence for the particle, so a
+  following `uu` is `уу`, as after no word. The next word is Cyrillic again.
+- **Esc with nothing composed** goes to the application as before (it still
+  closes dialogs). Esc after the caret moved inside a word does nothing:
+  the word is frozen as shown (Cyrillic or Latin) and has no raw keys left,
+  so Esc leaves it alone.
+- **Backspace right after a word and a space** deletes both and reopens the
+  word in the preedit with its raw keys (`sain` and a space, then Backspace,
+  gives `сайн` in the preedit, ready for Esc or more keys). A word committed
+  in Latin reopens in Latin. The previous word's gender comes back with it,
+  so `irsen uu` reopened is still `үү`. The abbreviation undo in section 7 is
+  the same gesture. The same limits apply: only straight after a space,
+  Shift and CapsLock keep it armed, and any other key, punctuation, Enter,
+  `commit()`, `reset()`, `cancel()` or `clear_context()` drops it. A frozen
+  word (caret moved) does not reopen. For shell authors: with `keep_latin`,
+  Backspace after any word and a space is consumed, so a missing
+  `clear_context()` call after a caret move now matters after every word, not
+  only after abbreviations.
+
+Not done yet: automatically keeping URLs, emails and words with digits in
+Latin, a list of common English words, and per-app memory.
+Background: [issue #10](https://github.com/TengisCh/buuz/issues/10).
+
+## 9. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -239,7 +273,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 9. Planned changes
+## 10. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults
