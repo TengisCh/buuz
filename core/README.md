@@ -21,5 +21,7 @@ after Left/Right/Home/End).
 original rules and `docs/table.html`; a differential test against a compiled
 build of the original algorithm is a recommended follow-up.
 
-Licensed under Apache-2.0; see `LICENSE` and `NOTICE` (original copyright
-Odbayar Nyamtseren).
+Licensed under Apache-2.0 only; see `LICENSE` and `NOTICE` (original copyright
+Odbayar Nyamtseren). Unlike the rest of the repository, which is
+MIT OR Apache-2.0, this crate is ported from the original Buuz and keeps its
+license (see `docs/decisions/0004-license-mit-or-apache-for-new-code.md`).

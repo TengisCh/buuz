@@ -1,0 +1,16 @@
+{
+  "name": "buuz-lint",
+  "private": true,
+  "description": "Docs lint for Buuz: Markdown style and Mermaid diagram parsing",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "markdown": "cd ../.. && tools/lint/node_modules/.bin/markdownlint-cli2",
+    "mermaid": "node check-mermaid.mjs"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "0.17.2",
+    "mermaid": "11.4.1",
+    "playwright": "1.49.1"
+  }
+}

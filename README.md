@@ -4,7 +4,7 @@
 method: you type how a word sounds in Latin letters and get Cyrillic as you
 type.
 
-```
+```text
 buuz id'ye        → бууз идье
 sain baina uu     → сайн байна уу
 ```
@@ -38,7 +38,7 @@ at home, and rebuilds the engine so it can run natively on today's systems.
 - **Faithful.** The rules match the original Buuz, including vowel harmony
   (`o`/`u` become `ө`/`ү` after front vowels).
 - **Free and open.** The core and basic Windows and macOS typing are open
-  source under Apache 2.0.
+  source (MIT OR Apache-2.0; the ported core is Apache-2.0).
 
 ## Building the core
 
@@ -57,8 +57,12 @@ Security issues: see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). Portions are
-derived from the original Buuz, Copyright 2009 Odbayar Nyamtseren.
+New code is dual-licensed under [MIT](LICENSE-MIT) or
+[Apache-2.0](LICENSE-APACHE), at your option. The transliteration core in
+[`core/`](core/) is ported from the original Buuz (Copyright 2009 Odbayar
+Nyamtseren) and is Apache-2.0 only. See [LICENSE](LICENSE), [NOTICE](NOTICE)
+and [decision 0004](docs/decisions/0004-license-mit-or-apache-for-new-code.md).
+Paid add-ons can build on both without opening their own code.
 
 "Buuz 2.0" is an independent continuation and is not affiliated with or
 endorsed by the original author unless stated otherwise.

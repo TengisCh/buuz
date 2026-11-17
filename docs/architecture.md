@@ -14,7 +14,7 @@ direction; each phase gets its own detailed design when it starts.
    the typing path.
 4. **Reach.** Windows and macOS first, a web converter as the zero-install
    entry point and funnel, mobile later.
-5. **Sustainable.** Open core (free, Apache 2.0) with room for paid add-ons in
+5. **Sustainable.** Open core (free, MIT OR Apache-2.0; ported core Apache-2.0) with room for paid add-ons in
    a separate private repository.
 
 ## 2. The big decision: one shared core, or separate per platform?
@@ -70,7 +70,7 @@ platforms never need this.
 
 ```mermaid
 flowchart TB
-    subgraph Shared["Shared, open source (Apache 2.0)"]
+    subgraph Shared["Shared, open source (MIT / Apache-2.0)"]
         CORE["buuz-core (Rust)<br/>rules, vowel harmony,<br/>composition buffer"]
         FFI["buuz-ffi<br/>stable C ABI + generated header"]
         WASM["buuz-wasm<br/>wasm-bindgen wrapper"]
@@ -114,7 +114,7 @@ flowchart TB
 
 ### Repository layout (monorepo)
 
-```
+```text
 buuz/
 ├── core/                 buuz-core: pure Rust, no I/O, no dependencies
 ├── ffi/                  buuz-ffi: C ABI (cbindgen header), panic-safe
@@ -162,6 +162,7 @@ sequenceDiagram
     S->>C: process_key(Space)
     C-->>S: commit "гэр"
     S->>A: insert "гэр ", end composition
+```
 
 | Stage | Budget | How we keep it |
 | --- | --- | --- |
@@ -293,7 +294,7 @@ core free of I/O:
 
 ## 7. Open core boundary
 
-| Open source, this repo (Apache 2.0) | Paid, separate private repo |
+| Open source, this repo (MIT OR Apache-2.0; `core/` Apache-2.0) | Paid, separate private repo |
 | --- | --- |
 | `buuz-core`, `buuz-ffi`, `buuz-wasm` | Dictionary, spell suggestions, word prediction |
 | Windows and macOS input methods, basic typing | Enterprise installers (MSI for Intune/GPO, MDM pkg), admin policies |
@@ -379,6 +380,7 @@ with real users, and starts the download funnel before the apps are ready.
 
 | Date | Decision |
 | --- | --- |
-| 2026-11-17 | Ship as "Buuz 2.0", a credited continuation, Apache 2.0 |
+| 2026-11-17 | Ship as "Buuz 2.0", a credited continuation |
+| 2026-11-17 | New code MIT OR Apache-2.0; ported `core/` stays Apache-2.0 (decision 0004) |
 | 2026-11-17 | Open core: free engine and basic typing public; paid features in a private repo |
 | 2026-11-17 | One Rust core compiled natively per platform (WASM on web), native shells per platform (proposed in this document) |

@@ -12,12 +12,13 @@ record that supersedes the old one instead of editing history.
 | # | Decision | Status |
 |---|----------|--------|
 | [0001](0001-shared-rust-core-native-shells.md) | Shared Rust core, native shells, WASM for web | Accepted |
-| [0002](0002-apache-2-open-core.md) | Apache 2.0 for core and basic typing (open core) | Accepted |
+| [0002](0002-apache-2-open-core.md) | Apache 2.0 for core and basic typing (open core) | Amended by 0004 |
 | [0003](0003-native-speed-over-portability.md) | Native speed over portability | Accepted |
+| [0004](0004-license-mit-or-apache-for-new-code.md) | MIT OR Apache-2.0 for new code, Apache-2.0 for the ported core | Accepted |
 
 ## Template
 
-```
+```markdown
 # NNNN: Title
 Status: Proposed | Accepted | Superseded by NNNN
 Date: YYYY-MM-DD

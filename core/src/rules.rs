@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Copyright 2009 Odbayar Nyamtseren <odbayar.n@gmail.com> (original Buuz rules)
 // Rust port: Copyright 2026 the Buuz contributors
 //

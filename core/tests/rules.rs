@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 the Buuz contributors. Licensed under the Apache License,
 // Version 2.0. Expected values derive from the rule table and word-state
 // logic of the original Buuz IME (Composer.cpp) and its docs/table.html.

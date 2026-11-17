@@ -28,13 +28,20 @@ test in `core/tests/` before fixing it.
   cargo test
   ```
 
-- New source files carry the Apache 2.0 header used in `core/src/`.
+- New source files start with an SPDX line: `// SPDX-License-Identifier: Apache-2.0`
+  inside `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
 
 ## Licensing of contributions
 
-By submitting a pull request you agree that your contribution is licensed
-under the Apache License 2.0 (section 5 of the license). You keep your
-copyright. Please only submit code you wrote or have the right to submit.
+Unless you say otherwise, any contribution you submit:
+
+- to `core/` is licensed under the Apache License 2.0, because that code is
+  derived from the original Buuz;
+- anywhere else is dual-licensed under MIT OR Apache-2.0, as described in
+  `LICENSE`, without any additional terms or conditions.
+
+You keep your copyright. Please only submit code you wrote or have the right
+to submit.
 
 ## Conduct
 

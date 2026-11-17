@@ -1,6 +1,6 @@
 # 0002: Apache 2.0 for core and basic typing (open core)
 
-Status: Accepted
+Status: Accepted, amended by [0004](0004-license-mit-or-apache-for-new-code.md) (new code is MIT OR Apache-2.0)
 Date: 2026-11-17
 
 ## Context
