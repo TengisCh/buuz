@@ -9,7 +9,11 @@ fn eq(input: &str, want: &str) {
 }
 
 fn classic(input: &str, want: &str) {
-    assert_eq!(convert_with(input, &Options::classic()), want, "input {input:?}");
+    assert_eq!(
+        convert_with(input, &Options::classic()),
+        want,
+        "input {input:?}"
+    );
 }
 
 fn type_keys(c: &mut Composer, keys: &[Key]) {
