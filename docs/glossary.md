@@ -33,7 +33,7 @@ when a new concept appears; rename here first when a name changes.
 | Term | Meaning | In code |
 | --- | --- | --- |
 | Classic mode | The original 2009 Buuz behaviour, left to right, every smart feature off. Its output never changes | `Options::classic()` |
-| Smart mode | The default: classic rules plus the smart features the user has switched on | `Options::default()` |
+| Smart mode | The default: classic rules plus the smart features, all on by default, each with its own switch | `Options::smart()` |
 | Smart feature | One opt-out improvement inside smart mode: smart vowels, abbreviations, later autocorrect and completion | fields of `Options` |
 | Smart vowels | Look-ahead vowel harmony, ий/ы and the particle rule | `Options::smart_vowels` |
 | Abbreviation | A short Latin key sequence expanded at commit (`bn` to байна). Backspace right after undoes it | `Abbreviations` |
