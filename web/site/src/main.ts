@@ -6,6 +6,10 @@ import "./style.css";
 import init, { convert } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { setupLang, t } from "./i18n";
+import { inject } from "@vercel/analytics";
+
+// Initialize Vercel Web Analytics
+inject();
 
 setupLang();
 
