@@ -72,10 +72,29 @@ smartBox.addEventListener("change", () => {
   render();
 });
 
+// "Abbreviations" (on by default): bn + space or punctuation -> байна (never at the end of the text).
+const abbrBox = document.getElementById("abbr") as HTMLInputElement;
+let abbr = true;
+try {
+  abbr = localStorage.getItem("buuz.abbr") !== "off";
+} catch {
+  /* private mode: default on */
+}
+abbrBox.checked = abbr;
+abbrBox.addEventListener("change", () => {
+  abbr = abbrBox.checked;
+  try {
+    localStorage.setItem("buuz.abbr", abbr ? "on" : "off");
+  } catch {
+    /* private mode: don't remember */
+  }
+  render();
+});
+
 function render(): void {
   // convert_with() is microseconds even for long pastes, so run it synchronously
   // on every input event: no debounce, no frame delay.
-  cyr.value = ready ? convert_with(latin.value.normalize("NFC"), smart) : "";
+  cyr.value = ready ? convert_with(latin.value.normalize("NFC"), smart, abbr) : "";
 }
 
 const toast = document.getElementById("toast") as HTMLElement;
@@ -198,7 +217,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = ready ? convert_with(text, smart) : "";
+  cyr.placeholder = ready ? convert_with(text, smart, false) : "";
 }
 function typewriter(): void {
   let p = 0;

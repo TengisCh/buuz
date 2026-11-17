@@ -20,6 +20,9 @@
 //! [`Composer`] and renders [`Composer::preedit`] / [`Composer::cursor`],
 //! inserting any text returned as `commit`.
 
+use std::sync::Arc;
+
+use crate::abbrev::Abbreviations;
 use crate::rules::{rules, to_lower, Rule, II_FINAL_STEMS, KEEP_II, X_F, X_M, X_MF, X_MM};
 
 /// Maximum number of raw input characters in one composition (as original).
@@ -56,6 +59,10 @@ pub struct KeyOutcome {
     pub commit: Option<String>,
     /// Input was refused because the composition is full (original beeps).
     pub rejected: bool,
+    /// Number of characters (Unicode scalars) right before the caret that the
+    /// application must delete before showing the preedit. Non-zero only when
+    /// Backspace undoes an abbreviation expansion.
+    pub delete_before: usize,
 }
 
 /// True for characters that start/extend a composition: ASCII letters,
@@ -80,11 +87,18 @@ pub struct Options {
     /// choose ий or ы (`aaviin` -> аавын) and let the particle уу/үү follow the
     /// previous word. `false` is the original Buuz behaviour.
     pub smart_vowels: bool,
+    /// Abbreviations to expand when a word is committed by Space or
+    /// punctuation (`bn ` -> `байна `). `None` (the default, and for
+    /// [`Options::classic`]) keeps the core faithful: no expansion.
+    pub abbreviations: Option<Arc<Abbreviations>>,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { smart_vowels: true }
+        Options {
+            smart_vowels: true,
+            abbreviations: None,
+        }
     }
 }
 
@@ -93,8 +107,34 @@ impl Options {
     pub fn classic() -> Self {
         Options {
             smart_vowels: false,
+            abbreviations: None,
         }
     }
+}
+
+/// What Backspace needs to take back an expansion committed by Space.
+#[derive(Debug, Clone)]
+struct Undo {
+    /// The raw keys of the abbreviation.
+    raw: Vec<char>,
+    /// Characters to delete: the expansion plus the space.
+    delete: usize,
+    /// The previous-word gender the abbreviation was typed with.
+    prev_gender: Option<u8>,
+}
+
+/// Particle gender of expanded Cyrillic text: its last back vowel makes it
+/// masculine, its last front vowel feminine. Like the typed-word rule, a ү
+/// right after г is the suffix -гүй and is no evidence (байхгүй stays
+/// masculine, мэдэхгүй stays feminine through its э).
+fn text_gender(text: &str) -> Option<u8> {
+    let chars: Vec<char> = text.chars().map(to_lower).collect();
+    chars.iter().enumerate().rev().find_map(|(i, &c)| match c {
+        'а' | 'о' | 'у' | 'я' | 'ё' | 'ю' => Some(X_M),
+        'ү' if i > 0 && chars[i - 1] == 'г' => None,
+        'э' | 'ө' | 'ү' | 'е' => Some(X_F),
+        _ => None,
+    })
 }
 
 /// One matched rule position in the raw keys (scratch data of `read_to_comp`).
@@ -252,6 +292,12 @@ pub struct Composer {
     word_gender: u8,
     /// Gender of the word before the last space, if the last key was a space.
     prev_gender: Option<u8>,
+    /// The composition was re-seeded from Cyrillic (caret moved): never expands.
+    reseeded: bool,
+    /// Backspace just undid an expansion: this word will not expand again.
+    no_expand: bool,
+    /// Set right after an expansion committed by Space.
+    undo: Option<Undo>,
     /// Scratch buffer reused across keystrokes.
     tokens: Vec<Token>,
 }
@@ -275,6 +321,9 @@ impl Composer {
             opts,
             word_gender: X_M,
             prev_gender: None,
+            reseeded: false,
+            no_expand: false,
+            undo: None,
             tokens: Vec::new(),
         }
     }
@@ -284,9 +333,13 @@ impl Composer {
         self.opts = opts;
     }
 
-    /// Forget the previous word (the particle `uu` then stays masculine).
+    /// Forget the previous word (the particle `uu` then stays masculine) and
+    /// any pending undo. Shells must call this on any caret move or focus
+    /// change the composer did not see (a click, a window switch, an arrow key
+    /// sent while nothing was composed and handled elsewhere).
     pub fn clear_context(&mut self) {
         self.prev_gender = None;
+        self.undo = None;
     }
 
     pub fn is_composing(&self) -> bool {
@@ -313,6 +366,7 @@ impl Composer {
     pub fn wants_key(&self, key: Key) -> bool {
         match key {
             Key::Char(c) if is_input_char(c) => true,
+            Key::Backspace if self.undo.is_some() => true,
             _ if self.comp.is_empty() => false,
             Key::Backspace
             | Key::Delete
@@ -325,10 +379,13 @@ impl Composer {
         }
     }
 
-    /// Commit the composition (e.g. on focus loss). Also forgets the previous
-    /// word, since the next key may land in a different place.
+    /// Commit the composition as typed (e.g. on focus loss). This never
+    /// expands an abbreviation; Space and punctuation do, via `process_key`.
+    /// Also forgets the previous word and any pending undo, since the next key
+    /// may land in a different place.
     pub fn commit(&mut self) -> Option<String> {
         self.prev_gender = None;
+        self.undo = None;
         self.take_composition()
     }
 
@@ -338,17 +395,28 @@ impl Composer {
             return None;
         }
         let s = self.preedit();
-        self.reset();
+        self.clear_buffer();
         Some(s)
     }
 
     /// Discard the composition without inserting anything.
     pub fn cancel(&mut self) {
-        self.reset();
+        self.clear_buffer();
         self.prev_gender = None;
+        self.undo = None;
     }
 
+    /// Drop the composition and any pending undo (but keep the previous-word
+    /// context, as before).
     pub fn reset(&mut self) {
+        self.clear_buffer();
+        self.undo = None;
+    }
+
+    /// Empty the buffer; the previous-word context and the undo stay.
+    fn clear_buffer(&mut self) {
+        self.reseeded = false;
+        self.no_expand = false;
         self.read.clear();
         self.comp.clear();
         self.cursor = 0;
@@ -365,6 +433,7 @@ impl Composer {
     }
 
     fn comp_to_read(&mut self) {
+        self.reseeded = true;
         self.read = self.comp.clone();
     }
 
@@ -374,17 +443,64 @@ impl Composer {
         (back, self.read.len().saturating_sub(back))
     }
 
+    /// Commit the word at Space or punctuation, expanding an abbreviation if
+    /// one matches. Returns the text and the gender it leaves for the next
+    /// word. After a Space expansion the undo is armed (it needs the
+    /// previous-word gender, so this runs before the caller updates it).
+    fn finish_word(&mut self, space: bool) -> (Option<String>, Option<u8>) {
+        let expansion = match &self.opts.abbreviations {
+            Some(abbr) if !self.reseeded && !self.no_expand && !self.comp.is_empty() => {
+                abbr.lookup(&self.read)
+            }
+            _ => None,
+        };
+        match expansion {
+            Some(text) => {
+                let gender = text_gender(&text);
+                if space {
+                    self.undo = Some(Undo {
+                        raw: self.read.clone(),
+                        delete: text.chars().count() + 1,
+                        prev_gender: self.prev_gender,
+                    });
+                }
+                self.clear_buffer();
+                (Some(text), gender)
+            }
+            None => {
+                let gender = Some(self.word_gender);
+                (self.take_composition(), gender)
+            }
+        }
+    }
+
     /// Process one key. Ports `ImeProcessKey` + `ImeToAsciiEx`.
     pub fn process_key(&mut self, key: Key) -> KeyOutcome {
         let mut out = KeyOutcome::default();
+        // Only a key right after the expansion can undo it.
+        // Shift/CapsLock alone is not such a key.
+        let undo = self.undo.take();
+        if key == Key::Modifier {
+            self.undo = undo.clone();
+        }
+        if let (Key::Backspace, true, Some(u)) = (key, self.comp.is_empty(), undo) {
+            self.read = u.raw;
+            self.no_expand = true;
+            self.prev_gender = u.prev_gender;
+            self.recompose();
+            self.cursor = self.comp.len();
+            out.consumed = true;
+            out.delete_before = u.delete;
+            return out;
+        }
         if !self.wants_key(key) {
             // Not ours: finish any composition, let the key through.
-            let gender = self.word_gender;
-            out.commit = self.take_composition();
+            let (commit, gender) = self.finish_word(key == Key::Space);
+            out.commit = commit;
             // A space right after a word hands that word's gender to the next
             // one; repeated spaces keep it; any other key forgets it.
             match key {
-                Key::Space if out.commit.is_some() => self.prev_gender = Some(gender),
+                Key::Space if out.commit.is_some() => self.prev_gender = gender,
                 // Shift/CapsLock alone must not break the context.
                 Key::Space | Key::Modifier => {}
                 _ => self.prev_gender = None,
@@ -438,7 +554,7 @@ impl Composer {
             _ => {}
         }
         if self.comp.is_empty() {
-            self.reset(); // emptied by editing: cancel, as the original does
+            self.clear_buffer(); // emptied by editing: cancel, as the original does
         }
         out
     }
@@ -472,6 +588,8 @@ pub fn convert_with(input: &str, opts: &Options) -> String {
             out.push(ch);
         }
     }
+    // The end of the text is not a typed Space or punctuation, so a trailing
+    // abbreviation stays as typed (бн until a Space follows), like `commit`.
     if let Some(s) = c.commit() {
         out.push_str(&s);
     }

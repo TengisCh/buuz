@@ -13,11 +13,22 @@ pub fn convert(input: &str) -> String {
     buuz_core::convert(input)
 }
 
-/// Like `convert`, with smart vowel harmony switched on or off
-/// (`false` is the classic left-to-right behaviour of the original Buuz).
+/// Like `convert`, with smart vowel harmony and abbreviation expansion switched
+/// on or off (`false, false` is the classic left-to-right behaviour of the
+/// original Buuz; `bn` -> `байна` needs `abbreviations`).
 #[wasm_bindgen]
-pub fn convert_with(input: &str, smart_vowels: bool) -> String {
-    buuz_core::convert_with(input, &buuz_core::Options { smart_vowels })
+pub fn convert_with(input: &str, smart_vowels: bool, abbreviations: bool) -> String {
+    let opts = buuz_core::Options {
+        smart_vowels,
+        abbreviations: abbreviations.then(buuz_core::Abbreviations::builtin),
+    };
+    buuz_core::convert_with(input, &opts)
+}
+
+/// The built-in abbreviation list as text, one `abbreviation = expansion` per line.
+#[wasm_bindgen]
+pub fn abbreviation_list() -> String {
+    buuz_core::Abbreviations::builtin().to_text()
 }
 
 #[cfg(test)]
@@ -29,10 +40,21 @@ mod tests {
 
     #[test]
     fn convert_with_switches_smart_vowels() {
-        assert_eq!(super::convert_with("unee", true), "үнээ");
-        assert_eq!(super::convert_with("unee", false), "унээ");
-        assert_eq!(super::convert_with("irsen uu", true), "ирсэн үү");
-        assert_eq!(super::convert_with("irsen uu", false), "ирсэн уу");
+        assert_eq!(super::convert_with("unee", true, false), "үнээ");
+        assert_eq!(super::convert_with("unee", false, false), "унээ");
+        assert_eq!(super::convert_with("irsen uu", true, false), "ирсэн үү");
+        assert_eq!(super::convert_with("irsen uu", false, false), "ирсэн уу");
+    }
+
+    #[test]
+    fn convert_with_switches_abbreviations() {
+        assert_eq!(super::convert_with("bn uu", true, true), "байна уу");
+        // Only a typed Space or punctuation expands; the end of the text does not.
+        assert_eq!(super::convert_with("bn ", true, true), "байна ");
+        assert_eq!(super::convert_with("bn.", true, true), "байна.");
+        assert_eq!(super::convert_with("bn", true, true), "бн");
+        assert_eq!(super::convert_with("bn ", true, false), "бн ");
+        assert!(super::abbreviation_list().contains("bn = байна\n"));
     }
 
     /// Every typewriter phrase on the page must convert exactly as written.

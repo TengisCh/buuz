@@ -24,6 +24,9 @@ const mn = {
   howTo: "Яаж бичих вэ?",
   howToBody:
     "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай. Үгийн хойно орох эгшгийг ч харж сонгодог тул <kbd>unee</kbd> гэвэл үнээ болно. Эр үгэнд <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий гаргах бол <kbd>ii'</kbd>.",
+  abbreviations: "Товчлол (bn → байна)",
+  abbreviationsHint:
+    "Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.",
   smartVowels: "Ухаалаг эгшиг",
   smartVowelsHint:
     "Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.",
@@ -113,6 +116,9 @@ const en: Record<Key, string> = {
   howTo: "How to type",
   howToBody:
     "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү. Buuz also looks ahead in the word, so <kbd>unee</kbd> gives үнээ, and <kbd>ii</kbd> becomes ы in masculine words (<kbd>aaviin</kbd> gives аавын). To force ий, type <kbd>ii'</kbd>.",
+  abbreviations: "Abbreviations (bn → байна)",
+  abbreviationsHint:
+    "A short form expands when you type a space or punctuation after it (bn then a space gives байна). On this website, deleting that space brings the abbreviation back; in the upcoming desktop keyboards, Backspace right after the space undoes it. Turn the checkbox off to never expand.",
   smartVowels: "Smart vowels",
   smartVowelsHint:
     "Picks vowels by looking ahead in the word (unee gives үнээ, aaviin gives аавын). Turn off for the original Buuz rules.",
