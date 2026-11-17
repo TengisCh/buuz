@@ -2,13 +2,20 @@ name: web
 
 on:
   push:
+    branches: [main]
     paths: ["web/**", "core/**", ".github/workflows/web.yml"]
   pull_request:
     paths: ["web/**", "core/**", ".github/workflows/web.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web/site
