@@ -58,11 +58,44 @@ function render(): void {
   cyr.value = ready ? convert(latin.value) : "";
 }
 
+const toast = document.getElementById("toast") as HTMLElement;
+const clearX = document.getElementById("clear-x") as HTMLButtonElement;
+const copyX = document.getElementById("copy-x") as HTMLButtonElement;
+
+// Phones: Google Translate-style. Both boxes grow with their text (capped), so
+// input, result and the copy button stay above the on-screen keyboard.
+const phone = matchMedia("(max-width: 640px)");
+function fit(): void {
+  for (const el of [latin, cyr]) {
+    el.rows = phone.matches ? 2 : 7;
+    if (!phone.matches) {
+      el.style.height = "";
+      continue;
+    }
+    el.style.height = "auto";
+    const cap = Math.round((window.visualViewport?.height ?? innerHeight) * (el === latin ? 0.3 : 0.32));
+    el.style.height = Math.min(el.scrollHeight + 2, Math.max(cap, 96)) + "px";
+  }
+  clearX.hidden = latin.value === "";
+}
+phone.addEventListener("change", fit);
+window.visualViewport?.addEventListener("resize", () => {
+  fit();
+  // Keep the toast just above the keyboard.
+  const vv = window.visualViewport!;
+  toast.style.bottom = Math.max(16, innerHeight - vv.height - vv.offsetTop + 16) + "px";
+});
+
 let statusTimer: number | undefined;
 function say(msg: string): void {
   status.textContent = msg;
+  toast.textContent = "✓ " + msg;
+  toast.classList.add("show");
   window.clearTimeout(statusTimer);
-  statusTimer = window.setTimeout(() => (status.textContent = ""), 1800);
+  statusTimer = window.setTimeout(() => {
+    status.textContent = "";
+    toast.classList.remove("show");
+  }, 1800);
 }
 
 async function copy(): Promise<void> {
@@ -81,15 +114,19 @@ async function copy(): Promise<void> {
 
 latin.addEventListener("input", () => {
   render();
+  fit();
   syncCaret();
   if (!mascot.classList.contains("puff")) animate("puff");
 });
 mascot.addEventListener("animationend", () => mascot.classList.remove("puff", "hop"));
 copyBtn.addEventListener("click", () => void copy());
+copyX.addEventListener("click", () => void copy());
+clearX.addEventListener("click", () => clearBtn.click());
 clearBtn.addEventListener("click", () => {
   latin.value = "";
   render();
   syncCaret();
+  fit();
   latin.focus();
 });
 document.addEventListener("keydown", (e) => {
@@ -111,10 +148,34 @@ for (let i = pool.length - 1; i > 0; i--) {
 }
 // While the demo types, hide the real caret so there's only one cursor.
 // The moment there is real text, the native caret comes back.
+// While the box has focus the ghost text is hidden entirely: it is distracting
+// when you are about to type. It comes back on blur if the box is still empty.
+// Always read the live focus state: autofocus can land before or after this
+// script runs (it differs between browsers), so a cached flag can go stale.
+const isFocused = (): boolean => document.activeElement === latin;
 function syncCaret(): void {
-  latin.classList.toggle("demo", latin.value === "" && !reducedMotion);
+  latin.classList.toggle("demo", latin.value === "" && !reducedMotion && !isFocused());
+}
+latin.addEventListener("focus", () => {
+  latin.placeholder = "";
+  cyr.placeholder = "";
+  syncCaret();
+});
+latin.addEventListener("blur", () => {
+  syncCaret();
+  if (reducedMotion && latin.value === "" && ready) showGhost(pool[0], false);
+});
+// Autofocus can have happened before this script ran: nothing to show then.
+if (isFocused()) {
+  latin.placeholder = "";
+  cyr.placeholder = "";
 }
 function showGhost(text: string, caret: boolean): void {
+  if (isFocused()) {
+    latin.placeholder = "";
+    cyr.placeholder = "";
+    return syncCaret();
+  }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
   cyr.placeholder = ready ? convert(text) : "";
@@ -125,9 +186,24 @@ function typewriter(): void {
   let n = 0;
   let phase: "type" | "hold" | "erase" | "gap" = "type";
   let blinks = 0;
+  let paused = false;
   const next = (ms: number) => window.setTimeout(step, ms);
   function step(): void {
-    if (latin.value !== "" || document.hidden) return void next(600);
+    if (latin.value !== "" || document.hidden || isFocused()) {
+      // Paused (focus, text, hidden tab): the next run restarts from the first
+      // letter of a fresh phrase, with the boxes empty, like real typing.
+      paused = true;
+      return void next(600);
+    }
+    if (paused) {
+      paused = false;
+      n = 0;
+      chars = [];
+      phase = "type";
+      blinks = 0;
+      p++;
+      showGhost("", true);
+    }
     if (chars.length === 0) chars = Array.from(pool[p % pool.length]);
     switch (phase) {
       case "type":
@@ -157,6 +233,7 @@ function typewriter(): void {
 init({ module_or_path: wasmUrl }).then(() => {
   ready = true;
   render(); // text typed while the module was loading
+  fit();
   if (reducedMotion) showGhost(pool[0], false);
   else typewriter();
 });
@@ -195,10 +272,18 @@ fb.addEventListener("submit", async (e) => {
         lang: document.documentElement.lang,
       }),
     });
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string; number?: number };
     if (res.ok) {
       fb.reset();
       fbSay(t("fbThanks"), true);
+      if (data.url && data.url.startsWith("https://github.com/TengisCh/buuz/issues/")) {
+        const a = document.createElement("a");
+        a.href = data.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = ` ${t("fbIssue")}${data.number ? ` #${data.number}` : ""}`;
+        fbStatus.append(a);
+      }
     } else {
       fbSay(t(FB_ERRORS[data.error ?? ""] ?? "fbError"), false);
     }
@@ -208,3 +293,65 @@ fb.addEventListener("submit", async (e) => {
     fbSend.disabled = false;
   }
 });
+
+// Floating feedback widget: a chat button bottom-right opens a small panel.
+// Non-modal: the page stays usable; Esc or a click outside closes it.
+const fab = document.getElementById("fb-fab") as HTMLButtonElement;
+const panel = document.getElementById("fb-panel") as HTMLElement;
+const fbMsg = document.getElementById("fb-msg") as HTMLTextAreaElement;
+let lastFocus: HTMLElement | null = null;
+function openPanel(): void {
+  if (!panel.hidden) return;
+  lastFocus = document.activeElement as HTMLElement | null;
+  panel.hidden = false;
+  fab.setAttribute("aria-expanded", "true");
+  fab.classList.add("open");
+  requestAnimationFrame(() => panel.classList.add("show"));
+  (panel.querySelector('[role="tab"][aria-selected="true"]')?.id === "tab-fb" ? fbMsg : (panel.querySelector(".mail") as HTMLElement)).focus();
+}
+function closePanel(restore = true): void {
+  if (panel.hidden) return;
+  panel.classList.remove("show");
+  panel.hidden = true;
+  fab.setAttribute("aria-expanded", "false");
+  fab.classList.remove("open");
+  if (restore) (lastFocus ?? fab).focus();
+}
+fab.addEventListener("click", () => (panel.hidden ? openPanel() : closePanel()));
+panel.querySelector(".fb-close")?.addEventListener("click", () => closePanel());
+for (const el of document.querySelectorAll("[data-open-feedback]")) el.addEventListener("click", openPanel);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !panel.hidden) closePanel();
+});
+document.addEventListener("pointerdown", (e) => {
+  const target = e.target as Node;
+  if (!panel.hidden && !panel.contains(target) && !fab.contains(target)) closePanel(false);
+});
+
+// Tabs: Feedback (public GitHub issue) / Contact (private email).
+const tabs = Array.from(panel.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+function selectTab(tab: HTMLButtonElement, focus = false): void {
+  for (const t of tabs) {
+    const on = t === tab;
+    t.setAttribute("aria-selected", String(on));
+    t.tabIndex = on ? 0 : -1;
+    (document.getElementById(t.getAttribute("aria-controls") ?? "") as HTMLElement).hidden = !on;
+  }
+  if (focus) tab.focus();
+}
+for (const tab of tabs) {
+  tab.addEventListener("click", () => selectTab(tab));
+  tab.addEventListener("keydown", (e) => {
+    const i = tabs.indexOf(tab);
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      selectTab(tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length], true);
+    }
+  });
+}
+
+// Footer links on other pages point to /?feedback=1 to open the panel here.
+if (new URLSearchParams(location.search).has("feedback")) {
+  history.replaceState(null, "", location.pathname);
+  openPanel();
+}

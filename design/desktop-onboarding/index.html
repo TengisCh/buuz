@@ -1,0 +1,507 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
+<!--
+  Buuz 2.0 desktop onboarding + settings mockups (static, not the app).
+  Spec: docs/desktop-onboarding.md
+  URL params: ?os=mac|win  &lang=mn|en  &screen=welcome|privacy|enable|enable-done|shortcut|try|harmony|import|done|home|typing|menu
+  Without &screen it shows every screen as a gallery.
+  Previews: node design/desktop-onboarding/render.js
+-->
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buuz desktop onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff; --card: #fffaf1; --dough: #fff3e0; --fg: #1e1838; --muted: #6f5f55;
+  --line: #f3e6d2; --press: #eedcc2; --sun: #ffd84d; --amber: #ffb648; --ember: #ff6a3d;
+  --sun-press: #e9a52f; --accent: #2e6bff; --accent-press: #1638b8; --ok: #1f9d55; --blush: #ff8e8e;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Nunito, system-ui, sans-serif; color: var(--fg); background: #efe6da; }
+.gallery { display: flex; flex-wrap: wrap; gap: 28px; padding: 28px; }
+.stage { width: 860px; height: 620px; display: grid; place-items: center; position: relative; overflow: hidden;
+  background: radial-gradient(120% 90% at 20% 0%, #ffe3b8 0%, #ffc59a 35%, #e89a7a 70%, #8a6a9a 100%); }
+.stage.win { background: radial-gradient(120% 90% at 80% 10%, #cfe0ff 0%, #9fb8ee 40%, #6b7fc4 75%, #3b3f7a 100%); }
+
+/* ---------- window chrome ---------- */
+.window { width: 760px; height: 540px; background: var(--bg); border-radius: 14px; position: relative; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 30px 60px rgba(40,20,10,.28); display: flex; flex-direction: column; }
+.win .window { border-radius: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,.12), 0 24px 48px rgba(10,20,60,.35); }
+.titlebar { height: 38px; flex: none; display: flex; align-items: center; padding: 0 14px; gap: 8px; }
+.mac .titlebar .dot { width: 12px; height: 12px; border-radius: 50%; }
+.mac .dot.r { background: #ff5f57; } .mac .dot.y { background: #febc2e; } .mac .dot.g { background: #d9d0c4; }
+.win .titlebar { padding: 0 0 0 14px; font: 600 12px "Segoe UI", system-ui, sans-serif; color: #333; gap: 8px; }
+.win .titlebar img { width: 16px; height: 16px; }
+.win .titlebar .caps { margin-left: auto; display: flex; height: 100%; }
+.win .titlebar .caps span { width: 46px; display: grid; place-items: center; font-size: 13px; color: #444; }
+.win .titlebar .caps span:last-child:hover { background: #c42b1c; }
+.lang { margin-left: auto; display: flex; gap: 2px; background: var(--card); border-radius: 999px; padding: 3px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.win .lang { margin-left: 0; margin-right: 8px; }
+.lang b { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; color: var(--muted); }
+.lang b.on { background: var(--fg); color: #fff; }
+
+/* ---------- onboarding layout ---------- */
+.body { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 56px 0; text-align: center; min-height: 0; }
+.footer { height: 76px; flex: none; display: flex; align-items: center; padding: 0 28px; gap: 12px; }
+.dots { display: flex; gap: 7px; margin: 0 auto; }
+.dots i { width: 8px; height: 8px; border-radius: 99px; background: var(--line); }
+.dots i.done { background: var(--amber); } .dots i.on { width: 26px; background: var(--ember); }
+.btn { font: 800 15px Nunito, sans-serif; border-radius: 999px; padding: 11px 22px; background: var(--card); color: var(--fg); box-shadow: 0 4px 0 var(--press); white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+.btn.primary { background: var(--accent); color: #fff; box-shadow: 0 4px 0 var(--accent-press); }
+.btn.ghost { background: none; box-shadow: none; color: var(--muted); }
+.btn.big { font-size: 17px; padding: 14px 34px; }
+.spacer { width: 120px; }
+h1 { font-size: 30px; font-weight: 900; margin: 6px 0 6px; letter-spacing: -.01em; line-height: 1.15; }
+.sub { color: var(--muted); font-size: 16px; font-weight: 700; margin: 0 0 18px; }
+.mascot { width: 92px; height: 92px; border-radius: 26px; box-shadow: 0 6px 0 rgba(200,80,40,.25); }
+.mascot.xl { width: 168px; height: 168px; border-radius: 44px; box-shadow: 0 10px 0 rgba(200,80,40,.25); }
+.mascot.sm { width: 64px; height: 64px; border-radius: 18px; }
+.card { background: var(--card); border-radius: 18px; box-shadow: inset 0 0 0 2px var(--line), 0 5px 0 var(--press); padding: 16px 18px; text-align: left; }
+kbd, .key { font: 700 15px "JetBrains Mono", monospace; background: #fff; color: var(--fg); border-radius: 9px; padding: 5px 10px; box-shadow: inset 0 0 0 1.5px var(--line), 0 3px 0 var(--press); display: inline-flex; align-items: center; gap: 4px; min-width: 32px; justify-content: center; }
+.key.lit { background: var(--sun); box-shadow: inset 0 0 0 1.5px var(--sun-press), 0 1px 0 var(--sun-press); transform: translateY(2px); }
+.arrow { color: var(--muted); font-weight: 900; }
+.cy { font-weight: 900; color: var(--ember); }
+
+/* welcome */
+.welcome .body { justify-content: center; padding-bottom: 8px; }
+.steam { position: relative; }
+.steam::before { content: none; position: absolute; left: 50%; top: -34px; transform: translateX(-50%); font: 900 30px Nunito; color: var(--ember); opacity: .85; }
+.welcome h1 { font-size: 40px; margin-top: 26px; }
+.demo-line { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 4px 0 12px; font-size: 20px; font-weight: 800; }
+.demo-line .lat { font-family: "JetBrains Mono", monospace; font-size: 17px; color: var(--muted); background: var(--card); padding: 6px 12px; border-radius: 10px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.credit { font-size: 12px; color: var(--muted); font-weight: 700; margin-top: 14px; }
+.platforms { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--muted); background: var(--card); border-radius: 999px; padding: 5px 12px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.pill svg { width: 14px; height: 14px; }
+
+/* privacy */
+.promises { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 600px; }
+.promise { display: flex; gap: 12px; align-items: center; padding: 14px 16px; }
+.promise .ico { font-size: 28px; width: 40px; text-align: center; flex: none; }
+.promise b { display: block; font-size: 15px; font-weight: 900; }
+.promise span { font-size: 13px; color: var(--muted); font-weight: 700; }
+
+/* enable */
+.status { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 520px; padding: 16px 18px; }
+.status .name { font-size: 18px; font-weight: 900; }
+.status .name small { display: block; font-size: 13px; color: var(--muted); font-weight: 700; }
+.badge { margin-left: auto; font-size: 13px; font-weight: 900; border-radius: 999px; padding: 6px 12px; }
+.badge.wait { background: #fff0d6; color: #a0661a; }
+.badge.ok { background: #dff5e7; color: var(--ok); }
+.path { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; max-width: 600px; margin-top: 4px; }
+.path .crumb { font-size: 13px; font-weight: 800; background: #fff; border-radius: 8px; padding: 5px 9px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.or { font-size: 13px; color: var(--muted); font-weight: 800; margin: 18px 0 10px; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 520px; }
+.or::before, .or::after { content: ""; flex: 1; height: 2px; background: var(--line); }
+.note { font-size: 12.5px; color: var(--muted); font-weight: 700; margin-top: 12px; }
+
+/* shortcut */
+.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 620px; }
+.choice { padding: 14px 12px 12px; text-align: center; position: relative; }
+.choice.on { box-shadow: inset 0 0 0 3px var(--accent), 0 5px 0 var(--accent-press); background: #f3f7ff; }
+.choice .keys { display: flex; gap: 6px; justify-content: center; align-items: center; height: 40px; }
+.choice b { display: block; font-size: 13.5px; margin-top: 8px; font-weight: 900; }
+.choice span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.rec { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--ember); color: #fff; font-size: 11px; font-weight: 900; border-radius: 99px; padding: 2px 9px; white-space: nowrap; }
+.live { margin-top: 20px; display: flex; gap: 14px; align-items: center; padding: 12px 18px; }
+.mode { display: inline-flex; align-items: center; gap: 6px; font-weight: 900; font-size: 15px; padding: 6px 12px; border-radius: 10px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); }
+.mode.on { background: var(--fg); color: #fff; box-shadow: none; }
+.mode img { width: 18px; height: 18px; border-radius: 5px; }
+
+/* try */
+.chat { width: 100%; max-width: 560px; background: #fff; border-radius: 18px; box-shadow: inset 0 0 0 2px var(--line), 0 5px 0 var(--press); overflow: hidden; text-align: left; }
+.chat .head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 2px solid var(--line); font-weight: 900; font-size: 14px; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(160deg, #ffd1b8, #ff9e80); display: grid; place-items: center; font-size: 16px; }
+.msgs { padding: 14px; display: flex; flex-direction: column; gap: 8px; height: 118px; }
+.bubble { max-width: 70%; padding: 8px 12px; border-radius: 16px; font-size: 15px; font-weight: 700; }
+.bubble.them { background: var(--dough); border-bottom-left-radius: 4px; align-self: flex-start; }
+.bubble.me { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+.compose { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-top: 2px solid var(--line); }
+.field { flex: 1; background: var(--card); border-radius: 999px; padding: 9px 16px; font-size: 16px; font-weight: 700; box-shadow: inset 0 0 0 2px var(--accent); }
+.field u { text-decoration-color: var(--ember); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.caret { display: inline-block; width: 2px; height: 18px; background: var(--fg); vertical-align: -3px; margin-left: 1px; }
+.send { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 900; }
+.tasks { display: flex; gap: 8px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
+.task { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; font-weight: 800; background: var(--card); border-radius: 999px; padding: 6px 14px 6px 8px; box-shadow: inset 0 0 0 1.5px var(--line); }
+.task .ck { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); }
+.task.done { color: var(--ok); } .task.done .ck { background: var(--ok); color: #fff; box-shadow: none; }
+.task.now { box-shadow: inset 0 0 0 2px var(--amber); }
+.task code { font: 700 13px "JetBrains Mono", monospace; color: var(--muted); }
+
+/* harmony */
+.tips { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 640px; }
+.tip h3 { margin: 0 0 4px; font-size: 16px; font-weight: 900; }
+.tip p { margin: 0 0 12px; font-size: 13px; color: var(--muted); font-weight: 700; }
+.ex { display: flex; align-items: center; gap: 8px; margin: 7px 0; font-size: 18px; }
+.ex code { font: 700 14px "JetBrains Mono", monospace; color: var(--muted); min-width: 74px; }
+.ex mark { background: var(--sun); color: var(--fg); border-radius: 4px; padding: 0 2px; }
+.keymap { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.keymap div { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 900; }
+
+/* import */
+.imports { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 600px; }
+.imp { text-align: center; padding: 18px; }
+.imp .big { font-size: 34px; }
+.imp b { display: block; font-size: 16px; font-weight: 900; margin: 6px 0 4px; }
+.imp span { display: block; font-size: 13px; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
+.paste { font: 600 13px "JetBrains Mono", monospace; color: var(--muted); background: #fff; border-radius: 10px; padding: 9px 12px; box-shadow: inset 0 0 0 1.5px var(--line); text-align: left; }
+
+/* done */
+.done .body { justify-content: center; }
+.confetti { position: absolute; inset: 38px 0 auto 0; height: 200px; pointer-events: none; }
+.confetti i { position: absolute; width: 9px; height: 14px; border-radius: 3px; }
+.recap { display: flex; gap: 12px; margin: 6px 0 4px; }
+.recap .card { display: flex; gap: 8px; align-items: center; padding: 10px 14px; font-weight: 900; font-size: 14px; }
+.pointer { position: absolute; top: 10px; right: 120px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900; color: var(--fg); background: var(--sun); padding: 6px 12px; border-radius: 999px; box-shadow: 0 3px 0 var(--sun-press); }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--muted); margin-top: 14px; }
+.check i { width: 20px; height: 20px; border-radius: 6px; background: var(--accent); color: #fff; font-style: normal; font-size: 13px; display: grid; place-items: center; }
+
+/* ---------- settings window ---------- */
+.settings .window { flex-direction: column; }
+.split { flex: 1; display: flex; min-height: 0; }
+.side { width: 196px; flex: none; background: var(--card); padding: 6px 10px 12px; display: flex; flex-direction: column; gap: 2px; border-right: 2px solid var(--line); }
+.side .brand { display: flex; align-items: center; gap: 8px; padding: 2px 8px 14px; font-weight: 900; font-size: 17px; }
+.side .brand img { width: 28px; height: 28px; border-radius: 8px; }
+.side .brand sup { color: var(--ember); font-size: 10px; }
+.nav { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; font-size: 14px; font-weight: 800; color: var(--muted); }
+.nav .e { width: 20px; text-align: center; }
+.nav.on { background: #fff; color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--line), 0 2px 0 var(--press); }
+.side .grow { flex: 1; }
+.main { flex: 1; padding: 6px 26px 18px; overflow: hidden; text-align: left; }
+.main h2 { font-size: 24px; font-weight: 900; margin: 4px 0 14px; }
+.hello { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.hello h2 { margin: 0; }
+.hello span { color: var(--muted); font-weight: 700; font-size: 14px; }
+.row3 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; margin-bottom: 12px; }
+.mini h4 { margin: 0 0 8px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.cheat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px 10px; }
+.cheat div { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; }
+.cheat kbd { font-size: 12px; padding: 3px 6px; min-width: 26px; border-radius: 7px; }
+.trybox { background: #fff; border-radius: 12px; padding: 10px 12px; box-shadow: inset 0 0 0 2px var(--line); font-size: 15px; font-weight: 700; color: var(--muted); }
+.setting { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-bottom: 2px solid var(--line); }
+.setting:last-child { border-bottom: 0; }
+.setting .e { font-size: 22px; width: 30px; text-align: center; }
+.setting b { display: block; font-size: 15px; font-weight: 900; }
+.setting span { font-size: 12.5px; color: var(--muted); font-weight: 700; }
+.setting .r { margin-left: auto; flex: none; }
+.toggle { width: 44px; height: 26px; border-radius: 99px; background: var(--press); position: relative; display: block; }
+.toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.toggle.on { background: var(--accent); } .toggle.on::after { left: 21px; }
+.soon { font-size: 11px; font-weight: 900; background: #fff0d6; color: #a0661a; border-radius: 99px; padding: 3px 8px; }
+.group { padding: 0; margin-bottom: 12px; }
+
+/* ---------- menu ---------- */
+.menubar { position: absolute; top: 0; left: 0; right: 0; height: 30px; background: rgba(255,255,255,.55); backdrop-filter: blur(20px); display: flex; align-items: center; padding: 0 14px; gap: 16px; font: 600 13px -apple-system, system-ui, sans-serif; color: #222; }
+.menubar .r { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+.menubar .im { background: rgba(0,0,0,.14); border-radius: 5px; padding: 2px 6px; display: inline-flex; align-items: center; }
+.menubar .im svg { width: 16px; height: 16px; }
+.dropdown { position: absolute; top: 34px; right: 128px; width: 290px; background: rgba(255,251,245,.94); backdrop-filter: blur(30px); border-radius: 12px; padding: 6px; box-shadow: 0 0 0 1px rgba(0,0,0,.1), 0 18px 40px rgba(40,20,10,.3); font-size: 14px; font-weight: 700; }
+.mi { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 7px; }
+.mi .e { width: 20px; text-align: center; }
+.mi .k { margin-left: auto; color: var(--muted); font: 600 12px "JetBrains Mono", monospace; }
+.mi.hi { background: var(--accent); color: #fff; } .mi.hi .k { color: #dfe7ff; }
+.mi.head { gap: 10px; padding: 8px 10px 10px; }
+.mi.head img { width: 34px; height: 34px; border-radius: 10px; }
+.mi.head b { display: block; font-weight: 900; font-size: 15px; }
+.mi.head span { font-size: 12px; color: var(--ok); font-weight: 800; }
+.sep { height: 1.5px; background: rgba(0,0,0,.08); margin: 5px 8px; }
+.mi.dim { color: #8d8279; font-size: 12px; font-weight: 800; padding: 4px 10px; }
+.taskbar { position: absolute; bottom: 0; left: 0; right: 0; height: 44px; background: rgba(240,244,252,.8); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; gap: 12px; font: 600 12px "Segoe UI", system-ui, sans-serif; color: #222; }
+.taskbar .ime { display: flex; flex-direction: column; align-items: center; line-height: 1.1; padding: 4px 8px; border-radius: 6px; background: rgba(0,0,0,.07); }
+.taskbar .ime b { font-size: 12px; }
+.win .dropdown { top: auto; bottom: 52px; right: 70px; border-radius: 8px; font-family: Nunito, "Segoe UI", sans-serif; }
+.caption { position: absolute; left: 22px; bottom: 18px; color: #fff; font-weight: 900; font-size: 13px; text-shadow: 0 1px 3px rgba(0,0,0,.35); max-width: 380px; text-align: left; }
+.win .caption { bottom: 60px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const P = new URLSearchParams(location.search);
+const OS = P.get('os') || 'mac';
+const L = P.get('lang') || 'mn';
+const ONE = P.get('screen');
+const ICON = '../../brand/icons/buuz-buddy-icon.svg';
+const SMALL = '../../brand/icons/buuz-buddy-small.svg';
+
+const APPLE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 4.9c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>';
+const WIN = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.5v7H3zM11 4.4 21 3v8.5H11zM3 12.5h7v7L3 18.5zM11 12.5h10V21l-10-1.4z"/></svg>';
+const GH = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.4 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>';
+const BGLYPH = '<svg viewBox="0 0 16 16"><text x="8" y="13" text-anchor="middle" font-family="Nunito" font-weight="900" font-size="14" fill="#222">Б</text></svg>';
+
+const mac = OS === 'mac';
+const T = {
+  mn: {
+    welcomeTitle: 'Латинаар бич,<br>кирилл болоод гарна',
+    welcomeSub: 'Бүх апп дотор. Интернэтгүй. Шууд.',
+    start: 'Эхлэх', next: 'Цааш', back: 'Буцах', skip: 'Алгасах',
+    credit: 'Нямцэрэнгийн Одбаярын Buuz-ийн үргэлжлэл · нээлттэй эх',
+    privTitle: 'Бичсэн зүйл тань зөвхөн танд',
+    privSub: 'Buuz танай компьютер дээр л ажиллана.',
+    p1: ['📴', 'Интернэт хэрэггүй', 'Бүх зүйл энэ компьютер дээр'],
+    p2: ['🙈', 'Товчлуур хадгалахгүй', 'Юу ч бичлэгдэхгүй, илгээгдэхгүй'],
+    p3: ['👤', 'Бүртгэл хэрэггүй', 'Нэвтрэх, имэйл, нууц үг үгүй'],
+    p4: ['🔐', 'Нууц үгэнд унтарна', 'Нууц үгийн талбарт оролцохгүй'],
+    gotIt: 'Ойлголоо',
+    enableTitle: mac ? 'Buuz-ийг гарын жагсаалтад нэмье' : 'Buuz-ийг гарын жагсаалтад нэмье',
+    enableSub: 'Нэг товшилт. Дараа нь бүх апп дотор бичнэ.',
+    imName: 'Buuz', imLang: 'Монгол · оролтын хэрэгсэл',
+    wait: '⏳ Хүлээж байна', ok: '✅ Нэмэгдлээ',
+    add: 'Нэмэх', openSettings: 'Тохиргоо нээх', orManual: 'эсвэл өөрөө',
+    enableNote: mac ? 'macOS зөвшөөрөл асууж магадгүй. «OK» дарна уу.' : 'Монгол хэл байхгүй бол өөрөө нэмэгдэнэ.',
+    added: 'Болчихлоо! 🎉',
+    keyTitle: 'Солих товчоо сонго',
+    keySub: 'Монгол ⇄ Латин хооронд нэг товчоор',
+    keyOpts: mac
+      ? [['🌐', 'fn', 'Глобус товч', 'Шинэ Mac-д'], ['⌃', 'Space', 'Control + Space', 'Сонгодог'], ['⇪', '', 'Caps Lock', 'Нэг товшилт']]
+      : [['⊞', 'Space', 'Win + Space', 'Windows-ийн'], ['Ctrl', 'Space', 'Ctrl + Space', 'Buuz асаах/унтраах'], ['Alt', 'Shift', 'Alt + Shift', 'Сонгодог']],
+    rec: 'Санал болгох', tryNow: 'Одоо дараад үз 👉', works: '✅ Ажиллаж байна!',
+    tryTitle: 'Бичээд үз',
+    trySub: 'Латинаар бич, Buuz өөрөө хөрвүүлнэ.',
+    chatName: 'Ээж', chatThem: 'Миний хүү юу хийж байна? 😊', chatMe: 'Сайн байна уу ээжээ',
+    typing: 'баярлала', tasks: [['сайн байна уу', 'sain baina uu', 'done'], ['баярлалаа', 'bayarlalaa', 'now'], ['өнөөдөр', 'qnqqdqr', '']],
+    harmTitle: '💡 Нэг жижиг заль',
+    harmSub: 'o, u хоёр үгэндээ тааруулж өөрөө өөрчлөгдөнө.',
+    h1: 'Эгшиг өөрөө зохицно', h1p: 'Үгэнд э, ө, ү байвал o → ө, u → ү',
+    h2: 'Заавал ө, ү хэрэгтэй бол', h2p: 'Үгийн эхэнд эсвэл хүссэн үедээ',
+    importTitle: 'Вэб дээр тохируулсан уу?',
+    importSub: 'Тохиргоогоо нэг товшилтоор авчир. Хүсэхгүй бол алгас.',
+    i1: ['🔗', 'Вэбээс илгээх', 'buuz.thetengis.com дээр «Апп руу» дар'],
+    i2: ['📋', 'Хуулж буулгах', 'Хуулсан тохиргоогоо энд тавь'],
+    pasteHere: 'buuz1:…',
+    doneTitle: 'Бэлэн! 🎉',
+    doneSub: mac ? 'Buuz дээд мөрөнд <b>Б</b> тэмдгээр харагдана.' : 'Buuz доод мөрөнд <b>МОН</b> тэмдгээр харагдана.',
+    finish: 'Бичиж эхлэх', login: 'Компьютер асахад бэлэн байлгах', here: 'Энд байна 👆', hereWin: 'Энд байна 👇',
+    // settings
+    nav: [['🏠', 'Нүүр'], ['✍️', 'Бичих'], ['⌨️', 'Товчлол'], ['📥', 'Тохиргоо зөөх'], ['🔒', 'Нууцлал'], ['⚙️', 'Ерөнхий']],
+    about: ['ℹ️', 'Тухай'], feedback: ['💬', 'Санал хүсэлт'],
+    homeHi: 'Сайн байна уу! 👋', homeOk: '✅ Buuz идэвхтэй', switchKey: 'Солих товч',
+    tryBox: 'Энд туршаад үз…', cheat: 'Товчны хүснэгт', status: 'Төлөв',
+    typingTitle: 'Бичих',
+    s1: ['🪄', 'Ухаалаг эгшиг', 'o → о/ө, u → у/ү үгэндээ тааруулна', 'on'],
+    s2: ['🔤', 'Том үсэг', 'Өгүүлбэрийн эхэнд том үсэг', ''],
+    s3: ['✂️', 'Товчилсон үг', 'bn → байна, bgaa → байгаа', 'soon'],
+    s4: ['🎛️', 'Өөрийн товчлуур', 'v → ү, zh → ж гэх мэт', 'soon'],
+    s5: ['🧠', 'Апп бүрт санах', 'Код бичих апп-д латинаар үлдэнэ', 'on'],
+    s6: ['〰️', 'Доогуур зураас', 'Хөрвүүлж буй үгийг харуулна', 'on'],
+    soon: 'удахгүй',
+    // menu
+    mHead: 'Buuz 2.0', mOn: '● Идэвхтэй', mMn: 'Монгол (Buuz)', mLat: 'Латин (ABC)', mOff: 'Энэ апп-д унтраах',
+    mCheat: 'Товчны хүснэгт', mSettings: 'Тохиргоо…', mUpdate: 'Шинэчлэл шалгах', mFeedback: 'Санал хүсэлт', mQuit: 'Гарах',
+    mCaption: mac ? 'macOS: Buuz-ийн цэс оролтын цэсэнд нэмэгдэнэ. Нэмэлт тэмдэг байхгүй.' : 'Windows: доод мөрний МОН тэмдэг дээр баруун товшино.',
+    langWord: 'Монгол',
+  },
+  en: {
+    welcomeTitle: 'Type Latin,<br>get Cyrillic',
+    welcomeSub: 'In every app. Offline. Instantly.',
+    start: 'Get started', next: 'Next', back: 'Back', skip: 'Skip',
+    credit: 'A continuation of Buuz by Odbayar Nyamtseren · open source',
+    privTitle: 'What you type stays yours',
+    privSub: 'Buuz runs on your computer and nowhere else.',
+    p1: ['📴', 'Works offline', 'Everything stays on this computer'],
+    p2: ['🙈', 'No keystroke logging', 'Nothing is recorded or sent'],
+    p3: ['👤', 'No account', 'No sign-in, email or password'],
+    p4: ['🔐', 'Off in passwords', 'Never touches password fields'],
+    gotIt: 'Got it',
+    enableTitle: 'Add Buuz to your keyboards',
+    enableSub: 'One click, then type in every app.',
+    imName: 'Buuz', imLang: 'Mongolian · input method',
+    wait: '⏳ Waiting', ok: '✅ Added',
+    add: 'Add Buuz', openSettings: 'Open Settings', orManual: 'or do it yourself',
+    enableNote: mac ? 'macOS may ask for confirmation. Click «OK».' : 'Mongolian is added for you if it is missing.',
+    added: 'Done! 🎉',
+    keyTitle: 'Pick your switch key',
+    keySub: 'Flip between Mongolian and Latin with one key',
+    keyOpts: mac
+      ? [['🌐', 'fn', 'Globe key', 'Newer Macs'], ['⌃', 'Space', 'Control + Space', 'Classic'], ['⇪', '', 'Caps Lock', 'One tap']]
+      : [['⊞', 'Space', 'Win + Space', 'Windows default'], ['Ctrl', 'Space', 'Ctrl + Space', 'Buuz on/off'], ['Alt', 'Shift', 'Alt + Shift', 'Classic']],
+    rec: 'Recommended', tryNow: 'Press it now 👉', works: '✅ It works!',
+    tryTitle: 'Give it a try',
+    trySub: 'Type in Latin. Buuz converts as you go.',
+    chatName: 'Mom', chatThem: 'Миний хүү юу хийж байна? 😊', chatMe: 'Сайн байна уу ээжээ',
+    typing: 'баярлала', tasks: [['сайн байна уу', 'sain baina uu', 'done'], ['баярлалаа', 'bayarlalaa', 'now'], ['өнөөдөр', 'qnqqdqr', '']],
+    harmTitle: '💡 One small trick',
+    harmSub: 'o and u adapt to the word on their own.',
+    h1: 'Vowels match the word', h1p: 'With э, ө or ү in the word: o → ө, u → ү',
+    h2: 'Need ө or ү for sure?', h2p: 'At the start of a word, or any time',
+    importTitle: 'Set up on the web?',
+    importSub: 'Bring your settings over in one click, or skip.',
+    i1: ['🔗', 'Send from the web', 'On buuz.thetengis.com, click «To app»'],
+    i2: ['📋', 'Paste', 'Paste the settings you copied'],
+    pasteHere: 'buuz1:…',
+    doneTitle: "You're all set! 🎉",
+    doneSub: mac ? 'Find Buuz as <b>Б</b> in your menu bar.' : 'Find Buuz as <b>МОН</b> in your taskbar.',
+    finish: 'Start typing', login: 'Ready when my computer starts', here: "It's here 👆", hereWin: "It's here 👇",
+    nav: [['🏠', 'Home'], ['✍️', 'Typing'], ['⌨️', 'Shortcuts'], ['📥', 'Import & export'], ['🔒', 'Privacy'], ['⚙️', 'General']],
+    about: ['ℹ️', 'About'], feedback: ['💬', 'Feedback'],
+    homeHi: 'Hello! 👋', homeOk: '✅ Buuz is on', switchKey: 'Switch key',
+    tryBox: 'Try it here…', cheat: 'Cheat sheet', status: 'Status',
+    typingTitle: 'Typing',
+    s1: ['🪄', 'Smart vowels', 'o → о/ө, u → у/ү to match the word', 'on'],
+    s2: ['🔤', 'Auto capitals', 'Capitalize the start of sentences', ''],
+    s3: ['✂️', 'Abbreviations', 'bn → байна, bgaa → байгаа', 'soon'],
+    s4: ['🎛️', 'My own keys', 'v → ү, zh → ж and so on', 'soon'],
+    s5: ['🧠', 'Remember per app', 'Stays Latin in code editors', 'on'],
+    s6: ['〰️', 'Underline while typing', 'Shows the word being converted', 'on'],
+    soon: 'soon',
+    mHead: 'Buuz 2.0', mOn: '● On', mMn: 'Mongolian (Buuz)', mLat: 'Latin (ABC)', mOff: 'Turn off in this app',
+    mCheat: 'Cheat sheet', mSettings: 'Settings…', mUpdate: 'Check for updates', mFeedback: 'Feedback', mQuit: 'Quit',
+    mCaption: mac ? "macOS: Buuz's menu lives in the Input menu. No extra icon." : 'Windows: right-click МОН in the taskbar.',
+    langWord: 'Mongolian',
+  }
+}[L];
+
+const STEPS = ['welcome', 'privacy', 'enable', 'shortcut', 'try', 'harmony', 'import', 'done'];
+
+function chrome(inner, opts = {}) {
+  const lang = `<div class="lang"><b class="${L === 'mn' ? 'on' : ''}">МН</b><b class="${L === 'en' ? 'on' : ''}">EN</b></div>`;
+  const tb = mac
+    ? `<div class="titlebar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>${opts.noLang ? '' : lang}</div>`
+    : `<div class="titlebar"><img src="${SMALL}">Buuz 2.0<span class="caps">${opts.noLang ? '' : lang}<span>─</span><span>▢</span><span>✕</span></span></div>`;
+  return `<div class="window">${tb}${inner}</div>`;
+}
+function footer(step, nextLabel, opts = {}) {
+  const i = STEPS.indexOf(step);
+  const dots = STEPS.slice(1).map((s, k) => `<i class="${k + 1 === i ? 'on' : k + 1 < i ? 'done' : ''}"></i>`).join('');
+  return `<div class="footer">${i > 1 ? `<span class="btn ghost">← ${T.back}</span>` : '<span class="spacer"></span>'}
+    <div class="dots">${dots}</div>
+    ${opts.skip ? `<span class="btn ghost">${T.skip}</span>` : ''}<span class="btn primary">${nextLabel} →</span></div>`;
+}
+
+const S = {};
+S.welcome = () => chrome(`<div class="body">
+  <div class="steam"><img class="mascot xl" src="${ICON}"></div>
+  <h1>${T.welcomeTitle}</h1>
+  <div class="demo-line"><span class="lat">sain baina uu</span><span class="arrow">→</span><span class="cy">сайн байна уу</span></div>
+  <p class="sub" style="margin:0 0 18px">${T.welcomeSub}</p>
+  <span class="btn primary big">${T.start} →</span>
+  <div class="credit">${T.credit}</div>
+</div>`);
+S.privacy = () => chrome(`<div class="body">
+  <img class="mascot" src="${ICON}">
+  <h1>${T.privTitle}</h1><p class="sub">${T.privSub}</p>
+  <div class="promises">${[T.p1, T.p2, T.p3, T.p4].map(p => `<div class="card promise"><div class="ico">${p[0]}</div><div><b>${p[1]}</b><span>${p[2]}</span></div></div>`).join('')}</div>
+  <div class="platforms" style="margin-top:16px"><span class="pill">${GH} github.com/TengisCh/buuz</span></div>
+</div>${footer('privacy', T.gotIt)}`);
+function enable(done) {
+  const path = mac
+    ? ['⚙️ System Settings', '⌨️ Keyboard', 'Input Sources', '＋', '🇲🇳 Mongolian', 'Buuz']
+    : ['⚙️ Settings', '🌐 Time & language', 'Language & region', '🇲🇳 Монгол', '⋯ Options', '＋ Buuz'];
+  return chrome(`<div class="body">
+  ${done ? `<img class="mascot" src="${ICON}">` : ''}
+  <h1 style="margin-top:${done ? 6 : 14}px">${done ? T.added : T.enableTitle}</h1><p class="sub">${T.enableSub}</p>
+  <div class="card status"><img class="mascot sm" src="${ICON}" style="width:46px;height:46px;border-radius:13px;box-shadow:none">
+    <div class="name">${T.imName}<small>${T.imLang}</small></div>
+    <span class="badge ${done ? 'ok' : 'wait'}">${done ? T.ok : T.wait}</span></div>
+  ${done ? '' : `<div style="margin-top:16px"><span class="btn primary big">＋ ${T.add}</span></div>
+  <div class="or">${T.orManual}</div>
+  <div class="path">${path.map(c => `<span class="crumb">${c}</span>`).join('<span class="arrow">›</span>')}</div>
+  <div style="margin-top:12px"><span class="btn">${mac ? APPLE.replace('<svg', '<svg width="14" height="14"') : WIN.replace('<svg', '<svg width="14" height="14"')} ${T.openSettings}</span></div>`}
+  <div class="note">${done ? '' : T.enableNote}</div>
+</div>${footer('enable', T.next)}`);
+}
+S.enable = () => enable(false);
+S['enable-done'] = () => enable(true);
+S.shortcut = () => chrome(`<div class="body">
+  <img class="mascot" src="${ICON}">
+  <h1>${T.keyTitle}</h1><p class="sub">${T.keySub}</p>
+  <div class="choices">${T.keyOpts.map((o, k) => `<div class="card choice ${k === 0 ? 'on' : ''}">${k === 0 ? `<span class="rec">⭐ ${T.rec}</span>` : ''}
+    <div class="keys"><span class="key ${k === 0 ? 'lit' : ''}">${o[0]}</span>${o[1] ? `<span class="arrow">+</span><span class="key ${k === 0 ? 'lit' : ''}">${o[1]}</span>` : ''}</div>
+    <b>${o[2]}</b><span>${o[3]}</span></div>`).join('')}</div>
+  <div class="card live"><b style="font-size:14px">${T.tryNow}</b>
+    <span class="mode">${mac ? 'ABC' : 'ENG'}</span><span class="arrow">⇄</span><span class="mode on"><img src="${ICON}">${T.langWord}</span>
+    <b style="font-size:14px;color:var(--ok)">${T.works}</b></div>
+</div>${footer('shortcut', T.next)}`);
+S.try = () => chrome(`<div class="body">
+  <h1 style="margin-top:2px">${T.tryTitle}</h1><p class="sub">${T.trySub}</p>
+  <div class="chat"><div class="head"><span class="avatar">👩</span>${T.chatName}<span style="margin-left:auto;color:var(--muted);font-size:12px">● online</span></div>
+    <div class="msgs"><div class="bubble them">${T.chatThem}</div><div class="bubble me">${T.chatMe}</div></div>
+    <div class="compose"><div class="field"><u>${T.typing}</u><span class="caret"></span></div><div class="send">↑</div></div></div>
+  <div class="tasks">${T.tasks.map(t => `<span class="task ${t[2]}"><span class="ck">${t[2] === 'done' ? '✓' : ''}</span>${t[0]} <code>${t[1]}</code></span>`).join('')}</div>
+</div>${footer('try', T.next, { skip: true })}`);
+S.harmony = () => chrome(`<div class="body">
+  <img class="mascot" src="${ICON}">
+  <h1>${T.harmTitle}</h1><p class="sub">${T.harmSub}</p>
+  <div class="tips">
+    <div class="card tip"><h3>🪄 ${T.h1}</h3><p>${T.h1p}</p>
+      <div class="ex"><code>nomoo</code><span class="arrow">→</span><b>ном<mark>оо</mark></b></div>
+      <div class="ex"><code>gertoo</code><span class="arrow">→</span><b>гэрт<mark>өө</mark></b></div>
+      <div class="ex"><code>teruu</code><span class="arrow">→</span><b>тэр<mark>үү</mark></b></div></div>
+    <div class="card tip"><h3>🎯 ${T.h2}</h3><p>${T.h2p}</p>
+      <div class="keymap"><div><kbd>q</kbd><span class="arrow">→</span>ө</div><div><kbd>w</kbd><span class="arrow">→</span>ү</div>
+        <div><kbd>'</kbd><span class="arrow">→</span>ь</div><div><kbd>"</kbd><span class="arrow">→</span>ъ</div></div>
+      <div class="ex" style="margin-top:12px"><code>qndqr</code><span class="arrow">→</span><b><mark>ө</mark>нд<mark>ө</mark>р</b></div></div>
+  </div>
+</div>${footer('harmony', T.next)}`);
+S.import = () => chrome(`<div class="body">
+  <img class="mascot" src="${ICON}">
+  <h1>${T.importTitle}</h1><p class="sub">${T.importSub}</p>
+  <div class="imports">
+    <div class="card imp"><div class="big">${T.i1[0]}</div><b>${T.i1[1]}</b><span>${T.i1[2]}</span><span class="btn" style="font-size:13px">🌐 buuz.thetengis.com</span></div>
+    <div class="card imp"><div class="big">${T.i2[0]}</div><b>${T.i2[1]}</b><span>${T.i2[2]}</span><div class="paste">${T.pasteHere}</div></div>
+  </div>
+</div>${footer('import', T.skip)}`);
+S.done = () => {
+  const colors = ['#ff6a3d', '#ffb648', '#2e6bff', '#ffd84d', '#ff8e8e', '#1f9d55'];
+  let conf = ''; for (let k = 0; k < 34; k++) conf += `<i style="left:${(k * 97) % 100}%;top:${(k * 53) % 180}px;background:${colors[k % 6]};transform:rotate(${k * 37}deg)"></i>`;
+  return chrome(`<div class="confetti">${conf}</div><div class="body">
+  <div class="steam"><img class="mascot xl" src="${ICON}" style="width:140px;height:140px"></div>
+  <h1 style="font-size:36px;margin-top:24px">${T.doneTitle}</h1><p class="sub">${T.doneSub}</p>
+  <div class="recap"><div class="card">${mac ? '<span class="key">🌐</span><span class="arrow">+</span><span class="key">fn</span>' : '<span class="key">⊞</span><span class="arrow">+</span><span class="key">Space</span>'} <span style="color:var(--muted)">⇄</span> МН</div>
+    <div class="card"><kbd>q</kbd> ө <kbd>w</kbd> ү</div></div>
+  <span class="btn primary big" style="margin-top:14px">${T.finish} ✍️</span>
+  <span class="check"><i>✓</i>${T.login}</span>
+</div>`);
+};
+
+function settings(page) {
+  const nav = T.nav.map((n, k) => `<div class="nav ${k === page ? 'on' : ''}"><span class="e">${n[0]}</span>${n[1]}</div>`).join('');
+  const side = `<div class="side"><div class="brand"><img src="${ICON}">Buuz<sup>2.0</sup></div>${nav}<div class="grow"></div>
+    <div class="nav"><span class="e">${T.feedback[0]}</span>${T.feedback[1]}</div><div class="nav"><span class="e">${T.about[0]}</span>${T.about[1]}</div></div>`;
+  let main;
+  if (page === 0) {
+    const ch = [['q', 'ө'], ['w', 'ү'], ['kh', 'х'], ['sh', 'ш'], ['ch', 'ч'], ['ya', 'я'], ['yu', 'ю'], ['ye', 'е'], ['ii', 'ий'], ['iii', 'ы'], ["'", 'ь'], ['"', 'ъ']];
+    main = `<div class="hello"><img class="mascot sm" src="${ICON}"><div><h2>${T.homeHi}</h2><span>Buuz 2.0 · v2.0.0</span></div></div>
+    <div class="row3"><div class="card mini"><h4>${T.status}</h4><div style="font-weight:900;font-size:17px;color:var(--ok)">${T.homeOk}</div>
+      <div style="margin-top:6px;font-size:13px;color:var(--muted);font-weight:700">📴 offline · 🙈 0 ${L === 'mn' ? 'бичлэг' : 'logs'}</div></div>
+      <div class="card mini"><h4>${T.switchKey}</h4><div style="display:flex;gap:6px;align-items:center">${mac ? '<span class="key">🌐</span><span class="arrow">+</span><span class="key">fn</span>' : '<span class="key">⊞</span><span class="arrow">+</span><span class="key">Space</span>'}</div></div></div>
+    <div class="card mini" style="margin-bottom:12px"><h4>✍️ ${L === 'mn' ? 'Турших' : 'Try'}</h4><div class="trybox"><span style="color:var(--fg)"><u style="text-decoration-color:var(--ember);text-underline-offset:4px">гэрээ</u></span><span class="caret"></span> <span style="font:600 12px JetBrains Mono;margin-left:8px">geree</span></div></div>
+    <div class="card mini"><h4>📖 ${T.cheat}</h4><div class="cheat">${ch.map(c => `<div><kbd>${c[0]}</kbd>${c[1]}</div>`).join('')}</div></div>`;
+  } else {
+    const rows = [T.s1, T.s2, T.s3, T.s4, T.s5, T.s6].map(s => `<div class="setting"><span class="e">${s[0]}</span><div><b>${s[1]}</b><span>${s[2]}</span></div>
+      <span class="r">${s[3] === 'soon' ? `<span class="soon">${T.soon}</span>` : `<span class="toggle ${s[3] === 'on' ? 'on' : ''}"></span>`}</span></div>`).join('');
+    main = `<h2>✍️ ${T.typingTitle}</h2><div class="card group">${rows}</div>`;
+  }
+  return chrome(`<div class="split">${side}<div class="main">${main}</div></div>`);
+}
+S.home = () => settings(0);
+S.typing = () => settings(1);
+
+S.menu = () => {
+  const items = `<div class="mi head"><img src="${ICON}"><div><b>${T.mHead}</b><span>${T.mOn}</span></div></div><div class="sep"></div>
+    <div class="mi hi"><span class="e">✓</span>${T.mMn}<span class="k">${mac ? '🌐' : '⊞ Space'}</span></div>
+    <div class="mi"><span class="e"></span>${T.mLat}</div>
+    <div class="mi"><span class="e">⏸️</span>${T.mOff}</div><div class="sep"></div>
+    <div class="mi"><span class="e">📖</span>${T.mCheat}</div>
+    <div class="mi"><span class="e">⚙️</span>${T.mSettings}<span class="k">${mac ? '⌘,' : ''}</span></div>
+    <div class="mi"><span class="e">🔄</span>${T.mUpdate}</div>
+    <div class="mi"><span class="e">💬</span>${T.mFeedback}</div>
+    ${mac ? '' : `<div class="sep"></div><div class="mi"><span class="e">✕</span>${T.mQuit}</div>`}`;
+  if (mac) return `<div class="menubar"><b></b><b>Finder</b><span>File</span><span>Edit</span><span>View</span>
+      <div class="r"><span>🔋</span><span>📶</span><span class="im">${BGLYPH}</span><span>Tue 9:41</span></div></div>
+      <div class="dropdown">${items}</div><div class="caption">${T.mCaption}</div>`;
+  return `<div class="taskbar"><span>⌃</span><span>📶</span><span>🔊</span><span class="ime"><b>МОН</b><span>Б</span></span><span style="text-align:right;line-height:1.2">9:41<br>17.11.2026</span></div>
+    <div class="dropdown">${items}</div><div class="caption">${T.mCaption}</div>`;
+};
+
+const ALL = ['welcome', 'privacy', 'enable', 'enable-done', 'shortcut', 'try', 'harmony', 'import', 'done', 'home', 'typing', 'menu'];
+const list = ONE ? [ONE] : ALL;
+document.documentElement.lang = L;
+document.getElementById('root').innerHTML = (ONE ? '' : '<div class="gallery">') +
+  list.map(s => `<div class="stage ${OS} ${s}" data-screen="${s}">${S[s]()}</div>`).join('') + (ONE ? '' : '</div>');
+</script>
+</body>
+</html>

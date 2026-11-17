@@ -10,6 +10,8 @@
 - {name: typing-rules, color: e99695, description: "A Latin input becomes the wrong Cyrillic"}
 - {name: enhancement, color: a2eeef, description: "New feature or request"}
 - {name: feedback, color: fbca04, description: "Ideas, impressions and suggestions from users"}
+- {name: thanks, color: ff8e8e, description: "A thank-you from a user (feedback form)"}
+- {name: collaboration, color: 2e6bff, description: "Someone wants to work with us (feedback form)"}
 - {name: documentation, color: 0075ca, description: "Improvements or additions to documentation"}
 - {name: question, color: d876e3, description: "Further information is requested"}
 - {name: epic, color: 3e4b9e, description: "Tracking issue that groups several issues"}

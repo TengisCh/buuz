@@ -36,14 +36,18 @@ test("cross-origin is refused", async () => {
 test("creates a labeled issue, defangs mentions, rate limits", async () => {
   process.env.GITHUB_FEEDBACK_TOKEN = "secret-token";
   let seen;
-  globalThis.fetch = async (url, init) => ((seen = { url, init }), new Response("{}", { status: 201 }));
+  globalThis.fetch = async (url, init) => (
+    (seen = { url, init }),
+    new Response(JSON.stringify({ html_url: "https://github.com/TengisCh/buuz/issues/42", number: 42 }), { status: 201 })
+  );
   const h = { "x-forwarded-for": "9.9.9.9" };
   for (let i = 0; i < 5; i++) {
     const r = await POST(req({ message: "hello @octocat\nline2", category: "bug", contact: "me@x.mn" }, h));
     assert.equal(r.status, 200);
+    if (i === 0) assert.deepEqual(await r.json(), { ok: true, url: "https://github.com/TengisCh/buuz/issues/42", number: 42 });
   }
   const payload = JSON.parse(seen.init.body);
-  assert.deepEqual(payload.labels, ["feedback"]);
+  assert.deepEqual(payload.labels, ["feedback", "bug"]);
   assert.ok(!payload.body.includes("@octocat"));
   assert.match(seen.url, /TengisCh\/buuz\/issues$/);
   const r6 = await POST(req({ message: "hello again" }, h));

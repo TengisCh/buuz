@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Generate the Buuz 2.0 (v2) icon options as SVG.
+"""Generate the Buuz 2.0 icon (Buuz Buddy) as SVG.
 
     python3 brand/generate.py brand/icons
 
-Every option is drawn on a 1024 x 1024 canvas and written as:
+The icon is drawn on a 1024 x 1024 canvas and written as:
   <slug>-icon.svg   full app icon (tile + artwork), 128 px and up
   <slug>-small.svg  simplified glyph for 16-32 px (favicon, tray, menu bar)
 
@@ -149,7 +149,7 @@ def svg(defs, body, size=1024):
             f"<defs>{defs}</defs>{body}</svg>\n")
 
 
-# ---------------------------------------------------------------- A. Buuz Buddy
+# ---------------------------------------------------------------- Buuz Buddy
 def buddy():
     d, t = tile("bgA", [(0, C["amber"]), (1, C["orange"])])
     icon = svg(d + DOUGH_DEFS, t + buuz(base=800, w=320, h=470))
@@ -159,104 +159,7 @@ def buddy():
     return icon, small
 
 
-# ---------------------------------------------------------------- B. Keycap
-def glyph_be(x, y, w, h):
-    """Cyrillic capital Б as one rounded stroke (no font needed)."""
-    bx = x + w * 0.55
-    r = h * 0.275
-    return (f"M {x+w} {y} L {x} {y} L {x} {y+h} L {bx} {y+h} "
-            f"A {r} {r} 0 0 0 {bx} {y+h-2*r} L {x} {y+h-2*r}")
-
-
-def glyph_b(x, y, w, h):
-    """Latin capital B as one rounded stroke."""
-    r1, r2 = h * 0.24, h * 0.26
-    m = y + 2 * r1
-    return (f"M {x} {y+h} L {x} {y} L {x+w-r1*1.1} {y} A {r1} {r1} 0 0 1 {x+w-r1*1.1} {m} L {x} {m} "
-            f"M {x+w-r2*1.1} {m} A {r2} {r2} 0 0 1 {x+w-r2*1.1} {y+h} L {x} {y+h}")
-
-
-def keycap_shape(x, y, w, h, depth, top_fill, side_fill, r=120):
-    return (f'<rect x="{x}" y="{y+depth}" width="{w}" height="{h}" rx="{r}" fill="{side_fill}"/>'
-            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{r}" fill="{top_fill}"/>'
-            f'<rect x="{x+40}" y="{y+26}" width="{w-80}" height="{h-90}" rx="{r-30}" fill="#fff" opacity=".18"/>')
-
-
-def keycap():
-    d, t = tile("bgB", [(0, "#2B2350"), (1, "#151033")])
-    d += ('<linearGradient id="capTop" x1="0" y1="0" x2="0" y2="1">'
-          f'<stop offset="0" stop-color="{C["blue_hi"]}"/><stop offset="1" stop-color="{C["blue"]}"/></linearGradient>')
-    stroke = 'fill="none" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"'
-    legends = (f'<path d="{glyph_b(236, 236, 78, 104)}" stroke="#fff" opacity=".9" {stroke}/>'
-               f'<path d="{glyph_be(710, 236, 80, 104)}" stroke="{C["amber"]}" {stroke}/>')
-    body = (t + '<ellipse cx="512" cy="900" rx="380" ry="40" fill="#000" opacity=".35" filter="url(#softer)"/>'
-            + keycap_shape(152, 160, 720, 650, 70, "url(#capTop)", C["blue_lo"], r=130)
-            + legends + buuz(base=720, w=235, h=320, mood="sip")
-            .replace('stroke-width="28"', 'stroke-width="22"').replace('stroke-width="40"', 'stroke-width="32"')
-            .replace('rx="27" ry="34"', 'rx="22" ry="28"'))
-    icon = svg(d + DOUGH_DEFS, body)
-    small_body = (t + keycap_shape(110, 110, 804, 720, 90, "url(#capTop)", C["blue_lo"], r=170)
-                  + f'<path d="{glyph_be(330, 250, 370, 440)}" fill="none" stroke="#fff" stroke-width="110" stroke-linecap="round" stroke-linejoin="round"/>')
-    return icon, svg(d, small_body)
-
-
-# ---------------------------------------------------------------- C. Rosette (top view)
-def rosette_art(cx=512, cy=520, R=330, n=9, steam=True):
-    out = [f'<ellipse cx="{cx+18}" cy="{cy+40}" rx="{R*1.02}" ry="{R*0.98}" fill="#000" opacity=".28" filter="url(#softer)"/>',
-           f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="url(#dough)"/>']
-    # spiral pleats seen from above: crescent swooshes that all turn the same way
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        def p(rr, aa):
-            return cx + rr * math.cos(aa), cy + rr * math.sin(aa)
-        x0, y0 = p(R * 0.22, a)
-        x1, y1 = p(R * 0.62, a + 0.55)
-        x2, y2 = p(R * 0.93, a + 0.55)
-        x3, y3 = p(R * 0.60, a + 0.95)
-        x4, y4 = p(R * 0.26, a + 0.55)
-        d = f"M {x0:.1f} {y0:.1f} Q {x1:.1f} {y1:.1f}, {x2:.1f} {y2:.1f} Q {x3:.1f} {y3:.1f}, {x4:.1f} {y4:.1f} Z"
-        lit = 0.5 + 0.5 * math.cos(a + 0.55 + 2.2)  # light from top-left
-        out.append(f'<path d="{d}" fill="{C["dough_hi"]}" opacity="{0.35+0.6*lit:.2f}"/>')
-        out.append(f'<path d="M {x2:.1f} {y2:.1f} Q {x3:.1f} {y3:.1f}, {x4:.1f} {y4:.1f}" fill="none" stroke="{C["pleat"]}" stroke-width="10" stroke-linecap="round" opacity=".7"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="{R}" fill="none" stroke="{C["dough_edge"]}" stroke-width="10" opacity=".5"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="{R*0.22}" fill="{C["dough"]}"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="{R*0.15}" fill="url(#hole)"/>')
-    out.append(f'<circle cx="{cx-R*0.05}" cy="{cy-R*0.05}" r="{R*0.05}" fill="#fff" opacity=".35"/>')
-    if steam:
-        out.append(f'<path d="M {cx} {cy-20} C {cx+60} {cy-120}, {cx-90} {cy-200}, {cx-10} {cy-300} S {cx+60} {cy-420}, {cx+10} {cy-460}" '
-                   f'fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round" opacity=".85"/>')
-    return "".join(out)
-
-
-def rosette():
-    d, t = tile("bgC", [(0, C["blue_hi"]), (1, C["blue_lo"])])
-    icon = svg(d + DOUGH_DEFS, t + rosette_art(cy=500, R=350, steam=False))
-    small = svg(d + DOUGH_DEFS, t + rosette_art(cy=512, R=400, n=6, steam=False)
-                .replace('stroke-width="10" stroke-linecap', 'stroke-width="26" stroke-linecap'))
-    return icon, small
-
-
-# ---------------------------------------------------------------- D. Steam Б
-def steam_b():
-    d, t = tile("bgD", [(0, C["violet"]), (1, C["night"])])
-    d += ('<linearGradient id="steamG" x1="0" y1="1" x2="0" y2="0">'
-          '<stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".45" stop-color="#fff"/></linearGradient>'
-          '<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>')
-    # a wisp leaves the open top and becomes a Б
-    letter = glyph_be(392, 120, 250, 330)
-    wisp = "M 512 548 C 470 520, 560 500, 520 486"
-    art = ''
-    for path, sw in ((letter, 56), (wisp, 40)):
-        art += (f'<path d="{path}" fill="none" stroke="#B9A8FF" stroke-width="{sw+24}" stroke-linecap="round" stroke-linejoin="round" opacity=".55" filter="url(#glow)"/>'
-                f'<path d="{path}" fill="none" stroke="#fff" stroke-width="{sw}" stroke-linecap="round" stroke-linejoin="round" opacity="{1 if path == letter else .7}"/>')
-    body = t + art + buuz(base=880, w=300, h=330, steam=False, n_pleats=12)
-    icon = svg(d + DOUGH_DEFS, body)
-    small = svg(d, t + f'<path d="{glyph_be(300, 200, 430, 620)}" fill="none" stroke="#fff" stroke-width="120" stroke-linecap="round" stroke-linejoin="round"/>'
-                + '<circle cx="770" cy="200" r="70" fill="#fff" opacity=".85"/>')
-    return icon, small
-
-
-OPTIONS = [("a-buuz-buddy", buddy), ("b-keycap", keycap), ("c-rosette", rosette), ("d-steam-b", steam_b)]
+OPTIONS = [("buuz-buddy", buddy)]
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "icons"

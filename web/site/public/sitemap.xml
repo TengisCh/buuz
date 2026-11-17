@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://buuz.thetengis.com/</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/" />
+  </url>
+  <url>
+    <loc>https://buuz.thetengis.com/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/privacy?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/privacy" />
+  </url>
+  <url>
+    <loc>https://buuz.thetengis.com/cookies</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/cookies" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/cookies?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/cookies" />
+  </url>
+</urlset>

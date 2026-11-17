@@ -1,0 +1,5 @@
+# Buuz 2.0: everyone, including search and AI crawlers, is welcome.
+User-agent: *
+Allow: /
+
+Sitemap: https://buuz.thetengis.com/sitemap.xml

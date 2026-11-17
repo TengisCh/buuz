@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/readme/demo.gif" alt="Typing sain uu! buuz id'ye? and getting сайн уу! бууз идье?" width="800">
+  <img src="docs/readme/demo.webp" alt="Typing sain baina uu, buuz id'ye and chi yuu hiij baina? and getting сайн байна уу, бууз идье and чи юу хийж байна?" width="800">
 </p>
 
 ## 🚀 Try it
