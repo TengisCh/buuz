@@ -27,6 +27,7 @@ Today there is a web converter: type Latin in the top box, copy Cyrillic from th
 - y -> ы ; sh -> ш ; ch -> ч ; yo -> ё ; yu -> ю ; ya -> я ; ye -> е
 - ' -> ь ; " -> ъ ; ii -> ий, or ы in masculine words (aaviin -> аавын) ; ii' -> ий (forced)
 - Smart vowels (on by default, can be switched off): unee -> үнээ (looks ahead for the word's gender) ; irsen uu -> ирсэн үү (the particle follows the previous word)
+- Abbreviations (on by default on the web, can be switched off): bn -> байна ; bnu -> байна уу ; sn -> сайн ; Bn -> Байна ; expands when you type a space or punctuation after it (not at the end of the text); on the website, deleting that space brings the abbreviation back; the upcoming desktop keyboards undo with Backspace right after the space; the checkbox turns it off
 
 ## FAQ
 

@@ -126,9 +126,9 @@ button.icon .sun { display: none; }
 :root[data-theme="dark"] button.icon .sun { display: block; }
 :root[data-theme="dark"] button.icon .moon { display: none; }
 
-/* "Smart vowels" switch inside the cheat sheet */
-.smart { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; margin-top: 0.9rem; cursor: pointer; }
-.smart input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
+/* Option switches (smart vowels, abbreviations) inside the cheat sheet */
+.toggle { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; margin-top: 0.9rem; cursor: pointer; }
+.toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
 .hint { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }
 
 /* "How to type": grouped columns that read top-to-bottom */

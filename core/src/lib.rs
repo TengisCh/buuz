@@ -22,9 +22,11 @@
 //! assert_eq!(buuz_core::convert("sain baina uu"), "сайн байна уу");
 //! ```
 
+mod abbrev;
 mod composer;
 mod rules;
 
+pub use abbrev::{AbbrevError, Abbreviations};
 pub use composer::{
     convert, convert_with, is_input_char, Composer, Key, KeyOutcome, Options, MAX_COMP_LEN,
 };

@@ -1,7 +1,7 @@
 # How Buuz turns Latin into Cyrillic
 
 Status: describes `buuz-core` with smart vowel harmony (issue #7), which is
-on by default; the original left-to-right behaviour is kept as the "classic"
+on by default, and abbreviation expansion (issue #5), which is opt-in; the original left-to-right behaviour is kept as the "classic"
 option. Buuz is a port of the original by Odbayar Nyamtseren. Planned changes
 are linked at the end and are **not** implemented yet.
 
@@ -183,7 +183,48 @@ as Cyrillic and further edits act on Cyrillic letters, as in the original.
 Frozen Cyrillic letters still count as evidence for the gender of the word:
 `у` and `о` (like `а`) are masculine evidence, `ү`, `ө` and `э` feminine.
 
-## 7. Cyrillic to Latin
+## 7. Abbreviations
+
+A short form expands to a whole word when you type a space or punctuation
+after it: `bn ` gives `байна ` and `bn.` gives `байна.`. The end of the text
+does not expand, so `bn` alone stays `бн`; on the web converter (which
+converts the whole text again on every change) deleting the space therefore
+brings the abbreviation back. The built-in list is small and
+conservative; the literal conversion of every key (`bn` → бн) is not a real
+word, so an entry never hides a word typed in full.
+
+| Type | Get | Type | Get |
+| --- | --- | --- | --- |
+| `bn` | байна | `bnu` | байна уу |
+| `bga`, `bgaa` | байгаа | `sbnu` | сайн байна уу |
+| `bhgui`, `bhgwi` | байхгүй | `sn` | сайн |
+| `ym` | юм | `zgr` | зүгээр |
+| `mdku` | мэдэхгүй | `tgd` | тэгээд |
+
+- **Case** follows the keys: `Bn` → Байна, `BN` → БАЙНА.
+- **Particle:** the expansion hands its gender to a following `uu`
+  (`mdku uu` → мэдэхгүй үү, `bn uu` → байна уу).
+- **Undo:** Backspace straight after an expansion committed by a space
+  deletes the expansion and the space and brings back the literal preedit
+  (`бн`), which then stays literal. `KeyOutcome::delete_before` tells the
+  front end how many characters to delete first. Any other key forgets the
+  undo; after punctuation or Enter there is no undo yet. The undo is for
+  the desktop keyboards; the website has no Backspace hook and needs none.
+  Shift and CapsLock keep the undo armed. `commit()`, `reset()`,
+  `cancel()` and `clear_context()` drop it, so shells must call
+  `clear_context()` on any caret move or focus change the composer did not see.
+- **Never expands:** a word whose caret was moved (it is frozen Cyrillic),
+  the focus-loss `Composer::commit()`, and the end of the text in the
+  whole-text converters (`convert_with`, the website).
+- **Settings:** off in the core by default (`Options::abbreviations` is
+  `None`, also for `Options::classic()`), on by default on the web. A table
+  is plain data (`Abbreviations::parse` / `to_text`, one `bn = байна` per
+  line, `#` comments); the core does no I/O.
+
+Not done yet: a per-entry editor, suffix shortcuts, undo after punctuation.
+Background: [issue #5](https://github.com/TengisCh/buuz/issues/5).
+
+## 8. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -191,7 +232,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 8. Planned changes
+## 9. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults

@@ -31,10 +31,21 @@ for (const [input, expected] of cases) {
 }
 
 test("classic mode keeps the original left-to-right rules", () => {
-  assert.equal(convert_with("unee", false), "унээ");
-  assert.equal(convert_with("aaviin", false), "аавийн");
-  assert.equal(convert_with("irsen uu", false), "ирсэн уу");
-  assert.equal(convert_with("unee", true), "үнээ");
+  assert.equal(convert_with("unee", false, false), "унээ");
+  assert.equal(convert_with("aaviin", false, false), "аавийн");
+  assert.equal(convert_with("irsen uu", false, false), "ирсэн уу");
+  assert.equal(convert_with("unee", true, false), "үнээ");
+});
+
+test("abbreviations expand only when switched on", () => {
+  assert.equal(convert_with("bn uu", true, true), "байна уу");
+  assert.equal(convert_with("bn ", true, false), "бн ");
+});
+
+test("an abbreviation expands only after a typed space or punctuation", () => {
+  assert.equal(convert_with("bn", true, true), "бн");
+  assert.equal(convert_with("bn ", true, true), "байна ");
+  assert.equal(convert_with("bn.", true, true), "байна.");
 });
 
 test("long paste stays fast", () => {
