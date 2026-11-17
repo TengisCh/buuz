@@ -24,10 +24,15 @@
 
 mod abbrev;
 mod composer;
+mod config;
 mod rules;
 
 pub use abbrev::{AbbrevError, Abbreviations};
 pub use composer::{
     convert, convert_with, is_input_char, Composer, Key, KeyOutcome, Options, MAX_COMP_LEN,
+};
+pub use config::{
+    Config, ConfigError, ConfigWarning, Parsed, Preset, CONFIG_VERSION, MAX_CONFIG_BYTES,
+    MAX_SECTION_ENTRIES, MAX_VALUE_CHARS,
 };
 pub use rules::export_rules;

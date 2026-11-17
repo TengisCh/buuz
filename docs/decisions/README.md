@@ -15,6 +15,7 @@ record that supersedes the old one instead of editing history.
 | [0002](0002-apache-2-open-core.md) | Apache 2.0 for core and basic typing (open core) | Amended by 0004 |
 | [0003](0003-native-speed-over-portability.md) | Native speed over portability | Accepted |
 | [0004](0004-license-mit-or-apache-for-new-code.md) | MIT OR Apache-2.0 for new code, Apache-2.0 for the ported core | Accepted |
+| [0005](0005-portable-config-format.md) | Portable config format, a small TOML subset | Accepted |
 
 ## Template
 

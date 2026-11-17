@@ -43,7 +43,8 @@ when a new concept appears; rename here first when a name changes.
 | Auto Latin | A link or an email turns Latin by itself (`@`, `://`, a `/` after a domain, or a domain at the end of a run). Separate switch from Keep Latin | `Options::auto_latin` |
 | Run | Everything typed since the last Space, Enter or Tab: words and the symbols between them. A caret move stops tracking until the next one. Auto Latin looks at the run | `docs/typing-rules.md` §9 |
 | Symbol key | A printable key that is not a letter and not a space (`.` `@` `/` digits). Acts like `Key::Other` when Auto Latin is off | `Key::Symbol` |
-| Portable config | The one settings file shared by web, Windows and macOS (issue #8) | |
+| Config | The portable settings file shared by web, Windows and macOS. A small TOML subset: a preset, option overrides, user abbreviations and custom keys. Versioned with `buuz_config = 1`. Unknown options and sections give warnings, not errors. See ADR 0005 | `Config` |
+| Preset | The base of a config: `smart` (default) or `classic`. Options in the config only override it | `Preset` |
 
 ## Project
 

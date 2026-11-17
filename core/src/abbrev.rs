@@ -75,7 +75,7 @@ fn lower_key(key: &str) -> String {
     key.chars().map(to_lower).collect()
 }
 
-fn check_key(key: &str, line: usize) -> Result<String, AbbrevError> {
+pub(crate) fn check_key(key: &str, line: usize) -> Result<String, AbbrevError> {
     let n = key.chars().count();
     if n == 0 || n > MAX_COMP_LEN || !key.chars().all(is_input_char) {
         return Err(AbbrevError::BadKey {
@@ -86,7 +86,7 @@ fn check_key(key: &str, line: usize) -> Result<String, AbbrevError> {
     Ok(lower_key(key))
 }
 
-fn check_value(key: &str, value: &str, line: usize) -> Result<(), AbbrevError> {
+pub(crate) fn check_value(key: &str, value: &str, line: usize) -> Result<(), AbbrevError> {
     if value.is_empty() || value.contains(['\n', '\r']) {
         return Err(AbbrevError::BadValue {
             line,
@@ -104,6 +104,21 @@ impl Abbreviations {
             Arc::new(Abbreviations::from_pairs(BUILTIN.iter().copied()).expect("valid built-in"))
         })
         .clone()
+    }
+
+    /// The built-in list with user changes on top: a pair with a non-empty
+    /// value adds or replaces an entry, a pair with an empty value removes
+    /// one. Keys must already be checked and lowercase (see `Config::parse`).
+    pub(crate) fn builtin_with(changes: &[(String, String)]) -> Self {
+        let mut map = Self::builtin().map.clone();
+        for (k, v) in changes {
+            if v.is_empty() {
+                map.remove(k.as_str());
+            } else {
+                map.insert(k.as_str().into(), v.as_str().into());
+            }
+        }
+        Abbreviations { map }
     }
 
     /// Build a table from `(key, expansion)` pairs. Keys are matched without
