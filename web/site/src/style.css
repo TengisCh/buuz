@@ -65,7 +65,9 @@ textarea {
   border-radius: 22px;
   box-shadow: 0 5px 0 var(--press);
 }
-textarea::placeholder { color: var(--muted); opacity: 0.6; }
+textarea::placeholder { color: var(--muted); opacity: 0.85; }
+/* On the orange output a white placeholder vanishes: use a deep ember-brown instead (about 4.6:1). */
+#cyr::placeholder { color: #7a2a10; opacity: 0.8; }
 #cyr {
   background: linear-gradient(160deg, #ff8f3d, var(--ember));
   color: var(--out-fg);
