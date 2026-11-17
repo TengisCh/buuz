@@ -31,6 +31,13 @@ test in `core/tests/` before fixing it.
 - New source files start with an SPDX line: `// SPDX-License-Identifier: Apache-2.0`
   inside `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
 
+## Writing docs
+
+Many readers read English as a second language, so keep docs plain: active
+voice, short sentences, one instruction per sentence, and the terms in
+`docs/glossary.md`. The full list is under "Writing" in
+[AGENTS.md](AGENTS.md).
+
 ## Licensing of contributions
 
 Unless you say otherwise, any contribution you submit:

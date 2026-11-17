@@ -88,6 +88,30 @@ Dependencies are the easiest way into a keyboard app, so:
   on the PR has passed (`.github/workflows/dependabot-automerge.yml`). Major
   updates stay open for review with the add-dependency checklist.
 
+## Writing
+
+Many readers of this repository read English as a second language. Write
+text that people read later (docs, skills, PR descriptions, commit messages,
+issue comments) in a subset of ASD-STE100 Simplified Technical English.
+Chat replies and the reasoning in ADRs and `grill` sessions are exempt.
+
+- Use the active voice. Put the instruction first: "Run `cargo test`", not
+  "Tests should be run".
+- Write one instruction per sentence.
+- Keep sentences short: at most 20 words in procedures, 25 in descriptions.
+  Keep paragraphs to 6 sentences or fewer.
+- Give each word one meaning, and use one word for each meaning. Do not
+  change words for variety.
+- Use the terms in [docs/glossary.md](docs/glossary.md) as the approved
+  technical names. Write code names in backticks.
+- Use simple words: "use", not "utilize"; "make sure", not "ensure";
+  "start", not "commence"; "help", not "facilitate"; "about", not
+  "approximately".
+- Write lists for steps and tables for comparisons. Do not hide steps in a
+  paragraph.
+- Leave out filler: no "comprehensive", "robust", "seamless", "leverage",
+  and no summary that repeats the text above it.
+
 ## Git and PRs
 
 - Branch from `main`: `issue-<n>-<slug>` for an issue, otherwise
