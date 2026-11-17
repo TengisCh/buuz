@@ -1,0 +1,20 @@
+# Buuz 2.0
+
+> Buuz 2.0 / Бууз 2.0: free, open-source phonetic typing for Mongolian. Type Latin letters on any keyboard and get Mongolian Cyrillic instantly ("sain baina uu" becomes "сайн байна уу"). Runs entirely in the browser; nothing typed is sent anywhere. Windows and macOS keyboards are coming.
+> Латин үсгээр бичихэд шууд монгол кирилл болдог үнэгүй, нээлттэй эхийн хөрвүүлэгч. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй. Windows, macOS-ийн гар удахгүй гарна.
+
+Buuz 2.0 continues Buuz, the Windows input method created by Odbayar Nyamtseren (https://github.com/odbayar/buuz), with the same phonetic rules, including vowel harmony for о/ө and у/ү.
+
+## Use it
+
+- [Web converter](https://buuz.thetengis.com/): type Latin, copy Cyrillic. Mongolian by default, English via the EN button or ?lang=en.
+- [Source code and issues](https://github.com/TengisCh/buuz): Rust core, WebAssembly build, website.
+
+## Policies
+
+- [Privacy notice](https://buuz.thetengis.com/privacy): converter text never leaves the device; cookieless page-view analytics only.
+- [Cookie policy](https://buuz.thetengis.com/cookies)
+
+## More
+
+- [Full description for LLMs](https://buuz.thetengis.com/llms-full.txt): typing rules, facts, FAQ.

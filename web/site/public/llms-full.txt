@@ -1,0 +1,36 @@
+# Buuz 2.0 (Бууз 2.0): full description
+
+Site: https://buuz.thetengis.com/
+Source: https://github.com/TengisCh/buuz
+Licence: MIT OR Apache-2.0 for new code; the ported typing core is Apache-2.0.
+Languages of the site: Mongolian (default) and English.
+
+## What it is
+
+Buuz 2.0 is a free phonetic input tool for writing Mongolian (Cyrillic) with a Latin keyboard. You type Latin letters and it produces Mongolian Cyrillic. It is a continuation of Buuz, the Windows input method created by Odbayar Nyamtseren (https://github.com/odbayar/buuz), and keeps the same typing rules.
+
+Today there is a web converter: type Latin in the top box, copy Cyrillic from the bottom box. Keyboards for Windows and macOS are planned and will use the same rules, so you can type straight into any app. Mobile may follow later.
+
+## Privacy and offline use
+
+- The converter runs in your browser, using the same Rust core as the future apps compiled to WebAssembly.
+- Text typed into the converter is never sent to a server.
+- The site uses cookieless page-view analytics and speed measurements. It does not use advertising or tracking cookies.
+- The optional feedback form sends only what is typed into that form.
+
+## Typing rules (examples)
+
+- sain baina uu -> сайн байна уу
+- buuz id'ye -> бууз идье
+- geree -> гэрээ ; gar -> гар (o and u follow vowel harmony: о/ө, у/ү)
+- q -> ө ; w -> ү (force the letter regardless of harmony)
+- y -> ы ; sh -> ш ; ch -> ч ; yo -> ё ; yu -> ю ; ya -> я ; ye -> е
+- ' -> ь ; " -> ъ ; ii -> ий
+
+## FAQ
+
+Is it free? Yes, and open source.
+Does it work offline? The page runs on your device and sends no typed text anywhere.
+Who made the original? Odbayar Nyamtseren created Buuz; Buuz 2.0 continues it with credit.
+When are the Windows and macOS keyboards coming? They are in development; see the GitHub repository for progress.
+How do I report a bug or suggest a feature? Use the feedback button on the site or open an issue at https://github.com/TengisCh/buuz/issues.
