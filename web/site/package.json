@@ -1,0 +1,20 @@
+{
+  "name": "buuz-site",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Buuz 2.0 web converter: type Latin, get Mongolian Cyrillic",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "wasm": "bash scripts/build-wasm.sh",
+    "dev": "npm run wasm && vite",
+    "build": "npm run wasm && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.7.3",
+    "vite": "6.0.11"
+  }
+}

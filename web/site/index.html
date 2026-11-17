@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buuz: type Mongolian with a Latin keyboard</title>
+    <meta
+      name="description"
+      content="Type Latin letters, get Mongolian Cyrillic instantly. Free, offline, nothing you type leaves your device."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/main.ts"></script>
+    <script>
+      window.va =
+        window.va ||
+        function () {
+          (window.vaq = window.vaq || []).push(arguments);
+        };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Buuz</h1>
+        <p class="tag">Type Mongolian with a Latin keyboard.</p>
+      </header>
+
+      <section class="converter" aria-label="Converter">
+        <label for="latin">Latin</label>
+        <textarea
+          id="latin"
+          rows="6"
+          placeholder="sain baina uu"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          autofocus
+        ></textarea>
+
+        <div class="out-head">
+          <label for="cyr">Монгол</label>
+          <div class="actions">
+            <button id="clear" type="button" class="ghost">Clear</button>
+            <button id="copy" type="button" class="primary">Copy</button>
+          </div>
+        </div>
+        <textarea id="cyr" lang="mn" rows="6" readonly aria-live="polite"></textarea>
+        <p id="status" class="status" role="status"></p>
+      </section>
+
+      <p class="privacy">
+        Everything runs on your device. What you type is never sent anywhere.
+      </p>
+
+      <details class="cheat">
+        <summary>How to type</summary>
+        <div class="grid">
+          <div><kbd>w</kbd> ү</div>
+          <div><kbd>q</kbd> ө</div>
+          <div><kbd>y</kbd> ы</div>
+          <div><kbd>sh</kbd> ш</div>
+          <div><kbd>ch</kbd> ч</div>
+          <div><kbd>yo</kbd> ё</div>
+          <div><kbd>yu</kbd> ю</div>
+          <div><kbd>ya</kbd> я</div>
+          <div><kbd>ye</kbd> е</div>
+          <div><kbd>'</kbd> ь</div>
+          <div><kbd>"</kbd> ъ</div>
+          <div><kbd>ii</kbd> ий</div>
+        </div>
+        <p>
+          <kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so
+          <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a
+          letter, use <kbd>q</kbd> or <kbd>w</kbd> for ө and ү.
+        </p>
+      </details>
+
+      <section class="get-app">
+        <h2>Type Mongolian in every app</h2>
+        <p>
+          Buuz is also coming as a keyboard for Windows and macOS, with the same
+          rules as this page, so you can type straight into any app.
+        </p>
+        <ul id="app-links">
+          <li><span class="soon">Windows</span> coming soon</li>
+          <li><span class="soon">macOS</span> coming soon</li>
+        </ul>
+      </section>
+
+      <footer>
+        <a href="https://github.com/TengisCh/buuz">Open source on GitHub</a>
+        <span>Buuz 2.0, a continuation of Buuz by Odbayar Nyamtseren.</span>
+      </footer>
+    </main>
+  </body>
+</html>
