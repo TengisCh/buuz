@@ -52,6 +52,16 @@ function animate(cls: "puff" | "hop"): void {
 
 let ready = false;
 
+// Settings: the gear in the header opens a dialog with the mode and options.
+const settings = document.getElementById("settings") as HTMLDialogElement;
+document.getElementById("settings-btn")?.addEventListener("click", () => settings.showModal());
+settings.querySelector(".fb-close")?.addEventListener("click", () => settings.close());
+// A click on the backdrop lands on the dialog itself, outside its padding box.
+settings.addEventListener("click", (e) => {
+  const r = settings.getBoundingClientRect();
+  if (e.target === settings && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) settings.close();
+});
+
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
 // (the original Buuz, every smart feature off, toggles greyed out).
 type Mode = "smart" | "classic";

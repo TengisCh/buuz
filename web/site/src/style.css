@@ -126,7 +126,15 @@ button.icon .sun { display: none; }
 :root[data-theme="dark"] button.icon .sun { display: block; }
 :root[data-theme="dark"] button.icon .moon { display: none; }
 
-/* Option switches (smart vowels, abbreviations) inside the cheat sheet */
+/* Settings dialog (gear in the header): mode and option switches */
+.settings {
+  width: min(420px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto;
+  margin: 5.75rem max(1rem, calc((100vw - 72rem) / 2 + 1rem)) auto auto; border: 0;
+  background: var(--bg); color: var(--fg); border-radius: 24px; padding: 1rem 1.1rem 1.25rem;
+  box-shadow: 0 0 0 1px var(--line), 0 24px 60px rgba(30, 24, 56, 0.22);
+}
+.settings::backdrop { background: rgba(30, 24, 56, 0.25); }
+@media (max-width: 520px) { .settings { margin: 5.25rem auto auto; } }
 .toggle { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; margin-top: 0.9rem; cursor: pointer; }
 .toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--accent); }
 .mode, .features { border: 0; margin: 0; padding: 0; min-width: 0; }
