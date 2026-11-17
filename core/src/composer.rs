@@ -48,7 +48,12 @@ pub enum Key {
     /// toggles the preedit between Cyrillic and the raw Latin keys; otherwise
     /// it acts like [`Key::Other`].
     Escape,
-    /// Anything else (space, Enter, Tab, digits, punctuation...).
+    /// A printable character that is not a letter and not a space (`.` `@`
+    /// `:` `/` `-` `_`, digits and others). Like [`Key::Other`] it commits the
+    /// word and passes through. With [`Options::auto_latin`] the composer also
+    /// watches the run for a link or an email and may turn it Latin.
+    Symbol(char),
+    /// Anything else (Enter, Tab and other non-printing keys).
     /// Ends the composition and is passed through to the application.
     Other,
 }
@@ -64,9 +69,13 @@ pub struct KeyOutcome {
     /// Input was refused because the composition is full (original beeps).
     pub rejected: bool,
     /// Number of characters (Unicode scalars) right before the caret that the
-    /// application must delete before showing the preedit. Non-zero only when
-    /// Backspace reopens a word committed by Space: an abbreviation expansion,
-    /// or any word with `keep_latin`.
+    /// application must delete first. Non-zero when Backspace reopens a word
+    /// committed by Space (an abbreviation expansion, or any word with
+    /// `keep_latin`), and when `auto_latin` turns a run Latin (the run was
+    /// already committed as Cyrillic).
+    ///
+    /// Order for shells: delete `delete_before` characters, insert `commit`,
+    /// then show the preedit.
     pub delete_before: usize,
 }
 
@@ -100,6 +109,10 @@ pub struct Options {
     /// `ok`, not `ок`), and Backspace right after a word and a Space reopens
     /// that word in the preedit. `false` is the original Buuz behaviour.
     pub keep_latin: bool,
+    /// Auto Latin: a run that holds `@`, `://` or a leading `www.`, or that
+    /// ends as a domain (`github.com`), turns Latin by itself. Separate from
+    /// `keep_latin`. `false` is the original Buuz behaviour.
+    pub auto_latin: bool,
 }
 
 impl Default for Options {
@@ -108,6 +121,7 @@ impl Default for Options {
             smart_vowels: true,
             abbreviations: None,
             keep_latin: true,
+            auto_latin: true,
         }
     }
 }
@@ -121,6 +135,7 @@ impl Options {
             smart_vowels: true,
             abbreviations: Some(Abbreviations::builtin()),
             keep_latin: true,
+            auto_latin: true,
         }
     }
 
@@ -131,6 +146,7 @@ impl Options {
             smart_vowels: false,
             abbreviations: None,
             keep_latin: false,
+            auto_latin: false,
         }
     }
 }
@@ -147,6 +163,71 @@ struct Undo {
     delete: usize,
     /// The previous-word gender the word was typed with.
     prev_gender: Option<u8>,
+    /// For an automatic change: the Cyrillic run to commit instead of reopening
+    /// a word.
+    restore: Option<String>,
+}
+
+/// Longest run (in characters) the composer tracks for Auto Latin.
+const RUN_MAX: usize = 100;
+
+/// Top-level domains that make `label.label` a domain at the end of a run.
+/// Short ones that are also Mongolian words (`us`, `ai`, `de`, `me`...) are
+/// left out: `tsai.de` after a full stop without a space is prose.
+const TLDS: &[&str] = &[
+    "com", "net", "org", "edu", "gov", "io", "dev", "app", "info", "mn", "ru", "biz", "xyz",
+];
+
+/// Punctuation that may sit before or after a link in prose.
+fn is_lead_punct(c: char) -> bool {
+    matches!(c, '(' | '[' | '"' | '\'')
+}
+
+fn is_trail_punct(c: char) -> bool {
+    matches!(
+        c,
+        '.' | ',' | ';' | ':' | '!' | '?' | ')' | ']' | '"' | '\''
+    )
+}
+
+/// [`is_domain`] on `a ++ b` after trimming surrounding punctuation.
+fn is_domain_trimmed(a: &[char], b: &[char]) -> bool {
+    let n = a.len() + b.len();
+    let at = |i: usize| if i < a.len() { a[i] } else { b[i - a.len()] };
+    let mut start = 0;
+    while start < n && is_lead_punct(at(start)) {
+        start += 1;
+    }
+    let mut end = n;
+    while end > start && is_trail_punct(at(end - 1)) {
+        end -= 1;
+    }
+    is_domain((start..end).map(at))
+}
+
+/// True if the keys read `label.label...tld`: labels of letters, digits or
+/// `-`, at least one dot, and a last label from [`TLDS`].
+fn is_domain(keys: impl Iterator<Item = char>) -> bool {
+    let mut dots = 0;
+    let mut label = [0u8; 8];
+    let mut n = 0;
+    for c in keys {
+        if c == '.' {
+            if n == 0 {
+                return false;
+            }
+            dots += 1;
+            n = 0;
+        } else if c.is_ascii_alphanumeric() || c == '-' {
+            if n < label.len() {
+                label[n] = c.to_ascii_lowercase() as u8;
+            }
+            n += 1;
+        } else {
+            return false;
+        }
+    }
+    dots > 0 && n > 0 && n <= label.len() && TLDS.iter().any(|t| t.as_bytes() == &label[..n])
 }
 
 /// Particle gender of expanded Cyrillic text: its last back vowel makes it
@@ -326,6 +407,15 @@ pub struct Composer {
     latin: bool,
     /// Set right after a word committed by Space that Backspace can reopen.
     undo: Option<Undo>,
+    /// Raw keys of the finished words and symbols of the current run (Auto
+    /// Latin). The word being typed is in `read`.
+    run: Vec<char>,
+    /// What the application shows for `run`: the committed text and symbols.
+    run_text: String,
+    /// The run is tracked: no caret move, no outside edit, at most `RUN_MAX`.
+    run_ok: bool,
+    /// The run turned Latin: words in it start in the Latin view.
+    run_latin: bool,
     /// A spare buffer for `Undo::raw`. Arming an undo happens after every word,
     /// so it copies into this recycled `Vec` instead of cloning `read`: no
     /// allocation per word once the buffer has grown to the longest word.
@@ -357,6 +447,10 @@ impl Composer {
             no_expand: false,
             latin: false,
             undo: None,
+            run: Vec::new(),
+            run_text: String::new(),
+            run_ok: true,
+            run_latin: false,
             spare: Vec::new(),
             tokens: Vec::new(),
         }
@@ -374,6 +468,7 @@ impl Composer {
     pub fn clear_context(&mut self) {
         self.prev_gender = None;
         self.drop_undo();
+        self.reset_run();
     }
 
     pub fn is_composing(&self) -> bool {
@@ -421,6 +516,7 @@ impl Composer {
     pub fn commit(&mut self) -> Option<String> {
         self.prev_gender = None;
         self.drop_undo();
+        self.reset_run();
         self.take_composition()
     }
 
@@ -439,6 +535,7 @@ impl Composer {
         self.clear_buffer();
         self.prev_gender = None;
         self.drop_undo();
+        self.reset_run();
     }
 
     /// Drop the composition and any pending undo (but keep the previous-word
@@ -446,6 +543,22 @@ impl Composer {
     pub fn reset(&mut self) {
         self.clear_buffer();
         self.drop_undo();
+        self.reset_run();
+    }
+
+    /// A caret move or an outside edit: forget the run, and track nothing
+    /// until the next Space, Enter or Tab.
+    fn stop_run(&mut self) {
+        self.reset_run();
+        self.run_ok = false;
+    }
+
+    /// Start a new run; keeps the buffers.
+    fn reset_run(&mut self) {
+        self.run.clear();
+        self.run_text.clear();
+        self.run_ok = true;
+        self.run_latin = false;
     }
 
     /// Forget the pending undo, keeping its buffer for the next one.
@@ -465,6 +578,7 @@ impl Composer {
             latin,
             delete,
             prev_gender: self.prev_gender,
+            restore: None,
         });
     }
 
@@ -497,6 +611,7 @@ impl Composer {
 
     fn comp_to_read(&mut self) {
         self.reseeded = true;
+        self.stop_run();
         self.read = self.comp.clone();
     }
 
@@ -540,14 +655,122 @@ impl Composer {
         }
     }
 
+    /// Record the finished word in `read` and the symbol `c` in the run, or
+    /// stop tracking a run that gets too long.
+    fn run_push(&mut self, c: char) {
+        if !self.run_ok {
+            return;
+        }
+        if self.run.len() + self.read.len() + 1 > RUN_MAX {
+            self.run_ok = false;
+            self.run.clear();
+            self.run_text.clear();
+            return;
+        }
+        self.run.extend_from_slice(&self.read);
+        self.run.push(c);
+    }
+
+    /// Live triggers: `@`, `://` and a leading `www.` turn the run Latin at
+    /// the key that completes them. The key is consumed.
+    fn try_trigger(&mut self, c: char, out: &mut KeyOutcome) -> bool {
+        if !self.run_ok || self.run_latin || self.run.len() + self.read.len() + 1 > RUN_MAX {
+            return false;
+        }
+        let hit = match c {
+            '@' => true,
+            '/' => {
+                (self.read.is_empty() && self.run.ends_with(&[':', '/']))
+                    || is_domain_trimmed(&self.run, &self.read)
+            }
+            _ => false,
+        };
+        if !hit {
+            return false;
+        }
+        let mut raw: String = self.run.iter().chain(self.read.iter()).collect();
+        raw.push(c);
+        out.consumed = true;
+        out.delete_before = self.run_text.chars().count();
+        out.commit = Some(raw);
+        self.clear_buffer();
+        self.prev_gender = None;
+        self.reset_run();
+        self.run_ok = false;
+        self.run_latin = true;
+        true
+    }
+
+    /// If the run ends here as a domain: its raw keys and the number of
+    /// characters already committed for it.
+    fn domain_run(&self) -> Option<(String, usize)> {
+        if !self.opts.auto_latin || !self.run_ok || self.run_latin {
+            return None;
+        }
+        if self.run.len() + self.read.len() > RUN_MAX || !is_domain_trimmed(&self.run, &self.read) {
+            return None;
+        }
+        let raw = self.run.iter().chain(self.read.iter()).collect();
+        Some((raw, self.run_text.chars().count()))
+    }
+
+    /// Replace the commit of a run end by the raw run. A Space arms the undo
+    /// that puts the Cyrillic run back.
+    fn make_latin(&mut self, out: &mut KeyOutcome, raw: String, delete: usize, space: bool) {
+        let mut cyrillic = std::mem::take(&mut self.run_text);
+        if let Some(tail) = out.commit.take() {
+            cyrillic.push_str(&tail);
+        }
+        self.drop_undo();
+        if space {
+            let mut buf = std::mem::take(&mut self.spare);
+            buf.clear();
+            self.undo = Some(Undo {
+                raw: buf,
+                latin: false,
+                delete: raw.chars().count() + 1,
+                prev_gender: None,
+                restore: Some(cyrillic),
+            });
+        }
+        out.delete_before = delete;
+        out.commit = Some(raw);
+        self.prev_gender = None;
+    }
+
+    /// The end of the text (`convert_with`) ends the run like a Space would,
+    /// without a key: a domain turns Latin. Returns the raw run and the
+    /// characters to delete.
+    fn finish_text(&mut self) -> Option<(String, usize)> {
+        let found = self.domain_run();
+        if found.is_some() {
+            self.clear_buffer();
+        }
+        found
+    }
+
     /// Process one key. Ports `ImeProcessKey` + `ImeToAsciiEx`.
     pub fn process_key(&mut self, key: Key) -> KeyOutcome {
         let mut out = KeyOutcome::default();
+        // Without Auto Latin a symbol is just `Other`.
+        let key = match key {
+            Key::Symbol(_) if !self.opts.auto_latin => Key::Other,
+            k => k,
+        };
         // Only a key right after the expansion can undo it.
         // Shift/CapsLock alone is not such a key.
         // (An armed undo means the composition is empty.)
         if key != Key::Modifier {
             if let Some(mut u) = self.undo.take() {
+                if key == Key::Backspace && u.restore.is_some() {
+                    // An automatic change: put the Cyrillic run back.
+                    self.spare = u.raw;
+                    self.prev_gender = None;
+                    out.consumed = true;
+                    out.delete_before = u.delete;
+                    out.commit = u.restore;
+                    return out;
+                }
                 if key == Key::Backspace {
                     // `read` is empty here: swap, so both buffers are kept.
                     std::mem::swap(&mut self.read, &mut u.raw);
@@ -565,9 +788,44 @@ impl Composer {
             }
         }
         if !self.wants_key(key) {
+            let auto = self.opts.auto_latin;
+            let mut domain = None;
+            let mut made_latin = false;
+            if auto {
+                match key {
+                    Key::Symbol(c) => {
+                        if self.try_trigger(c, &mut out) {
+                            return out;
+                        }
+                        self.run_push(c);
+                    }
+                    Key::Space | Key::Other => domain = self.domain_run(),
+                    Key::Modifier => {}
+                    // Backspace, caret keys, Esc: the text may have changed.
+                    _ => self.stop_run(),
+                }
+            }
             // Not ours: finish any composition, let the key through.
             let (commit, gender) = self.finish_word(key == Key::Space);
             out.commit = commit;
+            if auto {
+                match key {
+                    Key::Symbol(c) if self.run_ok => {
+                        if let Some(s) = &out.commit {
+                            self.run_text.push_str(s);
+                        }
+                        self.run_text.push(c);
+                    }
+                    Key::Space | Key::Other => {
+                        if let Some((raw, delete)) = domain {
+                            made_latin = true;
+                            self.make_latin(&mut out, raw, delete, key == Key::Space);
+                        }
+                        self.reset_run();
+                    }
+                    _ => {}
+                }
+            }
             // A space right after a word hands that word's gender to the next
             // one; repeated spaces keep it; any other key forgets it.
             match key {
@@ -575,6 +833,10 @@ impl Composer {
                 // Shift/CapsLock alone must not break the context.
                 Key::Space | Key::Modifier => {}
                 _ => self.prev_gender = None,
+            }
+            // A run that turned Latin leaves no gender for a particle.
+            if made_latin {
+                self.prev_gender = None;
             }
             return out;
         }
@@ -584,6 +846,9 @@ impl Composer {
                 if self.read.len() >= MAX_COMP_LEN {
                     out.rejected = true;
                     return out;
+                }
+                if self.run_latin && self.read.is_empty() {
+                    self.latin = true;
                 }
                 let (back, rc) = self.read_cursor();
                 self.read.insert(rc, c);
@@ -656,10 +921,15 @@ pub fn convert_with(input: &str, opts: &Options) -> String {
             Key::Char(ch)
         } else if ch == ' ' {
             Key::Space
-        } else {
+        } else if ch.is_alphabetic() || ch.is_whitespace() || ch.is_control() {
             Key::Other
+        } else {
+            Key::Symbol(ch)
         };
         let r = c.process_key(key);
+        for _ in 0..r.delete_before {
+            out.pop();
+        }
         if let Some(s) = r.commit {
             out.push_str(&s);
         }
@@ -669,6 +939,12 @@ pub fn convert_with(input: &str, opts: &Options) -> String {
     }
     // The end of the text is not a typed Space or punctuation, so a trailing
     // abbreviation stays as typed (бн until a Space follows), like `commit`.
+    if let Some((raw, delete)) = c.finish_text() {
+        for _ in 0..delete {
+            out.pop();
+        }
+        out.push_str(&raw);
+    }
     if let Some(s) = c.commit() {
         out.push_str(&s);
     }

@@ -40,6 +40,9 @@ when a new concept appears; rename here first when a name changes.
 | Undo | Backspace right after an automatic change restores what was typed | `KeyOutcome::delete_before` |
 | Keep Latin | Esc while composing shows the raw Latin keys instead of Cyrillic; Esc again switches back | `Options::keep_latin`, `Key::Escape` |
 | Reopen | Backspace right after a word and a space puts the word back in the preedit with its raw keys | `Options::keep_latin` |
+| Auto Latin | A link or an email turns Latin by itself (`@`, `://`, a `/` after a domain, or a domain at the end of a run). Separate switch from Keep Latin | `Options::auto_latin` |
+| Run | Everything typed since the last Space, Enter or Tab: words and the symbols between them. A caret move stops tracking until the next one. Auto Latin looks at the run | `docs/typing-rules.md` §9 |
+| Symbol key | A printable key that is not a letter and not a space (`.` `@` `/` digits). Acts like `Key::Other` when Auto Latin is off | `Key::Symbol` |
 | Portable config | The one settings file shared by web, Windows and macOS (issue #8) | |
 
 ## Project

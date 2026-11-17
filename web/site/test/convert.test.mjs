@@ -25,6 +25,8 @@ const cases = [
   ["aaviin", "аавын"],
   ["", ""],
   ["hello, 123!\nsain", "хэллө, 123!\nсайн"],
+  ["github.com", "github.com"],
+  ["bat@gmail.com", "bat@gmail.com"],
 ];
 for (const [input, expected] of cases) {
   test(JSON.stringify(input), () => assert.equal(convert(input), expected));
