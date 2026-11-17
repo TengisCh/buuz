@@ -25,7 +25,8 @@ Today there is a web converter: type Latin in the top box, copy Cyrillic from th
 - geree -> гэрээ ; gar -> гар (o and u follow vowel harmony: о/ө, у/ү)
 - q or ö -> ө ; w or ü -> ү (force the letter regardless of harmony)
 - y -> ы ; sh -> ш ; ch -> ч ; yo -> ё ; yu -> ю ; ya -> я ; ye -> е
-- ' -> ь ; " -> ъ ; ii -> ий
+- ' -> ь ; " -> ъ ; ii -> ий, or ы in masculine words (aaviin -> аавын) ; ii' -> ий (forced)
+- Smart vowels (on by default, can be switched off): unee -> үнээ (looks ahead for the word's gender) ; irsen uu -> ирсэн үү (the particle follows the previous word)
 
 ## FAQ
 

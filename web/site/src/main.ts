@@ -3,7 +3,7 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { convert } from "./wasm/buuz.js";
+import init, { convert_with } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { setupLang, t, type Key } from "./i18n";
 import phrases from "./phrases.json";
@@ -52,10 +52,30 @@ function animate(cls: "puff" | "hop"): void {
 
 let ready = false;
 
+// "Smart vowels" (on by default): look-ahead harmony, ий/ы, the уу/үү particle.
+// Off gives the classic left-to-right behaviour of the original Buuz.
+const smartBox = document.getElementById("smart") as HTMLInputElement;
+let smart = true;
+try {
+  smart = localStorage.getItem("buuz.smart") !== "off";
+} catch {
+  /* private mode: default on */
+}
+smartBox.checked = smart;
+smartBox.addEventListener("change", () => {
+  smart = smartBox.checked;
+  try {
+    localStorage.setItem("buuz.smart", smart ? "on" : "off");
+  } catch {
+    /* private mode: don't remember */
+  }
+  render();
+});
+
 function render(): void {
-  // convert() is microseconds even for long pastes, so run it synchronously
+  // convert_with() is microseconds even for long pastes, so run it synchronously
   // on every input event: no debounce, no frame delay.
-  cyr.value = ready ? convert(latin.value.normalize("NFC")) : "";
+  cyr.value = ready ? convert_with(latin.value.normalize("NFC"), smart) : "";
 }
 
 const toast = document.getElementById("toast") as HTMLElement;
@@ -178,7 +198,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = ready ? convert(text) : "";
+  cyr.placeholder = ready ? convert_with(text, smart) : "";
 }
 function typewriter(): void {
   let p = 0;

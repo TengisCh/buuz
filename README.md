@@ -44,10 +44,11 @@ Most letters are what you'd guess (`b` → б, `d` → д, `sain` → сайн).
 | `w` | ү | `yo` | ё | `c` | ц | `"` | ъ |
 | `q` | ө | `yu` | ю | `ch` | ч | | |
 | `y` | ы | `ya` | я | `sh` | ш | | |
-| `ii` | ий | | | `j` | ж | | |
+| `ii` | ий / ы | | | `j` | ж | | |
+| `ii'` | ий | | | | | | |
 | | | | | `z` | з | | |
 
-✨ **Vowel harmony:** `o` and `u` pick о/ө and у/ү for you, so `geree` → гэрээ and `gar` → гар.
+✨ **Vowel harmony:** `o` and `u` pick о/ө and у/ү for you, so `geree` → гэрээ and `gar` → гар. It looks ahead in the word (`unee` → үнээ), writes ы after masculine words (`aaviin` → аавын) and lets `uu` follow the word before it (`irsen uu` → ирсэн үү). Type `ii'` to force ий. All of this can be switched off for the original behaviour.
 
 ## 🥟 Why Buuz
 

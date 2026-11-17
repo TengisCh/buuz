@@ -23,7 +23,10 @@ const mn = {
     "Бүх зүйл таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.",
   howTo: "Яаж бичих вэ?",
   howToBody:
-    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай.",
+    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай. Үгийн хойно орох эгшгийг ч харж сонгодог тул <kbd>unee</kbd> гэвэл үнээ болно. Эр үгэнд <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий гаргах бол <kbd>ii'</kbd>.",
+  smartVowels: "Ухаалаг эгшиг",
+  smartVowelsHint:
+    "Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.",
   appTitle: "Ямар ч апп дээр монголоор бич",
   appBody:
     "Buuz удахгүй Windows, macOS-ийн гар болж гарна. Энэ хуудастай яг ижил дүрмээр, хүссэн апп дотроо шууд бичнэ.",
@@ -109,7 +112,10 @@ const en: Record<Key, string> = {
     "Everything runs on your device. What you type is never sent anywhere.",
   howTo: "How to type",
   howToBody:
-    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү.",
+    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү. Buuz also looks ahead in the word, so <kbd>unee</kbd> gives үнээ, and <kbd>ii</kbd> becomes ы in masculine words (<kbd>aaviin</kbd> gives аавын). To force ий, type <kbd>ii'</kbd>.",
+  smartVowels: "Smart vowels",
+  smartVowelsHint:
+    "Picks vowels by looking ahead in the word (unee gives үнээ, aaviin gives аавын). Turn off for the original Buuz rules.",
   appTitle: "Type Mongolian in every app",
   appBody:
     "Buuz is also coming as a keyboard for Windows and macOS, with the same rules as this page, so you can type straight into any app.",
