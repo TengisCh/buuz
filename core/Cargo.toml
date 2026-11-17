@@ -1,0 +1,9 @@
+[package]
+name = "buuz-core"
+version = "0.1.0"
+edition = "2021"
+description = "Offline phonetic Latin to Mongolian Cyrillic transliteration core with a composition-buffer API (Buuz-compatible)"
+license = "Apache-2.0"
+rust-version = "1.70"
+
+[dependencies]

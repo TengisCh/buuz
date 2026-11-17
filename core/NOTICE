@@ -1,0 +1,14 @@
+Buuz Core
+Copyright 2026 the Buuz contributors
+
+This product includes software derived from Buuz - Input Method Editor
+(https://github.com/odbayar/buuz), originally developed by
+Odbayar Nyamtseren and licensed under the Apache License, Version 2.0.
+
+Buuz - Input Method Editor
+Copyright 2009 Odbayar Nyamtseren <odbayar.n@gmail.com>
+
+Derived portions: the Latin-to-Mongolian-Cyrillic conversion rule table, the
+male/female word-state (vowel harmony) logic, the case-expansion logic, and the
+composition-buffer/cursor behaviour in src/ were ported from Composer.cpp of
+the original project into Rust.
