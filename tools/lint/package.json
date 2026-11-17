@@ -9,8 +9,8 @@
     "mermaid": "node check-mermaid.mjs"
   },
   "devDependencies": {
-    "markdownlint-cli2": "0.17.2",
-    "mermaid": "11.4.1",
-    "playwright": "1.49.1"
+    "markdownlint-cli2": "0.24.1",
+    "mermaid": "11.16.1",
+    "playwright": "1.64.1"
   }
 }
