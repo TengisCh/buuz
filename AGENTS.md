@@ -94,7 +94,7 @@ Dependencies are the easiest way into a keyboard app, so:
   `<area>/<slug>`. Never commit to `main` directly.
 - Commit subject: `<area>: <what changed>` in lower case, for example
   `core: accept ö/ü as input for ө/ү`. Areas: `core`, `web`, `docs`,
-  `brand`, `lint`, `ci`, `deps`, `agents`.
+  `brand`, `design`, `lint`, `ci`, `deps`, `agents`.
 - One concern per PR. Link the issue (`Closes #n`). PRs are squash-merged.
 - Only commit, push or open a PR when the maintainer asks.
 
