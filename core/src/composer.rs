@@ -44,7 +44,11 @@ pub enum Key {
     /// A space: like `Other` (commits and passes through), but the composer
     /// remembers the previous word's gender for the particle `uu`/`ү`.
     Space,
-    /// Anything else (space, Enter, Tab, digits, punctuation, Esc...).
+    /// Esc. With [`Options::keep_latin`] and a composition in progress it
+    /// toggles the preedit between Cyrillic and the raw Latin keys; otherwise
+    /// it acts like [`Key::Other`].
+    Escape,
+    /// Anything else (space, Enter, Tab, digits, punctuation...).
     /// Ends the composition and is passed through to the application.
     Other,
 }
@@ -61,7 +65,8 @@ pub struct KeyOutcome {
     pub rejected: bool,
     /// Number of characters (Unicode scalars) right before the caret that the
     /// application must delete before showing the preedit. Non-zero only when
-    /// Backspace undoes an abbreviation expansion.
+    /// Backspace reopens a word committed by Space: an abbreviation expansion,
+    /// or any word with `keep_latin`.
     pub delete_before: usize,
 }
 
@@ -91,6 +96,10 @@ pub struct Options {
     /// punctuation (`bn ` -> `байна `). `None` (the default, and for
     /// [`Options::classic`]) keeps the core faithful: no expansion.
     pub abbreviations: Option<Arc<Abbreviations>>,
+    /// Keep Latin: Esc while composing shows the raw Latin keys (`ok` stays
+    /// `ok`, not `ок`), and Backspace right after a word and a Space reopens
+    /// that word in the preedit. `false` is the original Buuz behaviour.
+    pub keep_latin: bool,
 }
 
 impl Default for Options {
@@ -98,6 +107,7 @@ impl Default for Options {
         Options {
             smart_vowels: true,
             abbreviations: None,
+            keep_latin: true,
         }
     }
 }
@@ -110,6 +120,7 @@ impl Options {
         Options {
             smart_vowels: true,
             abbreviations: Some(Abbreviations::builtin()),
+            keep_latin: true,
         }
     }
 
@@ -119,18 +130,22 @@ impl Options {
         Options {
             smart_vowels: false,
             abbreviations: None,
+            keep_latin: false,
         }
     }
 }
 
-/// What Backspace needs to take back an expansion committed by Space.
+/// What Backspace needs to reopen the word just committed by Space: an
+/// abbreviation expansion, or (with [`Options::keep_latin`]) any word.
 #[derive(Debug, Clone)]
 struct Undo {
-    /// The raw keys of the abbreviation.
+    /// The raw keys of the word.
     raw: Vec<char>,
-    /// Characters to delete: the expansion plus the space.
+    /// The word was shown in Latin (Esc) when it was committed.
+    latin: bool,
+    /// Characters to delete: the committed word plus the space.
     delete: usize,
-    /// The previous-word gender the abbreviation was typed with.
+    /// The previous-word gender the word was typed with.
     prev_gender: Option<u8>,
 }
 
@@ -307,8 +322,14 @@ pub struct Composer {
     reseeded: bool,
     /// Backspace just undid an expansion: this word will not expand again.
     no_expand: bool,
-    /// Set right after an expansion committed by Space.
+    /// Esc switched the preedit to the raw Latin keys.
+    latin: bool,
+    /// Set right after a word committed by Space that Backspace can reopen.
     undo: Option<Undo>,
+    /// A spare buffer for `Undo::raw`. Arming an undo happens after every word,
+    /// so it copies into this recycled `Vec` instead of cloning `read`: no
+    /// allocation per word once the buffer has grown to the longest word.
+    spare: Vec<char>,
     /// Scratch buffer reused across keystrokes.
     tokens: Vec<Token>,
 }
@@ -334,7 +355,9 @@ impl Composer {
             prev_gender: None,
             reseeded: false,
             no_expand: false,
+            latin: false,
             undo: None,
+            spare: Vec::new(),
             tokens: Vec::new(),
         }
     }
@@ -350,7 +373,7 @@ impl Composer {
     /// sent while nothing was composed and handled elsewhere).
     pub fn clear_context(&mut self) {
         self.prev_gender = None;
-        self.undo = None;
+        self.drop_undo();
     }
 
     pub fn is_composing(&self) -> bool {
@@ -378,6 +401,7 @@ impl Composer {
         match key {
             Key::Char(c) if is_input_char(c) => true,
             Key::Backspace if self.undo.is_some() => true,
+            Key::Escape => self.opts.keep_latin && !self.comp.is_empty(),
             _ if self.comp.is_empty() => false,
             Key::Backspace
             | Key::Delete
@@ -396,7 +420,7 @@ impl Composer {
     /// may land in a different place.
     pub fn commit(&mut self) -> Option<String> {
         self.prev_gender = None;
-        self.undo = None;
+        self.drop_undo();
         self.take_composition()
     }
 
@@ -414,26 +438,54 @@ impl Composer {
     pub fn cancel(&mut self) {
         self.clear_buffer();
         self.prev_gender = None;
-        self.undo = None;
+        self.drop_undo();
     }
 
     /// Drop the composition and any pending undo (but keep the previous-word
     /// context, as before).
     pub fn reset(&mut self) {
         self.clear_buffer();
-        self.undo = None;
+        self.drop_undo();
+    }
+
+    /// Forget the pending undo, keeping its buffer for the next one.
+    fn drop_undo(&mut self) {
+        if let Some(u) = self.undo.take() {
+            self.spare = u.raw;
+        }
+    }
+
+    /// Arm the undo for the word in `read`, copying it into the spare buffer.
+    fn arm_undo(&mut self, latin: bool, delete: usize) {
+        let mut raw = std::mem::take(&mut self.spare);
+        raw.clear();
+        raw.extend_from_slice(&self.read);
+        self.undo = Some(Undo {
+            raw,
+            latin,
+            delete,
+            prev_gender: self.prev_gender,
+        });
     }
 
     /// Empty the buffer; the previous-word context and the undo stay.
     fn clear_buffer(&mut self) {
         self.reseeded = false;
         self.no_expand = false;
+        self.latin = false;
         self.read.clear();
         self.comp.clear();
         self.cursor = 0;
     }
 
     fn recompose(&mut self) {
+        if self.latin {
+            // Shown as typed. A Latin word gives no evidence for the particle.
+            self.comp.clear();
+            self.comp.extend_from_slice(&self.read);
+            self.word_gender = X_M;
+            return;
+        }
         let ctx = Context {
             smart: self.opts.smart_vowels,
             prev_gender: self.prev_gender,
@@ -456,11 +508,14 @@ impl Composer {
 
     /// Commit the word at Space or punctuation, expanding an abbreviation if
     /// one matches. Returns the text and the gender it leaves for the next
-    /// word. After a Space expansion the undo is armed (it needs the
-    /// previous-word gender, so this runs before the caller updates it).
+    /// word. After a Space expansion, or any word with `keep_latin`, the undo
+    /// is armed (it needs the previous-word gender, so this runs before the
+    /// caller updates it).
     fn finish_word(&mut self, space: bool) -> (Option<String>, Option<u8>) {
         let expansion = match &self.opts.abbreviations {
-            Some(abbr) if !self.reseeded && !self.no_expand && !self.comp.is_empty() => {
+            Some(abbr)
+                if !self.reseeded && !self.no_expand && !self.latin && !self.comp.is_empty() =>
+            {
                 abbr.lookup(&self.read)
             }
             _ => None,
@@ -469,16 +524,16 @@ impl Composer {
             Some(text) => {
                 let gender = text_gender(&text);
                 if space {
-                    self.undo = Some(Undo {
-                        raw: self.read.clone(),
-                        delete: text.chars().count() + 1,
-                        prev_gender: self.prev_gender,
-                    });
+                    self.arm_undo(false, text.chars().count() + 1);
                 }
                 self.clear_buffer();
                 (Some(text), gender)
             }
             None => {
+                // A word re-seeded from Cyrillic has no raw keys left to reopen.
+                if space && self.opts.keep_latin && !self.reseeded && !self.comp.is_empty() {
+                    self.arm_undo(self.latin, self.comp.len() + 1);
+                }
                 let gender = Some(self.word_gender);
                 (self.take_composition(), gender)
             }
@@ -490,19 +545,24 @@ impl Composer {
         let mut out = KeyOutcome::default();
         // Only a key right after the expansion can undo it.
         // Shift/CapsLock alone is not such a key.
-        let undo = self.undo.take();
-        if key == Key::Modifier {
-            self.undo = undo.clone();
-        }
-        if let (Key::Backspace, true, Some(u)) = (key, self.comp.is_empty(), undo) {
-            self.read = u.raw;
-            self.no_expand = true;
-            self.prev_gender = u.prev_gender;
-            self.recompose();
-            self.cursor = self.comp.len();
-            out.consumed = true;
-            out.delete_before = u.delete;
-            return out;
+        // (An armed undo means the composition is empty.)
+        if key != Key::Modifier {
+            if let Some(mut u) = self.undo.take() {
+                if key == Key::Backspace {
+                    // `read` is empty here: swap, so both buffers are kept.
+                    std::mem::swap(&mut self.read, &mut u.raw);
+                    self.spare = u.raw;
+                    self.latin = u.latin;
+                    self.no_expand = true;
+                    self.prev_gender = u.prev_gender;
+                    self.recompose();
+                    self.cursor = self.comp.len();
+                    out.consumed = true;
+                    out.delete_before = u.delete;
+                    return out;
+                }
+                self.spare = u.raw;
+            }
         }
         if !self.wants_key(key) {
             // Not ours: finish any composition, let the key through.
@@ -557,6 +617,14 @@ impl Composer {
             Key::Home if self.cursor > 0 => {
                 self.comp_to_read();
                 self.cursor = 0;
+            }
+            // Only reached with keep_latin and a composition (see wants_key).
+            // A re-seeded word has no raw keys, so Esc leaves it alone.
+            Key::Escape if !self.reseeded => {
+                self.latin = !self.latin;
+                self.recompose();
+                // Without a re-seed the caret is always at the end.
+                self.cursor = self.comp.len();
             }
             Key::End if self.cursor < self.comp.len() => {
                 self.comp_to_read();
