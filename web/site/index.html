@@ -10,6 +10,9 @@
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#FFF3E0" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1E1838" media="(prefers-color-scheme: dark)" />
     <script type="module" src="/src/main.ts"></script>
     <script>
       window.va =
@@ -24,7 +27,7 @@
     <main>
       <header>
         <div class="top">
-          <h1>Buuz</h1>
+          <h1 class="wordmark"><img id="mascot" class="mascot" src="/buuz.svg" alt="" width="56" height="56" /><span>Buuz</span><sup>2.0</sup></h1>
           <button id="lang" type="button" class="ghost lang" lang="en" title="Switch to English" aria-label="Switch to English">EN</button>
         </div>
         <p class="tag" data-i18n="tag">Латинаар бич, кирилл болоод гарчихна.</p>

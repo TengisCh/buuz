@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Copyright 2026 the Buuz contributors
 
+import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
 import init, { convert } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
@@ -13,6 +14,15 @@ const cyr = document.getElementById("cyr") as HTMLTextAreaElement;
 const copyBtn = document.getElementById("copy") as HTMLButtonElement;
 const clearBtn = document.getElementById("clear") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLElement;
+const mascot = document.getElementById("mascot") as HTMLElement;
+
+// The mascot puffs while you type and hops when you copy. Restarting the
+// animation needs the class removed and a reflow before adding it back.
+function animate(cls: "puff" | "hop"): void {
+  mascot.classList.remove("puff", "hop");
+  void mascot.offsetWidth;
+  mascot.classList.add(cls);
+}
 
 let ready = false;
 
@@ -40,9 +50,14 @@ async function copy(): Promise<void> {
     cyr.setSelectionRange(0, 0);
   }
   say(t("copied"));
+  animate("hop");
 }
 
-latin.addEventListener("input", render);
+latin.addEventListener("input", () => {
+  render();
+  if (!mascot.classList.contains("puff")) animate("puff");
+});
+mascot.addEventListener("animationend", () => mascot.classList.remove("puff", "hop"));
 copyBtn.addEventListener("click", () => void copy());
 clearBtn.addEventListener("click", () => {
   latin.value = "";
