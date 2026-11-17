@@ -1,10 +1,7 @@
 <!-- markdownlint-disable MD041 -->
 <p align="center">
   <a href="https://buuz.thetengis.com">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/readme/hero-dark.png">
-      <img src="docs/readme/hero-light.png" alt="Buuz 2.0: sain baina uu becomes сайн байна уу" width="520">
-    </picture>
+    <img src="docs/readme/hero.png" alt="Buuz 2.0: sain baina uu becomes сайн байна уу" width="520">
   </a>
 </p>
 
