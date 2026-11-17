@@ -1,0 +1,21 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Platform build output
+*.user
+[Bb]in/
+[Oo]bj/
+build/
+DerivedData/
+xcuserdata/
+node_modules/
+dist/
+pkg/

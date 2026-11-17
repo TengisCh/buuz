@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 //! Composition-buffer API mirroring the original Buuz IME `Composer`.
 //!
 //! A front end (Windows TSF, macOS InputMethodKit, ...) feeds [`Key`]s to a
@@ -133,8 +132,13 @@ impl Composer {
         match key {
             Key::Char(c) if is_input_char(c) => true,
             _ if self.comp.is_empty() => false,
-            Key::Backspace | Key::Delete | Key::Modifier | Key::Left | Key::Right
-            | Key::Home | Key::End => true,
+            Key::Backspace
+            | Key::Delete
+            | Key::Modifier
+            | Key::Left
+            | Key::Right
+            | Key::Home
+            | Key::End => true,
             _ => false,
         }
     }
@@ -242,7 +246,11 @@ pub fn convert(input: &str) -> String {
     let mut c = Composer::new();
     let mut out = String::new();
     for ch in input.chars() {
-        let key = if is_input_char(ch) { Key::Char(ch) } else { Key::Other };
+        let key = if is_input_char(ch) {
+            Key::Char(ch)
+        } else {
+            Key::Other
+        };
         let r = c.process_key(key);
         if let Some(s) = r.commit {
             out.push_str(&s);

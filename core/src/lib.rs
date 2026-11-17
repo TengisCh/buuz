@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 //! Offline, platform-independent Latin -> Mongolian Cyrillic phonetic
 //! transliteration core, behaviour-compatible with the original Buuz IME.
 //!

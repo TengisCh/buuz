@@ -1,0 +1,35 @@
+name: Typing bug
+description: A Latin input turns into the wrong Cyrillic
+labels: ["typing-rules"]
+body:
+  - type: input
+    id: typed
+    attributes:
+      label: What you typed (Latin keys)
+      placeholder: geree
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: гэрээ
+    validations:
+      required: true
+  - type: input
+    id: got
+    attributes:
+      label: What you got
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Where
+      options: [Windows, macOS, Web converter, Other]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version (OS and Buuz)

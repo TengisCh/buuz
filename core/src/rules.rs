@@ -202,9 +202,17 @@ fn add_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: &str, to: &str, flags
         let mut t = to.clone();
         for (bit, &i) in alpha.iter().enumerate() {
             let upper = mask & (1 << bit) == 0;
-            f[i] = if upper { to_upper(f[i]) } else { to_lower(f[i]) };
+            f[i] = if upper {
+                to_upper(f[i])
+            } else {
+                to_lower(f[i])
+            };
             if let Some(tp) = pos_map[i] {
-                t[tp] = if upper { to_upper(t[tp]) } else { to_lower(t[tp]) };
+                t[tp] = if upper {
+                    to_upper(t[tp])
+                } else {
+                    to_lower(t[tp])
+                };
             }
         }
         insert_rule(map, f, Rule { to: t, flags });

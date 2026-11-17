@@ -1,0 +1,17 @@
+name: Other bug
+description: Crashes, install problems, an app that misbehaves with Buuz
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps to reproduce, what you expected, what you got.
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: OS, app where you were typing, Buuz version
+    validations:
+      required: true
