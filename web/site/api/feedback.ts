@@ -8,7 +8,14 @@
 // function: only what the person types into the feedback form.
 
 const REPO = "TengisCh/buuz";
-const CATEGORIES = new Set(["bug", "idea", "other"]);
+// Category -> GitHub labels. GitHub creates a missing label on first use.
+const LABELS: Record<string, string[]> = {
+  thanks: ["feedback", "thanks"],
+  bug: ["feedback", "bug"],
+  idea: ["feedback", "enhancement"],
+  collab: ["feedback", "collaboration"],
+  other: ["feedback"],
+};
 const MIN_MESSAGE = 5;
 const MAX_MESSAGE = 2000;
 const MAX_CONTACT = 200;
@@ -81,7 +88,8 @@ export async function POST(request: Request): Promise<Response> {
   const message = str(data.message, MAX_MESSAGE + 1);
   if (message.length < MIN_MESSAGE) return json({ error: "too_short" }, 400);
   if (message.length > MAX_MESSAGE) return json({ error: "too_long" }, 400);
-  const category = CATEGORIES.has(str(data.category, 10)) ? str(data.category, 10) : "other";
+  const raw = str(data.category, 10);
+  const category = raw in LABELS ? raw : "other";
   const contact = str(data.contact, MAX_CONTACT);
   const lang = str(data.lang, 2) === "en" ? "en" : "mn";
 
@@ -116,14 +124,18 @@ export async function POST(request: Request): Promise<Response> {
         "user-agent": "buuz-feedback-form",
         "content-type": "application/json",
       },
-      body: JSON.stringify({ title, body, labels: ["feedback"] }),
+      body: JSON.stringify({ title, body, labels: LABELS[category] }),
     });
     if (!res.ok) {
       // Status only: never log the token or the response headers.
       console.error("feedback: GitHub responded", res.status);
       return json({ error: "upstream" }, 502);
     }
-    return json({ ok: true }, 200);
+    // Hand back the public issue link so the sender can follow it.
+    const issue = (await res.json().catch(() => ({}))) as { html_url?: unknown; number?: unknown };
+    const url = typeof issue.html_url === "string" && issue.html_url.startsWith(`https://github.com/${REPO}/issues/`) ? issue.html_url : undefined;
+    const number = typeof issue.number === "number" ? issue.number : undefined;
+    return json({ ok: true, url, number }, 200);
   } catch {
     console.error("feedback: GitHub request failed");
     return json({ error: "upstream" }, 502);

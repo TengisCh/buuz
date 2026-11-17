@@ -55,11 +55,13 @@
     <script defer src="/_vercel/speed-insights/script.js"></script>
   </head>
   <body>
-    <main>
+    <a class="skip" href="#latin" data-i18n="skip">Хөрвүүлэгч рүү очих</a>
+    <main id="main">
       <header>
         <div class="top">
           <h1 class="wordmark"><img id="mascot" class="mascot" src="/buuz.svg" alt="" width="56" height="56" /><span>Buuz</span><sup>2.0</sup></h1>
           <div class="toggles">
+          <a class="icon-link" href="https://github.com/TengisCh/buuz" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub"><svg class="gh" viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
           <button id="theme" type="button" class="ghost icon" title="Харанхуй горим" aria-label="Харанхуй горим" aria-pressed="false">
             <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
             <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g></svg>
@@ -161,34 +163,94 @@
         </ul>
       </section>
 
-      <section class="feedback">
-        <h2><span aria-hidden="true">💬 </span><span data-i18n="feedbackTitle">Санал хүсэлт</span></h2>
-        <p data-i18n="feedbackBody">Алдаа олсон уу, эсвэл гоё санаа байна уу? Доор бичээд илгээчихээрэй.</p>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="f-inner">
+        <div class="f-grid">
+          <div class="f-brand">
+            <a class="f-logo" href="/"><img src="/buuz.svg" alt="" width="32" height="32" /><span>Buuz</span><sup>2.0</sup></a>
+            <p data-i18n="tag">Латинаар бич, кирилл болоод гарчихна.</p>
+            <div class="f-social">
+              <a class="icon-link" href="https://github.com/TengisCh/buuz" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub"><svg class="gh" viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg></a>
+              <a class="icon-link" href="https://github.com/sponsors/TengisCh" target="_blank" rel="noopener" aria-label="GitHub Sponsors" title="GitHub Sponsors"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="#EA4AAA" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.4h2c.7-1.3 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21Z"/></svg></a>
+              <a class="icon-link" href="mailto:buuz@thetengis.com" aria-label="buuz@thetengis.com" title="buuz@thetengis.com"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 6.5h17v11h-17z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6"/></svg></a>
+            </div>
+          </div>
+          <nav aria-labelledby="f-h-product">
+            <h2 id="f-h-product" data-i18n="footProduct">Бүтээгдэхүүн</h2>
+            <ul>
+              <li><a href="/">🌐 <span data-i18n="footWeb">Вэб хөрвүүлэгч</span></a></li>
+              <li><span class="muted"><svg class="pi" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="#0078D4" d="M0 0h11.377v11.372H0zM12.623 0H24v11.372H12.623zM0 12.623h11.377V24H0zM12.623 12.623H24V24H12.623z"/></svg> Windows · <span data-i18n="soon">удахгүй</span></span></li>
+              <li><span class="muted"><svg class="pi apple" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg> macOS · <span data-i18n="soon">удахгүй</span></span></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-h-community">
+            <h2 id="f-h-community" data-i18n="footCommunity">Нээлттэй эх</h2>
+            <ul>
+              <li><a class="ghlink" href="https://github.com/TengisCh/buuz" target="_blank" rel="noopener"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span>GitHub</span></a></li>
+              <li><button type="button" class="linklike" data-open-feedback>💬 <span data-i18n="feedbackTitle">Санал хүсэлт</span></button></li>
+              <li><a href="https://github.com/sponsors/TengisCh" target="_blank" rel="noopener">💛 <span data-i18n="footSponsor">Дэмжих</span></a></li>
+              <li><a href="mailto:buuz@thetengis.com">✉️ buuz@thetengis.com</a></li>
+            </ul>
+          </nav>
+          <nav aria-labelledby="f-h-legal">
+            <h2 id="f-h-legal" data-i18n="footLegal">Эрх зүй</h2>
+            <ul>
+              <li><a href="/privacy">🔒 <span data-i18n="footPrivacy">Нууцлалын мэдэгдэл</span></a></li>
+              <li><a href="/cookies">🍪 <span data-i18n="footCookies">Күүкийн бодлого</span></a></li>
+              <li><a href="https://github.com/TengisCh/buuz/blob/main/LICENSE" target="_blank" rel="noopener">📜 <span data-i18n="footLicense">Лиценз</span></a></li>
+            </ul>
+          </nav>
+        </div>
+        <div class="f-bottom">
+          <span>© 2026 Buuz 2.0 · MIT / Apache-2.0</span>
+          <span data-i18n-html="credit">Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.</span>
+        </div>
+      </div>
+    </footer>
+
+    <button id="fb-fab" class="fab" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="fb-panel" data-i18n-aria="feedbackTitle" aria-label="Санал хүсэлт" title="Санал хүсэлт"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12 3C6.9 3 3 6.4 3 10.7c0 2.4 1.3 4.6 3.4 6l-.7 3.2c-.1.5.4.9.9.6l3.6-2.1c.6.1 1.2.2 1.8.2 5.1 0 9-3.4 9-7.8S17.1 3 12 3Zm-4 8.9a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Zm4 0a1.3 1.3 0 1 1 0-2.6 1.3 1.3 0 0 1 0 2.6Z"/></svg></button>
+
+    <div id="fb-panel" class="fb-panel" role="dialog" aria-labelledby="fb-title" hidden>
+      <div class="fb-head">
+        <h2 id="fb-title"><span data-i18n="feedbackTitle">Санал хүсэлт</span> <span aria-hidden="true">👋</span></h2>
+        <button type="button" class="fb-close" data-i18n-aria="close" aria-label="Хаах" title="Хаах"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="fb-tabs" role="tablist">
+        <button type="button" role="tab" id="tab-fb" aria-controls="pane-fb" aria-selected="true">💬 <span data-i18n="tabFeedback">Санал</span></button>
+        <button type="button" role="tab" id="tab-contact" aria-controls="pane-contact" aria-selected="false" tabindex="-1">✉️ <span data-i18n="tabContact">Холбоо барих</span></button>
+      </div>
+
+      <div id="pane-fb" role="tabpanel" aria-labelledby="tab-fb">
         <form id="fb" novalidate>
-          <label for="fb-msg" data-i18n="fbMessage">Таны санал</label>
-          <textarea id="fb-msg" name="message" rows="4" maxlength="2000" required data-i18n-ph="fbMessagePh" placeholder="Юу бодож байна, бидэнд хэлээрэй..."></textarea>
           <fieldset class="cats">
-            <legend data-i18n="fbCategory">Төрөл</legend>
-            <label><input type="radio" name="category" value="idea" checked /> <span data-i18n="fbIdea">Санаа</span></label>
-            <label><input type="radio" name="category" value="bug" /> <span data-i18n="fbBug">Алдаа</span></label>
-            <label><input type="radio" name="category" value="other" /> <span data-i18n="fbOther">Бусад</span></label>
+            <legend class="sr-only" data-i18n="fbCategory">Төрөл</legend>
+            <label><input type="radio" name="category" value="thanks" /><span>🙏 <span data-i18n="fbThanksCat">Талархал</span></span></label>
+            <label><input type="radio" name="category" value="bug" /><span>🐞 <span data-i18n="fbBug">Алдаа</span></span></label>
+            <label><input type="radio" name="category" value="idea" checked /><span>💡 <span data-i18n="fbIdea">Санаа</span></span></label>
+            <label><input type="radio" name="category" value="collab" /><span>🤝 <span data-i18n="fbCollab">Хамтран ажиллах</span></span></label>
+            <label><input type="radio" name="category" value="other" /><span>💬 <span data-i18n="fbOther">Бусад</span></span></label>
           </fieldset>
-          <label for="fb-contact" data-i18n="fbContact">Холбоо барих (заавал биш)</label>
-          <input id="fb-contact" name="contact" type="text" maxlength="200" autocomplete="off" data-i18n-ph="fbContactPh" placeholder="И-мэйл эсвэл GitHub нэр" />
+          <label for="fb-msg" class="sr-only" data-i18n="fbMessage">Таны санал</label>
+          <textarea id="fb-msg" name="message" rows="4" maxlength="2000" required data-i18n-ph="fbMessagePh" placeholder="Юу бодож байна, бидэнд хэлээрэй..."></textarea>
+          <label for="fb-contact" class="sr-only" data-i18n="fbContact">Холбоо барих (заавал биш)</label>
+          <input id="fb-contact" name="contact" type="text" maxlength="200" autocomplete="off" data-i18n-ph="fbContactPh" placeholder="Имэйл эсвэл GitHub (заавал биш)" />
           <div class="hp" aria-hidden="true"><label>Website <input name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
-          <p class="note" data-i18n="fbPublic">Санал GitHub дээр нийтэд харагдана. Холбоо барих хаягаа хүсвэл л бичээрэй.</p>
+          <p class="note"><span aria-hidden="true">🌐 </span><span data-i18n="fbPublic">Санал GitHub дээр нийтэд харагдана.</span></p>
           <div class="fb-actions">
-            <button class="primary" id="fb-send" type="submit" data-i18n="feedbackBtn">Санал илгээх</button>
-            <a class="ghlink" href="https://github.com/TengisCh/buuz/issues/new/choose" target="_blank" rel="noopener"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span data-i18n="fbGithub">Эсвэл GitHub дээр бичих</span></a>
+            <a class="ghlink small" href="https://github.com/TengisCh/buuz/issues/new/choose" target="_blank" rel="noopener"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span data-i18n="fbGithub">GitHub дээр бичих</span></a>
+            <button class="primary" id="fb-send" type="submit" data-i18n="feedbackBtn">Илгээх</button>
           </div>
           <p id="fb-status" class="fb-status" role="status"></p>
         </form>
-      </section>
+      </div>
 
-      <footer>
-        <a class="ghlink" href="https://github.com/TengisCh/buuz"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span data-i18n="github">GitHub дээр нээлттэй эх</span></a>
-        <span data-i18n-html="credit">Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.</span>
-      </footer>
-    </main>
+      <div id="pane-contact" role="tabpanel" aria-labelledby="tab-contact" hidden>
+        <p class="contact-lead" data-i18n="contactBody">Хувийн асуулт, хамтын ажиллагаа, хэвлэлийн хүсэлт байвал шууд имэйлээр бичээрэй. Энэ нь нийтэд харагдахгүй.</p>
+        <a class="button mail" href="mailto:buuz@thetengis.com?subject=Buuz%202.0"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 6.5h17v11h-17z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m4 7 8 6 8-6"/></svg><span>buuz@thetengis.com</span></a>
+      </div>
+    </div>
   </body>
 </html>

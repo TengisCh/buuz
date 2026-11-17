@@ -195,10 +195,18 @@ fb.addEventListener("submit", async (e) => {
         lang: document.documentElement.lang,
       }),
     });
-    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string; number?: number };
     if (res.ok) {
       fb.reset();
       fbSay(t("fbThanks"), true);
+      if (data.url && data.url.startsWith("https://github.com/TengisCh/buuz/issues/")) {
+        const a = document.createElement("a");
+        a.href = data.url;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = ` ${t("fbIssue")}${data.number ? ` #${data.number}` : ""}`;
+        fbStatus.append(a);
+      }
     } else {
       fbSay(t(FB_ERRORS[data.error ?? ""] ?? "fbError"), false);
     }
@@ -208,3 +216,59 @@ fb.addEventListener("submit", async (e) => {
     fbSend.disabled = false;
   }
 });
+
+// Floating feedback widget: a chat button bottom-right opens a small panel.
+// Non-modal: the page stays usable; Esc or a click outside closes it.
+const fab = document.getElementById("fb-fab") as HTMLButtonElement;
+const panel = document.getElementById("fb-panel") as HTMLElement;
+const fbMsg = document.getElementById("fb-msg") as HTMLTextAreaElement;
+let lastFocus: HTMLElement | null = null;
+function openPanel(): void {
+  if (!panel.hidden) return;
+  lastFocus = document.activeElement as HTMLElement | null;
+  panel.hidden = false;
+  fab.setAttribute("aria-expanded", "true");
+  fab.classList.add("open");
+  requestAnimationFrame(() => panel.classList.add("show"));
+  (panel.querySelector('[role="tab"][aria-selected="true"]')?.id === "tab-fb" ? fbMsg : (panel.querySelector(".mail") as HTMLElement)).focus();
+}
+function closePanel(restore = true): void {
+  if (panel.hidden) return;
+  panel.classList.remove("show");
+  panel.hidden = true;
+  fab.setAttribute("aria-expanded", "false");
+  fab.classList.remove("open");
+  if (restore) (lastFocus ?? fab).focus();
+}
+fab.addEventListener("click", () => (panel.hidden ? openPanel() : closePanel()));
+panel.querySelector(".fb-close")?.addEventListener("click", () => closePanel());
+for (const el of document.querySelectorAll("[data-open-feedback]")) el.addEventListener("click", openPanel);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !panel.hidden) closePanel();
+});
+document.addEventListener("pointerdown", (e) => {
+  const target = e.target as Node;
+  if (!panel.hidden && !panel.contains(target) && !fab.contains(target)) closePanel(false);
+});
+
+// Tabs: Feedback (public GitHub issue) / Contact (private email).
+const tabs = Array.from(panel.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+function selectTab(tab: HTMLButtonElement, focus = false): void {
+  for (const t of tabs) {
+    const on = t === tab;
+    t.setAttribute("aria-selected", String(on));
+    t.tabIndex = on ? 0 : -1;
+    (document.getElementById(t.getAttribute("aria-controls") ?? "") as HTMLElement).hidden = !on;
+  }
+  if (focus) tab.focus();
+}
+for (const tab of tabs) {
+  tab.addEventListener("click", () => selectTab(tab));
+  tab.addEventListener("keydown", (e) => {
+    const i = tabs.indexOf(tab);
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      e.preventDefault();
+      selectTab(tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length], true);
+    }
+  });
+}
