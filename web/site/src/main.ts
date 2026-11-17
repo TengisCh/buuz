@@ -3,7 +3,7 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { convert_with } from "./wasm/buuz.js";
+import init, { convert_classic, convert_with } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { setupLang, t, type Key } from "./i18n";
 import phrases from "./phrases.json";
@@ -52,6 +52,36 @@ function animate(cls: "puff" | "hop"): void {
 
 let ready = false;
 
+// Mode: "smart" (the default; the feature toggles below apply) or "classic"
+// (the original Buuz, every smart feature off, toggles greyed out).
+type Mode = "smart" | "classic";
+const features = document.getElementById("features") as HTMLFieldSetElement;
+const modeRadios = document.querySelectorAll<HTMLInputElement>('input[name="mode"]');
+let mode: Mode = "smart";
+try {
+  if (localStorage.getItem("buuz.mode") === "classic") mode = "classic";
+} catch {
+  /* private mode: default smart */
+}
+function applyMode(): void {
+  for (const r of modeRadios) r.checked = r.value === mode;
+  features.disabled = mode === "classic";
+}
+applyMode();
+for (const r of modeRadios) {
+  r.addEventListener("change", () => {
+    if (!r.checked) return;
+    mode = r.value === "classic" ? "classic" : "smart";
+    try {
+      localStorage.setItem("buuz.mode", mode);
+    } catch {
+      /* private mode: don't remember */
+    }
+    applyMode();
+    render();
+  });
+}
+
 // "Smart vowels" (on by default): look-ahead harmony, ий/ы, the уу/үү particle.
 // Off gives the classic left-to-right behaviour of the original Buuz.
 const smartBox = document.getElementById("smart") as HTMLInputElement;
@@ -94,7 +124,8 @@ abbrBox.addEventListener("change", () => {
 function render(): void {
   // convert_with() is microseconds even for long pastes, so run it synchronously
   // on every input event: no debounce, no frame delay.
-  cyr.value = ready ? convert_with(latin.value.normalize("NFC"), smart, abbr) : "";
+  const text = latin.value.normalize("NFC");
+  cyr.value = !ready ? "" : mode === "classic" ? convert_classic(text) : convert_with(text, smart, abbr);
 }
 
 const toast = document.getElementById("toast") as HTMLElement;
@@ -217,7 +248,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = ready ? convert_with(text, smart, false) : "";
+  cyr.placeholder = !ready ? "" : mode === "classic" ? convert_classic(text) : convert_with(text, smart, false);
 }
 function typewriter(): void {
   let p = 0;

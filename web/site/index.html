@@ -242,16 +242,24 @@
           <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий
           гаргах бол <kbd>ii'</kbd>.
         </p>
-        <label class="toggle">
-          <input id="smart" type="checkbox" checked />
-          <span data-i18n="smartVowels">Ухаалаг эгшиг</span>
-        </label>
-        <p class="hint" data-i18n="smartVowelsHint">Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.</p>
-        <label class="toggle">
-          <input id="abbr" type="checkbox" checked />
-          <span data-i18n="abbreviations">Товчлол (bn → байна)</span>
-        </label>
-        <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
+        <fieldset class="mode">
+          <legend data-i18n="mode">Горим</legend>
+          <label class="toggle"><input type="radio" name="mode" value="smart" checked /><span data-i18n="modeSmart">Ухаалаг (үндсэн)</span></label>
+          <label class="toggle"><input type="radio" name="mode" value="classic" /><span data-i18n="modeClassic">Сонгодог (анхны Buuz)</span></label>
+        </fieldset>
+        <p class="hint" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p>
+        <fieldset id="features" class="features">
+          <label class="toggle">
+            <input id="smart" type="checkbox" checked />
+            <span data-i18n="smartVowels">Ухаалаг эгшиг</span>
+          </label>
+          <p class="hint" data-i18n="smartVowelsHint">Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.</p>
+          <label class="toggle">
+            <input id="abbr" type="checkbox" checked />
+            <span data-i18n="abbreviations">Товчлол (bn → байна)</span>
+          </label>
+          <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
+        </fieldset>
       </details>
 
       <section class="faq" aria-labelledby="faq-h">

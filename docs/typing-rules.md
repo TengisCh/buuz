@@ -158,6 +158,13 @@ masculine mode; each gender-deciding vowel switches the mode for the letters
 after it. `unee` → унээ, `ovqq` → овөө, `aaviin` → аавийн, `irsen uu` →
 ирсэн уу.
 
+This is part of **classic mode** (`Options::classic()`), which types exactly
+like the original Buuz with every smart feature off: no smart vowels, no
+abbreviations, and none of the features added later. **Smart mode** is the
+default (`Options::smart()` turns every smart feature on); each feature has
+its own switch inside it. On the web converter the "Mode" switch under
+"How to type" picks one; the choice is remembered in the browser.
+
 ### 4.5 What harmony does not cover
 
 - **Words with no deciding vowel** (`hun`, `ug`, `huuhdiin`): genuinely

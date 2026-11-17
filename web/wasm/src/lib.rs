@@ -25,6 +25,14 @@ pub fn convert_with(input: &str, smart_vowels: bool, abbreviations: bool) -> Str
     buuz_core::convert_with(input, &opts)
 }
 
+/// Classic mode: the original Buuz rules with every smart feature off,
+/// including any added later (autocorrect, completion). The "Classic" switch
+/// on the site uses this rather than `convert_with(.., false, false)`.
+#[wasm_bindgen]
+pub fn convert_classic(input: &str) -> String {
+    buuz_core::convert_with(input, &buuz_core::Options::classic())
+}
+
 /// The built-in abbreviation list as text, one `abbreviation = expansion` per line.
 #[wasm_bindgen]
 pub fn abbreviation_list() -> String {
@@ -44,6 +52,14 @@ mod tests {
         assert_eq!(super::convert_with("unee", false, false), "унээ");
         assert_eq!(super::convert_with("irsen uu", true, false), "ирсэн үү");
         assert_eq!(super::convert_with("irsen uu", false, false), "ирсэн уу");
+    }
+
+    #[test]
+    fn convert_classic_is_the_original_buuz() {
+        assert_eq!(super::convert_classic("unee"), "унээ");
+        assert_eq!(super::convert_classic("irsen uu"), "ирсэн уу");
+        assert_eq!(super::convert_classic("bn uu "), "бн уу ");
+        assert_eq!(super::convert_classic("sain baina"), "сайн байна");
     }
 
     #[test]
