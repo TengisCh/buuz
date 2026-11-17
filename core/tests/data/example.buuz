@@ -1,0 +1,26 @@
+# Buuz settings. Save as my-typing.buuz.
+
+# Required, first line with content. Newer files are refused.
+buuz_config = 1
+
+# Base settings: "smart" (default) or "classic".
+# "classic" is the original Buuz and has every smart feature off.
+preset = "smart"
+
+# Only overrides. Leave out a key to keep the preset value.
+[options]
+smart_vowels = true     # look-ahead vowel harmony
+abbreviations = true    # false turns off all abbreviations, also your own
+keep_latin = true       # Esc shows the raw keys
+auto_latin = true       # true: links and emails turn Latin by themselves
+
+# Added to the built-in list. Keys are not case sensitive.
+[abbreviations]
+mgl = "Монгол"          # new entry
+bn = "байна аа"         # replaces the built-in entry
+tgd = ""                # empty value removes the built-in entry
+
+# Custom key mappings. Checked and stored, not applied yet (issue #3).
+[keys]
+"o'" = "ө"
+"u'" = "ү"

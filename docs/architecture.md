@@ -285,12 +285,27 @@ core free of I/O:
 3. **Differential test** (`tools/difftest`): build the original C++ `Composer`
    and compare it with `buuz-core` on a large word list and random input, to
    prove behavioural compatibility instead of relying on hand-written cases.
-4. **Settings as data:** a small options struct passed in by the shell (for
-   example, which quote key marks `ь`), so no platform reimplements options.
+4. **Settings as data:** the portable `Config` (see below) that the shell
+   passes in as text, so no platform reimplements options.
 5. **Extension point for paid features:** a trait for "suggestions for the
    current preedit" that the open core calls if an implementation is present.
    The paid dictionary and prediction crate implements it in the private
    repository; the free build simply has none.
+
+### Portable config
+
+A user keeps one settings file for all shells. The file is a small subset of
+TOML (see [ADR 0005](decisions/0005-portable-config-format.md)). The core
+reads it with `Config::parse` and gives the composer the `Options` from
+`Config::options`. A shell does this once at load, never per key.
+
+- `Config::parse` gives a `Parsed` value: the `Config` and a list of
+  warnings for unknown options and sections. A shell can show them.
+- The fields of `Config` are private. Getters read them. Setters check them.
+- `Config::to_text` writes the canonical text for export.
+- A file with a newer `buuz_config` version is refused with `TooNew`.
+- The `[keys]` section is checked and stored. The core does not apply it yet.
+- The core does no I/O. Each shell reads and writes the file itself.
 
 ## 7. Open core boundary
 
