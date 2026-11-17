@@ -5,7 +5,7 @@
     "MD013": false, // line length: prose is wrapped by editors
     "MD024": { "siblings_only": true },
     "MD060": false, // table pipe spacing: new in markdownlint 0.38+, our tables are compact by hand
-    // README hero uses centered HTML (<picture> for light/dark logos)
+    // README uses centered HTML (<p>, <img>); <picture>/<source> stay allowed for theme-specific images
     "MD033": { "allowed_elements": ["p", "a", "img", "picture", "source", "b", "br", "sup", "kbd"] }
   },
   "globs": ["**/*.md"],

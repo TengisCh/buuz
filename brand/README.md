@@ -25,6 +25,12 @@ Rebuild everything (needs Python, Pillow and Playwright):
 python3 brand/generate.py brand/icons && node brand/export.js && python3 brand/webp.py
 ```
 
+The README hero ([`../docs/readme/hero.png`](../docs/readme/hero.png)) is a transparent, theme-neutral image: its colours keep at least 3:1 contrast on both GitHub's light (`#ffffff`) and dark (`#0d1117`) backgrounds. Rebuild it with (needs Playwright, see `tools/lint`):
+
+```sh
+NODE_PATH=tools/lint/node_modules node brand/readme-hero.js
+```
+
 [`brief.md`](brief.md) has the reasoning behind the brand.
 
 ## Palette
