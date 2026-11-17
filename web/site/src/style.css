@@ -133,7 +133,7 @@ button.icon .sun { display: none; }
 
 /* Feedback card */
 .feedback {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  display: block;
   background: var(--card); border-radius: 24px; padding: 1rem 1.25rem; margin-bottom: 1.1rem;
   box-shadow: 0 5px 0 var(--press);
 }
@@ -155,3 +155,18 @@ a.button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); 
 
 /* Demo typing in the empty Latin box: hide the native caret so only the demo cursor shows. */
 #latin.demo { caret-color: transparent; }
+
+/* Feedback form */
+.feedback form { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+.feedback form label { font-weight: 700; font-size: 0.9rem; }
+.feedback input[type="text"] { width: 100%; padding: 0.6rem 0.75rem; font: inherit; color: var(--fg); background: var(--card); border: 2px solid var(--line); border-radius: 12px; }
+.feedback textarea { font-size: 1rem; }
+.cats { border: 0; padding: 0; margin: 0.25rem 0; display: flex; gap: 1rem; flex-wrap: wrap; }
+.cats legend { font-weight: 700; font-size: 0.9rem; padding: 0; margin-bottom: 0.25rem; }
+.cats label { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.feedback .note { font-size: 0.85rem; }
+.fb-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.fb-status { min-height: 1.5rem; margin: 0; font-weight: 700; }
+.fb-status.ok { color: var(--accent); }
+.fb-status.err { color: #c0392b; }

@@ -5,7 +5,7 @@ import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
 import init, { convert } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t } from "./i18n";
+import { setupLang, t, type Key } from "./i18n";
 import phrases from "./phrases.json";
 
 setupLang();
@@ -159,4 +159,52 @@ init({ module_or_path: wasmUrl }).then(() => {
   render(); // text typed while the module was loading
   if (reducedMotion) showGhost(pool[0], false);
   else typewriter();
+});
+
+// Feedback form: posts only what is typed into this form to /api/feedback.
+// The converter text is never included.
+const fb = document.getElementById("fb") as HTMLFormElement;
+const fbSend = document.getElementById("fb-send") as HTMLButtonElement;
+const fbStatus = document.getElementById("fb-status") as HTMLElement;
+const FB_ERRORS: Record<string, Key> = {
+  too_short: "fbTooShort",
+  too_long: "fbTooLong",
+  rate_limited: "fbRate",
+  not_configured: "fbNotReady",
+};
+function fbSay(msg: string, ok: boolean): void {
+  fbStatus.textContent = msg;
+  fbStatus.className = "fb-status " + (ok ? "ok" : "err");
+}
+fb.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = new FormData(fb);
+  const message = String(f.get("message") ?? "").trim();
+  if (message.length < 5) return fbSay(t("fbTooShort"), false);
+  fbSend.disabled = true;
+  fbSay(t("fbSending"), true);
+  try {
+    const res = await fetch("/api/feedback", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        message,
+        category: f.get("category"),
+        contact: f.get("contact"),
+        website: f.get("website"),
+        lang: document.documentElement.lang,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    if (res.ok) {
+      fb.reset();
+      fbSay(t("fbThanks"), true);
+    } else {
+      fbSay(t(FB_ERRORS[data.error ?? ""] ?? "fbError"), false);
+    }
+  } catch {
+    fbSay(t("fbError"), false);
+  } finally {
+    fbSend.disabled = false;
+  }
 });

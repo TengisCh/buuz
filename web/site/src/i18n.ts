@@ -38,8 +38,25 @@ const mn = {
   consonants: "Гийгүүлэгч",
   signs: "Тэмдэг",
   feedbackTitle: "Санал хүсэлт",
-  feedbackBody: "Алдаа олсон уу, эсвэл гоё санаа байна уу? GitHub дээр бидэнд бичээрэй.",
+  feedbackBody: "Алдаа олсон уу, эсвэл гоё санаа байна уу? Доор бичээд илгээчихээрэй.",
   feedbackBtn: "Санал илгээх",
+  fbMessage: "Таны санал",
+  fbMessagePh: "Юу бодож байна, бидэнд хэлээрэй...",
+  fbCategory: "Төрөл",
+  fbBug: "Алдаа",
+  fbIdea: "Санаа",
+  fbOther: "Бусад",
+  fbContact: "Холбоо барих (заавал биш)",
+  fbContactPh: "И-мэйл эсвэл GitHub нэр",
+  fbPublic: "Санал GitHub дээр нийтэд харагдана. Холбоо барих хаягаа хүсвэл л бичээрэй.",
+  fbSending: "Илгээж байна...",
+  fbThanks: "Баярлалаа! Санал тань илгээгдлээ.",
+  fbTooShort: "Арай дэлгэрэнгүй бичээрэй.",
+  fbTooLong: "Хэт урт байна, 2000 тэмдэгтээс бага байлгаарай.",
+  fbRate: "Хэт олон удаа илгээлээ. Түр хүлээгээд дахин оролдоорой.",
+  fbNotReady: "Санал илгээх хэсэг одоохондоо ажиллахгүй байна. GitHub холбоосоор бичээрэй.",
+  fbError: "Илгээж чадсангүй. Дахин оролдоорой.",
+  fbGithub: "Эсвэл GitHub дээр бичих",
   themeDark: "Харанхуй горим",
   themeLight: "Цайвар горим",
 };
@@ -75,8 +92,25 @@ const en: Record<Key, string> = {
   consonants: "Consonants",
   signs: "Signs",
   feedbackTitle: "Feedback",
-  feedbackBody: "Found a bug or have a fun idea? Tell us on GitHub.",
+  feedbackBody: "Found a bug or have a fun idea? Write it below and send it.",
   feedbackBtn: "Send feedback",
+  fbMessage: "Your feedback",
+  fbMessagePh: "What's on your mind?",
+  fbCategory: "Type",
+  fbBug: "Bug",
+  fbIdea: "Idea",
+  fbOther: "Other",
+  fbContact: "Contact (optional)",
+  fbContactPh: "Email or GitHub name",
+  fbPublic: "Feedback is posted publicly on GitHub. Only add contact details if you want a reply.",
+  fbSending: "Sending...",
+  fbThanks: "Thank you! Your feedback was sent.",
+  fbTooShort: "Please write a little more.",
+  fbTooLong: "Too long, please keep it under 2000 characters.",
+  fbRate: "Too many messages. Please wait a bit and try again.",
+  fbNotReady: "The feedback form isn't switched on yet. Please use the GitHub link instead.",
+  fbError: "Couldn't send. Please try again.",
+  fbGithub: "Or write on GitHub",
   themeDark: "Dark mode",
   themeLight: "Light mode",
 };
@@ -124,6 +158,9 @@ export function apply(lang: Lang): void {
   // Text-only keys use textContent; keys with markup (<kbd>, links) are ours.
   for (const el of document.querySelectorAll<HTMLElement>("[data-i18n]")) {
     el.textContent = t(el.dataset.i18n as Key);
+  }
+  for (const el of document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("[data-i18n-ph]")) {
+    el.placeholder = t(el.dataset.i18nPh as Key);
   }
   for (const el of document.querySelectorAll<HTMLElement>("[data-i18n-html]")) {
     el.innerHTML = t(el.dataset.i18nHtml as Key);
