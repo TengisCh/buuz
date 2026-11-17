@@ -150,23 +150,32 @@ for (let i = pool.length - 1; i > 0; i--) {
 // The moment there is real text, the native caret comes back.
 // While the box has focus the ghost text is hidden entirely: it is distracting
 // when you are about to type. It comes back on blur if the box is still empty.
-let focused = document.activeElement === latin;
+// Always read the live focus state: autofocus can land before or after this
+// script runs (it differs between browsers), so a cached flag can go stale.
+const isFocused = (): boolean => document.activeElement === latin;
 function syncCaret(): void {
-  latin.classList.toggle("demo", latin.value === "" && !reducedMotion && !focused);
+  latin.classList.toggle("demo", latin.value === "" && !reducedMotion && !isFocused());
 }
 latin.addEventListener("focus", () => {
-  focused = true;
   latin.placeholder = "";
   cyr.placeholder = "";
   syncCaret();
 });
 latin.addEventListener("blur", () => {
-  focused = false;
   syncCaret();
   if (reducedMotion && latin.value === "" && ready) showGhost(pool[0], false);
 });
+// Autofocus can have happened before this script ran: nothing to show then.
+if (isFocused()) {
+  latin.placeholder = "";
+  cyr.placeholder = "";
+}
 function showGhost(text: string, caret: boolean): void {
-  if (focused) return;
+  if (isFocused()) {
+    latin.placeholder = "";
+    cyr.placeholder = "";
+    return syncCaret();
+  }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
   cyr.placeholder = ready ? convert(text) : "";
@@ -177,9 +186,24 @@ function typewriter(): void {
   let n = 0;
   let phase: "type" | "hold" | "erase" | "gap" = "type";
   let blinks = 0;
+  let paused = false;
   const next = (ms: number) => window.setTimeout(step, ms);
   function step(): void {
-    if (latin.value !== "" || document.hidden || focused) return void next(600);
+    if (latin.value !== "" || document.hidden || isFocused()) {
+      // Paused (focus, text, hidden tab): the next run restarts from the first
+      // letter of a fresh phrase, with the boxes empty, like real typing.
+      paused = true;
+      return void next(600);
+    }
+    if (paused) {
+      paused = false;
+      n = 0;
+      chars = [];
+      phase = "type";
+      blinks = 0;
+      p++;
+      showGhost("", true);
+    }
     if (chars.length === 0) chars = Array.from(pool[p % pool.length]);
     switch (phase) {
       case "type":
