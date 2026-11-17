@@ -1,0 +1,67 @@
+name: dependabot-automerge
+
+# Merges Dependabot patch and minor updates once every other check on the PR
+# has passed. Major updates are left open for a person to review (see
+# .claude/skills/add-dependency). Dependabot rebases its own PRs when they
+# conflict, and this workflow runs again after each rebase.
+#
+# The other workflows use path filters, so they cannot be required checks on
+# main (a filtered-out workflow would stay "pending" forever). Instead this job
+# waits for whatever checks did start on the PR, and merges only if none failed.
+
+on: pull_request
+
+permissions: {}
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  automerge:
+    name: automerge
+    if: >-
+      github.repository == 'TengisCh/buuz' &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      statuses: read
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+
+      - name: Wait for the other checks, then merge
+        if: >-
+          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+          steps.meta.outputs.update-type == 'version-update:semver-minor'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SELF: automerge
+        run: |
+          set -euo pipefail
+          # Give the other workflows time to register their checks.
+          sleep 60
+          for _ in $(seq 1 80); do
+            checks=$(gh pr checks "$PR_URL" --json name,bucket || true)
+            others=$(jq --arg self "$SELF" '[.[] | select(.name != $self)]' <<<"$checks")
+            total=$(jq 'length' <<<"$others")
+            failed=$(jq '[.[] | select(.bucket == "fail" or .bucket == "cancel")] | length' <<<"$others")
+            pending=$(jq '[.[] | select(.bucket == "pending")] | length' <<<"$others")
+            if [ "$failed" -gt 0 ]; then
+              echo "A check failed; leaving this PR for review."
+              exit 0
+            fi
+            if [ "$total" -gt 0 ] && [ "$pending" -eq 0 ]; then
+              gh pr merge "$PR_URL" --squash --match-head-commit "$HEAD_SHA"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Checks did not finish in time; leaving this PR for review."
+          exit 1

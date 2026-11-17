@@ -67,6 +67,9 @@ Dependencies are the easiest way into a keyboard app, so:
   already in a lockfile.
 - GitHub Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment.
   Keep it that way; Dependabot updates them.
+- Dependabot patch and minor updates merge themselves once every other check
+  on the PR has passed (`.github/workflows/dependabot-automerge.yml`). Major
+  updates stay open for review with the add-dependency checklist.
 
 ## Git and PRs
 
