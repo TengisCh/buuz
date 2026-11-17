@@ -84,6 +84,8 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("OI",   "ӨЙ", X_F | X_AC),
     ("Q",    "Ө",  ALL | X_MF),
     ("QI",   "ӨЙ", ALL | X_MF),
+    ("Ö",    "Ө",  ALL | X_MF),
+    ("ÖI",   "ӨЙ", ALL | X_MF),
     ("O'",   "Ө",  ALL | X_MF),
     ("O'I",  "ӨЙ", ALL | X_MF),
     ("'O",   "Ө",  ALL | X_MF),
@@ -107,6 +109,8 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("UI",   "ҮЙ", X_F | X_AC),
     ("W",    "Ү",  ALL | X_MF),
     ("WI",   "ҮЙ", ALL | X_MF),
+    ("Ü",    "Ү",  ALL | X_MF),
+    ("ÜI",   "ҮЙ", ALL | X_MF),
     ("U'",   "Ү",  ALL | X_MF),
     ("U'I",  "ҮЙ", ALL | X_MF),
     ("'U",   "Ү",  ALL | X_MF),
@@ -147,10 +151,15 @@ impl RuleSet {
     }
 }
 
+/// The umlaut letters accepted as input for ө and ү.
+fn is_umlaut(ch: char) -> bool {
+    matches!(ch, 'ö' | 'ü' | 'Ö' | 'Ü')
+}
+
 pub(crate) fn to_upper(ch: char) -> char {
     if ch.is_ascii() {
         ch.to_ascii_uppercase()
-    } else if (ch as u32) >> 8 == 4 {
+    } else if (ch as u32) >> 8 == 4 || is_umlaut(ch) {
         ch.to_uppercase().next().unwrap_or(ch)
     } else {
         ch
@@ -160,7 +169,7 @@ pub(crate) fn to_upper(ch: char) -> char {
 pub(crate) fn to_lower(ch: char) -> char {
     if ch.is_ascii() {
         ch.to_ascii_lowercase()
-    } else if (ch as u32) >> 8 == 4 {
+    } else if (ch as u32) >> 8 == 4 || is_umlaut(ch) {
         ch.to_lowercase().next().unwrap_or(ch)
     } else {
         ch
@@ -168,7 +177,7 @@ pub(crate) fn to_lower(ch: char) -> char {
 }
 
 fn is_alpha(ch: char) -> bool {
-    ch.is_ascii_alphabetic() || ((ch as u32) >> 8 == 4 && ch.is_alphabetic())
+    ch.is_ascii_alphabetic() || is_umlaut(ch) || ((ch as u32) >> 8 == 4 && ch.is_alphabetic())
 }
 
 fn insert_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: Vec<char>, rule: Rule) {

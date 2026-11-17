@@ -23,7 +23,7 @@ Today there is a web converter: type Latin in the top box, copy Cyrillic from th
 - sain baina uu -> сайн байна уу
 - buuz id'ye -> бууз идье
 - geree -> гэрээ ; gar -> гар (o and u follow vowel harmony: о/ө, у/ү)
-- q -> ө ; w -> ү (force the letter regardless of harmony)
+- q or ö -> ө ; w or ü -> ү (force the letter regardless of harmony)
 - y -> ы ; sh -> ш ; ch -> ч ; yo -> ё ; yu -> ю ; ya -> я ; ye -> е
 - ' -> ь ; " -> ъ ; ii -> ий
 

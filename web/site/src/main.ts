@@ -55,7 +55,7 @@ let ready = false;
 function render(): void {
   // convert() is microseconds even for long pastes, so run it synchronously
   // on every input event: no debounce, no frame delay.
-  cyr.value = ready ? convert(latin.value) : "";
+  cyr.value = ready ? convert(latin.value.normalize("NFC")) : "";
 }
 
 const toast = document.getElementById("toast") as HTMLElement;
