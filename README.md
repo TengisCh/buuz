@@ -26,7 +26,7 @@
 
 👉 **[buuz.thetengis.com](https://buuz.thetengis.com)**: type, copy, paste anywhere. No sign-up, nothing leaves your device.
 
-[![Windows: coming soon](https://img.shields.io/badge/Windows-coming_soon-0078D4?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTIgNC4yIDEwLjYgM3Y4LjRIMnpNMTEuNiAyLjkgMjIgMS41djkuOUgxMS42ek0yIDEyLjRoOC42djguNUwyIDE5Ljd6TTExLjYgMTIuNEgyMnYxMGwtMTAuNC0xLjR6Ii8%2BPC9zdmc%2B)](#-whats-inside) [![macOS: coming soon](https://img.shields.io/badge/macOS-coming_soon-000000?logo=apple&logoColor=white)](#-whats-inside)
+[![Windows: coming soon](https://img.shields.io/badge/Windows-coming_soon-0078D4?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgwek0xMi42MjMgMTIuNjIzSDI0VjI0SDEyLjYyM3oiLz48L3N2Zz4%3D)](#-whats-inside) [![macOS: coming soon](https://img.shields.io/badge/macOS-coming_soon-000000?logo=apple&logoColor=white)](#-whats-inside)
 
 Keyboards for Windows and macOS are on the way, so you can type Mongolian in any app. ⭐ Star the repo to hear when they land.
 
@@ -62,7 +62,7 @@ Most letters are what you'd guess (`b` → б, `d` → д, `sain` → сайн).
 | --- | --- | --- |
 | [`core/`](core/) | ![Rust](https://img.shields.io/badge/-Rust-B7410E?logo=rust&logoColor=white) `buuz-core`, the engine every platform shares | ✅ Working, tested |
 | [`web/`](web/) | ![WebAssembly](https://img.shields.io/badge/-WebAssembly-654FF0?logo=webassembly&logoColor=white) ![Vite](https://img.shields.io/badge/-Vite-646CFF?logo=vite&logoColor=white) web converter on ![Vercel](https://img.shields.io/badge/-Vercel-000000?logo=vercel&logoColor=white) | ✅ [Live](https://buuz.thetengis.com) |
-| `windows/` | ![Windows](https://img.shields.io/badge/Windows-keyboard-0078D4?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTIgNC4yIDEwLjYgM3Y4LjRIMnpNMTEuNiAyLjkgMjIgMS41djkuOUgxMS42ek0yIDEyLjRoOC42djguNUwyIDE5Ljd6TTExLjYgMTIuNEgyMnYxMGwtMTAuNC0xLjR6Ii8%2BPC9zdmc%2B) Text Services Framework | 🛠️ Next |
+| `windows/` | ![Windows](https://img.shields.io/badge/Windows-keyboard-0078D4?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgwek0xMi42MjMgMTIuNjIzSDI0VjI0SDEyLjYyM3oiLz48L3N2Zz4%3D) Text Services Framework | 🛠️ Next |
 | `macos/` | ![macOS](https://img.shields.io/badge/macOS-keyboard-000000?logo=apple&logoColor=white) InputMethodKit | 🛠️ Next |
 | [`brand/`](brand/) | Mascot, icons, palette | 🎨 |
 | [`docs/`](docs/) | [Architecture](docs/architecture.md) and [decisions](docs/decisions/) | 📚 |
