@@ -1,0 +1,30 @@
+name: pr-title
+
+# PRs are squash-merged, so the PR title becomes the commit subject on main.
+# Enforce AGENTS.md's "<area>: <what changed>" format. Dependabot's
+# "build(deps...): ..." titles are allowed as they are.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check the title format
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          areas='core|web|docs|brand|lint|ci|deps|agents'
+          own="^(${areas})(, ?(${areas}))*: [^[:space:]]"
+          bot='^build\(deps(-dev)?\): '
+          if [[ "$TITLE" =~ $own ]] || [[ "$TITLE" =~ $bot ]]; then
+            echo "OK: $TITLE"
+          else
+            echo "::error::PR title must look like '<area>: <what changed>' with area one of ${areas//|/, } (several joined by ', '). Got: $TITLE"
+            exit 1
+          fi

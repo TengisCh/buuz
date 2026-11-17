@@ -23,6 +23,7 @@
 - {name: "area:windows", color: c5def5, description: "Windows input method (TSF)"}
 - {name: "area:macos", color: c5def5, description: "macOS input method (InputMethodKit)"}
 - {name: "area:mobile", color: c5def5, description: "Android or iOS keyboard"}
+- {name: "area:ci", color: c5def5, description: "CI, agent setup, repo tooling"}
 
 # Priority: set by the maintainer during triage
 - {name: "priority:high", color: b60205, description: "Next up"}
