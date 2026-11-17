@@ -24,6 +24,23 @@ Status: draft for review. Not legal advice. Researched 2026-11-17.
 
 Note: the repo has a `NOTICE` file that only says "Buuz - Input Method Editor / Copyright 2009 Odbayar Nyamtseren". There is no other trademark policy in the repo.
 
+### Provenance check (added after follow-up question)
+
+What is **confirmed** from the source repo ([odbayar/buuz](https://github.com/odbayar/buuz)):
+
+- All 80 commits are by Odbayar Nyamtseren (three spellings of the same identity: "Odbayar Nyamtseren", "oba", "odbayar n", all `odbayar.n@gmail.com`). No other contributors appear.
+- Every source file carries "Copyright 2009 Odbayar Nyamtseren" (some "2009-2012") plus the Apache 2.0 header; the Windows version resource names the company as "Buuz Project".
+- The history starts 2009-07-13 with "Imported the source files from SVN", so earlier work lived in Subversion and is not visible here. The installer links to `buuz.sourceforge.net` and `code.google.com/p/buuz`, so the project had a SourceForge and a Google Code home.
+- The repo does not mention any earlier project it was derived from, and no co-authors or third-party credits.
+
+What is **not confirmed** (I could not reach these pages from here; the archive and SourceForge fetches failed or were blocked):
+
+- Who the owners and members of the Google Code and SourceForge projects were. If others co-founded it, they would not show up in the Git history.
+- Whether the pre-2009 SVN history had other authors.
+- Whether the mapping rules (`scripts/mongolian_letters.txt`, `docs/table.html`) came from an earlier scheme. Phonetic Latin to Cyrillic typing was common in Mongolia before 2009, so the idea is not unique to this project, but the code and tables are his as published.
+
+Conclusion: crediting Odbayar Nyamtseren is correct and required by the license, because he is the only copyright holder named in the code. It is not proof that nobody else contributed earlier. Asking him directly (and checking the archived Google Code and SourceForge pages in a browser) is the way to close the gap. No NOTICE change is needed now; the NOTICE should keep his line and could add "Buuz Project" as named in the original.
+
 ## 2. What Apache 2.0 allows for a revival
 
 - **Allowed:** use, copy, modify, fork, redistribute, relicense *your own* additions, sell binaries or support, and build a closed-source product on top (section 2 grants a perpetual, worldwide, royalty-free license; section 4 sets conditions).
