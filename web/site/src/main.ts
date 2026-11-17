@@ -4,6 +4,9 @@
 import "./style.css";
 import init, { convert } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
+import { setupLang, t } from "./i18n";
+
+setupLang();
 
 const latin = document.getElementById("latin") as HTMLTextAreaElement;
 const cyr = document.getElementById("cyr") as HTMLTextAreaElement;
@@ -36,7 +39,7 @@ async function copy(): Promise<void> {
     document.execCommand("copy");
     cyr.setSelectionRange(0, 0);
   }
-  say("Copied");
+  say(t("copied"));
 }
 
 latin.addEventListener("input", render);

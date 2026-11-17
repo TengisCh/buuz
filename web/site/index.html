@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="mn">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Buuz: type Mongolian with a Latin keyboard</title>
+    <title>Buuz: Латин үсгээр монголоор бич</title>
     <meta
       name="description"
-      content="Type Latin letters, get Mongolian Cyrillic instantly. Free, offline, nothing you type leaves your device."
+      content="Латинаар бичихэд шууд кирилл болно. Үнэгүй, бичсэн зүйл тань хаашаа ч илгээгдэхгүй."
     />
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -23,12 +23,15 @@
   <body>
     <main>
       <header>
-        <h1>Buuz</h1>
-        <p class="tag">Type Mongolian with a Latin keyboard.</p>
+        <div class="top">
+          <h1>Buuz</h1>
+          <button id="lang" type="button" class="ghost lang" lang="en" title="Switch to English" aria-label="Switch to English">EN</button>
+        </div>
+        <p class="tag" data-i18n="tag">Латинаар бич, кирилл болоод гарчихна.</p>
       </header>
 
       <section class="converter" aria-label="Converter">
-        <label for="latin">Latin</label>
+        <label for="latin" data-i18n="latin">Латин</label>
         <textarea
           id="latin"
           rows="6"
@@ -41,22 +44,22 @@
         ></textarea>
 
         <div class="out-head">
-          <label for="cyr">Монгол</label>
+          <label for="cyr" data-i18n="cyr">Кирилл</label>
           <div class="actions">
-            <button id="clear" type="button" class="ghost">Clear</button>
-            <button id="copy" type="button" class="primary">Copy</button>
+            <button id="clear" type="button" class="ghost" data-i18n="clear">Цэвэрлэх</button>
+            <button id="copy" type="button" class="primary" data-i18n="copy">Хуулах</button>
           </div>
         </div>
         <textarea id="cyr" lang="mn" rows="6" readonly aria-live="polite"></textarea>
         <p id="status" class="status" role="status"></p>
       </section>
 
-      <p class="privacy">
-        Everything runs on your device. What you type is never sent anywhere.
+      <p class="privacy" data-i18n="privacy">
+        Бүх зүйл таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.
       </p>
 
       <details class="cheat">
-        <summary>How to type</summary>
+        <summary data-i18n="howTo">Яаж бичих вэ?</summary>
         <div class="grid">
           <div><kbd>w</kbd> ү</div>
           <div><kbd>q</kbd> ө</div>
@@ -71,28 +74,29 @@
           <div><kbd>"</kbd> ъ</div>
           <div><kbd>ii</kbd> ий</div>
         </div>
-        <p>
-          <kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so
-          <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a
-          letter, use <kbd>q</kbd> or <kbd>w</kbd> for ө and ү.
+        <p data-i18n-html="howToBody">
+          <kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг
+          нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd>
+          гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г
+          ашиглаарай.
         </p>
       </details>
 
       <section class="get-app">
-        <h2>Type Mongolian in every app</h2>
-        <p>
-          Buuz is also coming as a keyboard for Windows and macOS, with the same
-          rules as this page, so you can type straight into any app.
+        <h2 data-i18n="appTitle">Ямар ч апп дээр монголоор бич</h2>
+        <p data-i18n="appBody">
+          Buuz удахгүй Windows, macOS-ийн гар болж гарна. Энэ хуудастай яг ижил
+          дүрмээр, хүссэн апп дотроо шууд бичнэ.
         </p>
         <ul id="app-links">
-          <li><span class="soon">Windows</span> coming soon</li>
-          <li><span class="soon">macOS</span> coming soon</li>
+          <li><span class="soon">Windows</span> <span data-i18n="soon">удахгүй</span></li>
+          <li><span class="soon">macOS</span> <span data-i18n="soon">удахгүй</span></li>
         </ul>
       </section>
 
       <footer>
-        <a href="https://github.com/TengisCh/buuz">Open source on GitHub</a>
-        <span>Buuz 2.0, a continuation of Buuz by Odbayar Nyamtseren.</span>
+        <a href="https://github.com/TengisCh/buuz" data-i18n="github">GitHub дээр нээлттэй эх</a>
+        <span data-i18n="credit">Buuz 2.0 бол Н.Одбаярын бүтээсэн Buuz-ийн үргэлжлэл.</span>
       </footer>
     </main>
   </body>

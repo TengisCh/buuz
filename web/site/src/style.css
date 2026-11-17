@@ -71,3 +71,5 @@ kbd {
 .soon { font-weight: 600; }
 footer { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 2rem; color: var(--muted); font-size: 0.85rem; }
 a { color: var(--accent); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+button.lang { min-width: 44px; padding: 0.25rem 0.6rem; font-size: 0.85rem; color: var(--muted); }
