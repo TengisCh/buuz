@@ -19,22 +19,39 @@ A phonetic Latin to Mongolian Cyrillic input method (`geree` becomes
 | `tools/lint/` | Markdown and Mermaid lint | Node |
 | `brand/`, `design/` | Logo, mockups and their render scripts | |
 
-Read [docs/architecture.md](docs/architecture.md) before structural changes
-and [docs/typing-rules.md](docs/typing-rules.md) before touching rules.
+Read [docs/architecture.md](docs/architecture.md) before structural changes,
+[docs/typing-rules.md](docs/typing-rules.md) before touching rules, and use
+the names in [docs/glossary.md](docs/glossary.md) in code, tests and issues.
 
 ## Hard rules
 
 1. **The typing path stays private and fast.** No network calls, no logging of
    keystrokes, no heavy allocation per key. This is a security promise
    ([SECURITY.md](SECURITY.md)), not a preference.
-2. **Rule changes are test-first.** Every typing bug becomes a failing case in
-   `core/tests/` before the fix. Keep output identical to the original Buuz
-   unless an issue says otherwise.
+2. **Behaviour changes are test-first.** Every typing bug and every new
+   feature starts as a failing test (`tdd` skill). Classic mode
+   (`Options::classic()`) stays identical to the original Buuz; new
+   behaviour goes into smart mode, on by default, with its own toggle.
 3. **SPDX header on new source files.** `// SPDX-License-Identifier: Apache-2.0`
    in `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
 4. **No new dependency without the add-dependency checklist** (below).
 5. **Never** commit secrets or `.env` files, force-push `main`, publish
    packages, or change GitHub or Vercel settings. Ask the maintainer.
+
+## Workflow
+
+Plan, then test-first build, then review. For an issue use the
+`plan-issue` skill, which runs these phases:
+
+| Phase | How | Model |
+| --- | --- | --- |
+| Question the design | `grill` skill (issues labelled `needs-design`, new settings) | Opus |
+| Plan | plan mode or the `planner` subagent; post the plan on the issue or PR | Opus |
+| Implement | `tdd` skill, or the `implementer` subagent | Sonnet |
+| Review | `reviewer` subagent, then the `verify` skill | Opus |
+| Lookups, triage | `scout` subagent, `triage-issue` skill | Haiku |
+
+Small, clear typing bugs skip grill and plan: use `fix-typing-bug`.
 
 ## Commands
 
