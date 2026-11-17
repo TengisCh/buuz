@@ -53,6 +53,7 @@ Window: 760 × 540, fixed, centred, not resizable. Steps 2 to 8 show progress
 dots and Back / Next. Copy below is MN (default) / EN.
 
 ### 3.1 👋 Welcome (`mac-welcome.png`)
+
 - Large Buuz Buddy (steam puffs once on open), title
   **«Латинаар бич, кирилл болоод гарна» / "Type Latin, get Cyrillic"**.
 - Animated demo line: `sain baina uu` → **сайн байна уу**, typed letter by letter.
@@ -61,12 +62,14 @@ dots and Back / Next. Copy below is MN (default) / EN.
   Нямцэрэнгийн Одбаяр, open source.
 
 ### 3.2 🔒 Privacy promise (`mac-privacy.png`)
+
 Four cards, icon + short line each:
 📴 no internet needed · 🙈 no keystrokes saved or sent · 👤 no account ·
 🔐 off in password fields. GitHub pill links the source. Button **Ойлголоо / Got it**.
 This replaces Wispr's sign-in and data-preference screens.
 
 ### 3.3 ➕ Add Buuz (`mac-enable.png`, `win-enable.png`, `*-enable-done.png`)
+
 Equivalent of Wispr's permission cards. A status card «Buuz · Монгол» shows
 ⏳ waiting → ✅ added, updated live.
 
@@ -83,6 +86,7 @@ To verify while building: whether macOS 14 / 15 / 26 still allows
 `TISEnableInputSource` from a notarized app without extra prompts.
 
 ### 3.4 ⌨️ Switch key (`*-shortcut.png`)
+
 Three cards, recommended one pre-selected with ⭐:
 
 | macOS | Windows |
@@ -98,6 +102,7 @@ light up when pressed, and «✅ Ажиллаж байна!» appears after one 
 (detected through the input-source-changed notification / TSF profile sink).
 
 ### 3.5 ✍️ Try it (`*-try.png`)
+
 A pretend chat (generic, no real brand) with «Ээж». The text field is a real
 text field, so typing goes through the **real Buuz input method** with the
 underlined preedit, exactly as in other apps. Three task chips check off as
@@ -112,7 +117,9 @@ If Buuz is not the active input source, a hint shows the chosen switch key.
 **Алгасах / Skip** is always available.
 
 ### 3.6 💡 Vowel tip (`*-harmony.png`)
+
 Two cards:
+
 - 🪄 **Эгшиг өөрөө зохицно**: with э, ө, ү in the word, o → ө, u → ү.
   `nomoo` → ном**оо**, `gertoo` → гэрт**өө**, `teruu` → тэр**үү** (all checked against `buuz-core`).
 - 🎯 **Заавал ө, ү хэрэгтэй бол**: `q` → ө, `w` → ү, `'` → ь, `"` → ъ; `qndqr` → **ө**нд**ө**р.
@@ -120,13 +127,16 @@ Two cards:
 When issue #7 (smarter vowel harmony) lands, update the examples from its tests.
 
 ### 3.7 📥 Import from the web (optional, `*-import.png`)
+
 Follows the portable config design in issue #8. Two cards:
+
 - 🔗 **Вэбээс илгээх**: on buuz.thetengis.com, a «Апп руу» button opens
   `buuz://import?cfg=buuz1:…`; the app shows a diff and asks to apply.
 - 📋 **Хуулж буулгах**: paste a `buuz1:…` string.
 The primary button reads **Алгасах / Skip** until something is imported. **Not in v1:** hidden until #8 ships (decided, §8).
 
 ### 3.8 🎉 Done (`*-done.png`)
+
 Confetti + steam puff, «Бэлэн! 🎉», where to find Buuz
 (macOS: **Б** in the menu bar; Windows: **МОН** in the taskbar), a recap card
 (switch key, `q`=ө, `w`=ү), **Бичиж эхлэх / Start typing** (closes the window),
