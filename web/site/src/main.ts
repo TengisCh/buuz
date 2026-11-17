@@ -81,6 +81,7 @@ async function copy(): Promise<void> {
 
 latin.addEventListener("input", () => {
   render();
+  syncCaret();
   if (!mascot.classList.contains("puff")) animate("puff");
 });
 mascot.addEventListener("animationend", () => mascot.classList.remove("puff", "hop"));
@@ -88,6 +89,7 @@ copyBtn.addEventListener("click", () => void copy());
 clearBtn.addEventListener("click", () => {
   latin.value = "";
   render();
+  syncCaret();
   latin.focus();
 });
 document.addEventListener("keydown", (e) => {
@@ -101,12 +103,19 @@ document.addEventListener("keydown", (e) => {
 // itself, pauses, deletes, and the next one starts. The Cyrillic box shows the
 // live conversion as its placeholder. It only ever touches placeholders, so it
 // sits still the moment there is real text, and resumes when the box is empty.
+const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pool = (phrases as [string, string][]).map(([l]) => l);
 for (let i = pool.length - 1; i > 0; i--) {
   const j = Math.floor(Math.random() * (i + 1));
   [pool[i], pool[j]] = [pool[j], pool[i]];
 }
+// While the demo types, hide the real caret so there's only one cursor.
+// The moment there is real text, the native caret comes back.
+function syncCaret(): void {
+  latin.classList.toggle("demo", latin.value === "" && !reducedMotion);
+}
 function showGhost(text: string, caret: boolean): void {
+  syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
   cyr.placeholder = ready ? convert(text) : "";
 }
@@ -148,6 +157,6 @@ function typewriter(): void {
 init({ module_or_path: wasmUrl }).then(() => {
   ready = true;
   render(); // text typed while the module was loading
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) showGhost(pool[0], false);
+  if (reducedMotion) showGhost(pool[0], false);
   else typewriter();
 });
