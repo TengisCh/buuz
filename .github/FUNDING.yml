@@ -1,0 +1,5 @@
+# Shows the "Sponsor" button on GitHub (enable it under Settings > General > Features > Sponsorships).
+github: [TengisCh]
+# Fallback if GitHub Sponsors isn't available for your country: create the collective at
+# https://opencollective.com/create (host: Open Source Collective), then uncomment.
+# open_collective: buuz
