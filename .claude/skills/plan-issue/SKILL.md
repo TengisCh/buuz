@@ -15,8 +15,10 @@ description: Turn a Buuz GitHub issue into an agreed, test-first plan and then r
    first. Post the plan as an issue comment or the PR description before
    coding, so it survives compaction (`CLAUDE.md`).
 4. **Branch.** `issue-<n>-<slug>` from an up-to-date `main`.
-5. **Implement** (Sonnet). Follow the `tdd` skill step by step, or hand the
-   plan to the `implementer` subagent. One concern per PR.
+5. **Implement** (Sonnet). Give the plan to the `implementer` subagent. It
+   follows the `tdd` skill. Do not write the code in the main session when
+   that session runs on Opus. Give fixes from review to `implementer` too.
+   One concern per PR.
 6. **Review** (Opus). Run the `reviewer` subagent on the diff and fix what
    it finds. Then the `verify` skill.
 7. **Docs.** Update `docs/typing-rules.md`, `docs/glossary.md` and, for a

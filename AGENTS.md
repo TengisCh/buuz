@@ -47,7 +47,7 @@ Plan, then test-first build, then review. For an issue use the
 | --- | --- | --- |
 | Question the design | `grill` skill (issues labelled `needs-design`, new settings) | Opus |
 | Plan | plan mode or the `planner` subagent; post the plan on the issue or PR | Opus |
-| Implement | `tdd` skill, or the `implementer` subagent | Sonnet |
+| Implement | `implementer` subagent, which follows the `tdd` skill (also for review fixes) | Sonnet |
 | Review | `reviewer` subagent, then the `verify` skill | Opus |
 | Lookups, triage | `scout` subagent, `triage-issue` skill | Haiku |
 
