@@ -8,6 +8,10 @@ on:
     paths: ["**/*.md", ".markdownlint-cli2.jsonc", "tools/lint/**", ".github/workflows/docs.yml"]
   workflow_dispatch:
 
+# Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).
+permissions:
+  contents: read
+
 concurrency:
   group: docs-${{ github.ref }}
   cancel-in-progress: true
@@ -20,8 +24,10 @@ jobs:
       run:
         working-directory: tools/lint
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -30,6 +36,6 @@ jobs:
       - name: Markdown lint
         run: tools/lint/node_modules/.bin/markdownlint-cli2
         working-directory: .
-      - run: npx playwright install --with-deps chromium
+      - run: npx --no-install playwright install --with-deps chromium
       - name: Mermaid diagrams parse
         run: node check-mermaid.mjs

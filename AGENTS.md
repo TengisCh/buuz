@@ -1,0 +1,87 @@
+# Working on Buuz with a coding agent
+
+Instructions for any AI coding agent (Claude Code, Codex, Cursor, Copilot and
+others) working in this repository. Humans: see
+[CONTRIBUTING.md](CONTRIBUTING.md). Both say the same thing; this file is the
+short, strict version.
+
+## What Buuz is
+
+A phonetic Latin to Mongolian Cyrillic input method (`geree` becomes
+`гэрээ`). One Rust core, native shells per platform, a web converter.
+
+| Path | What | Language |
+| --- | --- | --- |
+| `core/` | Transliteration rules and composition engine. Apache-2.0, ported from the original Buuz | Rust |
+| `web/wasm/` | WebAssembly wrapper around `core/` | Rust |
+| `web/site/` | Website and converter at buuz.thetengis.com (Vite, Vercel) | TypeScript |
+| `docs/` | Architecture, typing rules, decisions (ADRs) | Markdown |
+| `tools/lint/` | Markdown and Mermaid lint | Node |
+| `brand/`, `design/` | Logo, mockups and their render scripts | |
+
+Read [docs/architecture.md](docs/architecture.md) before structural changes
+and [docs/typing-rules.md](docs/typing-rules.md) before touching rules.
+
+## Hard rules
+
+1. **The typing path stays private and fast.** No network calls, no logging of
+   keystrokes, no heavy allocation per key. This is a security promise
+   ([SECURITY.md](SECURITY.md)), not a preference.
+2. **Rule changes are test-first.** Every typing bug becomes a failing case in
+   `core/tests/` before the fix. Keep output identical to the original Buuz
+   unless an issue says otherwise.
+3. **SPDX header on new source files.** `// SPDX-License-Identifier: Apache-2.0`
+   in `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
+4. **No new dependency without the add-dependency checklist** (below).
+5. **Never** commit secrets or `.env` files, force-push `main`, publish
+   packages, or change GitHub or Vercel settings. Ask the maintainer.
+
+## Commands
+
+Run the checks for what you touched before you say a change is done.
+
+```sh
+# core/ (also run when web/wasm changes)
+cd core && cargo fmt && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked
+
+# web/site/ (builds core to wasm first; needs Rust + wasm32 target)
+cd web/site && npm ci && npm run build && npm test
+
+# any Markdown
+cd tools/lint && npm ci && cd ../.. && tools/lint/node_modules/.bin/markdownlint-cli2
+```
+
+## Supply-chain rules
+
+Dependencies are the easiest way into a keyboard app, so:
+
+- Install from lockfiles only: `npm ci`, `cargo build --locked`. Do not run
+  `npm install` or `cargo update` unless the task is a dependency change.
+- `.npmrc` refuses npm versions younger than 7 days (`min-release-age=7`).
+  Do not bypass it unless the maintainer asks, for a security fix.
+- Adding or upgrading a dependency: prefer none; check the package is the
+  real one (name, repo, maintainers, downloads), that its version is at least
+  7 days old, has no install script you have not read, and has a licence
+  compatible with MIT OR Apache-2.0. Pin exact versions. Say why in the PR.
+- Never pipe a download into a shell, and never `npx` a package that is not
+  already in a lockfile.
+- GitHub Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment.
+  Keep it that way; Dependabot updates them.
+
+## Git and PRs
+
+- Branch from `main`: `issue-<n>-<slug>` for an issue, otherwise
+  `<area>/<slug>`. Never commit to `main` directly.
+- Commit subject: `<area>: <what changed>` in lower case, for example
+  `core: accept ö/ü as input for ө/ү`. Areas: `core`, `web`, `docs`,
+  `brand`, `lint`, `ci`, `deps`, `agents`.
+- One concern per PR. Link the issue (`Closes #n`). PRs are squash-merged.
+- Only commit, push or open a PR when the maintainer asks.
+
+## Growing the agent setup
+
+Project skills live in `.claude/skills/<name>/SKILL.md`. When you notice the
+same multi-step workflow for the second time, or the maintainer corrects you
+on how something is done here, propose a new skill or a rule in this file
+(see the `new-skill` skill). Keep this file short: rules here, procedures in
+skills.
