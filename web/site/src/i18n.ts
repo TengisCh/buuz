@@ -33,6 +33,15 @@ const mn = {
     'Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.',
   switchTo: "EN",
   switchLabel: "Switch to English",
+  vowels: "Эгшиг",
+  yVowels: "Й-тэй эгшиг",
+  consonants: "Гийгүүлэгч",
+  signs: "Тэмдэг",
+  feedbackTitle: "Санал хүсэлт",
+  feedbackBody: "Алдаа олсон уу, эсвэл гоё санаа байна уу? GitHub дээр бидэнд бичээрэй.",
+  feedbackBtn: "Санал илгээх",
+  themeDark: "Харанхуй горим",
+  themeLight: "Цайвар горим",
 };
 
 export type Key = keyof typeof mn;
@@ -61,6 +70,15 @@ const en: Record<Key, string> = {
   credit: 'Buuz 2.0 continues <a href="https://github.com/odbayar/buuz">Buuz</a> by Odbayar Nyamtseren.',
   switchTo: "МН",
   switchLabel: "Монгол хэл рүү шилжих",
+  vowels: "Vowels",
+  yVowels: "Y-vowels",
+  consonants: "Consonants",
+  signs: "Signs",
+  feedbackTitle: "Feedback",
+  feedbackBody: "Found a bug or have a fun idea? Tell us on GitHub.",
+  feedbackBtn: "Send feedback",
+  themeDark: "Dark mode",
+  themeLight: "Light mode",
 };
 
 const strings: Record<Lang, Record<Key, string>> = { mn, en };
@@ -117,6 +135,7 @@ export function apply(lang: Lang): void {
     btn.title = t("switchLabel");
     btn.lang = lang === "mn" ? "en" : "mn";
   }
+  document.dispatchEvent(new Event("buuz:lang"));
 }
 
 export function setupLang(): void {

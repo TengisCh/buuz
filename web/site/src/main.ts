@@ -9,6 +9,31 @@ import { setupLang, t } from "./i18n";
 
 setupLang();
 
+// Theme: light by default, dark only by choice (saved). The inline script in
+// index.html applies a saved choice before first paint.
+const themeBtn = document.getElementById("theme") as HTMLButtonElement;
+function syncTheme(): void {
+  const dark = document.documentElement.dataset.theme === "dark";
+  const label = t(dark ? "themeLight" : "themeDark");
+  themeBtn.setAttribute("aria-pressed", String(dark));
+  themeBtn.setAttribute("aria-label", label);
+  themeBtn.title = label;
+}
+themeBtn.addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme !== "dark";
+  if (dark) root.dataset.theme = "dark";
+  else delete root.dataset.theme;
+  try {
+    localStorage.setItem("buuz.theme", dark ? "dark" : "light");
+  } catch {
+    /* private mode: don't remember */
+  }
+  syncTheme();
+});
+document.addEventListener("buuz:lang", syncTheme);
+syncTheme();
+
 const latin = document.getElementById("latin") as HTMLTextAreaElement;
 const cyr = document.getElementById("cyr") as HTMLTextAreaElement;
 const copyBtn = document.getElementById("copy") as HTMLButtonElement;

@@ -8,10 +8,16 @@
       name="description"
       content="Латинаар бичихэд шууд кирилл болно. Үнэгүй, бичсэн зүйл тань хаашаа ч илгээгдэхгүй."
     />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#FFFFFF" />
+    <script>
+      // Light is the default; dark only when the visitor picked it. Set before paint to avoid a flash.
+      try {
+        if (localStorage.getItem("buuz.theme") === "dark") document.documentElement.dataset.theme = "dark";
+      } catch {}
+    </script>
     <script type="module" src="/src/main.ts"></script>
     <script>
       window.va =
@@ -27,7 +33,13 @@
       <header>
         <div class="top">
           <h1 class="wordmark"><img id="mascot" class="mascot" src="/buuz.svg" alt="" width="56" height="56" /><span>Buuz</span><sup>2.0</sup></h1>
+          <div class="toggles">
+          <button id="theme" type="button" class="ghost icon" title="Харанхуй горим" aria-label="Харанхуй горим" aria-pressed="false">
+            <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
+            <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g></svg>
+          </button>
           <button id="lang" type="button" class="ghost lang" lang="en" title="Switch to English" aria-label="Switch to English">EN</button>
+          </div>
         </div>
         <p class="tag" data-i18n="tag">Латинаар бич, кирилл болоод гарчихна.</p>
       </header>
@@ -66,19 +78,44 @@
 
       <details class="cheat">
         <summary data-i18n="howTo">Яаж бичих вэ?</summary>
-        <div class="grid">
-          <div><kbd>w</kbd> ү</div>
-          <div><kbd>q</kbd> ө</div>
-          <div><kbd>y</kbd> ы</div>
-          <div><kbd>sh</kbd> ш</div>
-          <div><kbd>ch</kbd> ч</div>
-          <div><kbd>yo</kbd> ё</div>
-          <div><kbd>yu</kbd> ю</div>
-          <div><kbd>ya</kbd> я</div>
-          <div><kbd>ye</kbd> е</div>
-          <div><kbd>'</kbd> ь</div>
-          <div><kbd>"</kbd> ъ</div>
-          <div><kbd>ii</kbd> ий</div>
+        <div class="keys">
+          <div class="col">
+            <h3 data-i18n="vowels">Эгшиг</h3>
+            <ul>
+              <li><kbd>e</kbd><span>э</span></li>
+              <li><kbd>w</kbd><span>ү</span></li>
+              <li><kbd>q</kbd><span>ө</span></li>
+              <li><kbd>y</kbd><span>ы</span></li>
+              <li><kbd>ii</kbd><span>ий</span></li>
+            </ul>
+          </div>
+          <div class="col">
+            <h3 data-i18n="yVowels">Й-тэй эгшиг</h3>
+            <ul>
+              <li><kbd>ye</kbd><span>е</span></li>
+              <li><kbd>yo</kbd><span>ё</span></li>
+              <li><kbd>yu</kbd><span>ю</span></li>
+              <li><kbd>ya</kbd><span>я</span></li>
+            </ul>
+          </div>
+          <div class="col">
+            <h3 data-i18n="consonants">Гийгүүлэгч</h3>
+            <ul>
+              <li><kbd>h</kbd><span>х</span></li>
+              <li><kbd>c</kbd><span>ц</span></li>
+              <li><kbd>ch</kbd><span>ч</span></li>
+              <li><kbd>sh</kbd><span>ш</span></li>
+              <li><kbd>j</kbd><span>ж</span></li>
+              <li><kbd>z</kbd><span>з</span></li>
+            </ul>
+          </div>
+          <div class="col">
+            <h3 data-i18n="signs">Тэмдэг</h3>
+            <ul>
+              <li><kbd>'</kbd><span>ь</span></li>
+              <li><kbd>"</kbd><span>ъ</span></li>
+            </ul>
+          </div>
         </div>
         <p data-i18n-html="howToBody">
           <kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг
@@ -100,8 +137,16 @@
         </ul>
       </section>
 
+      <section class="feedback">
+        <div>
+          <h2 data-i18n="feedbackTitle">Санал хүсэлт</h2>
+          <p data-i18n="feedbackBody">Алдаа олсон уу, эсвэл гоё санаа байна уу? GitHub дээр бидэнд бичээрэй.</p>
+        </div>
+        <a class="button" href="https://github.com/TengisCh/buuz/issues/new/choose" target="_blank" rel="noopener"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span data-i18n="feedbackBtn">Санал илгээх</span></a>
+      </section>
+
       <footer>
-        <a href="https://github.com/TengisCh/buuz" data-i18n="github">GitHub дээр нээлттэй эх</a>
+        <a class="ghlink" href="https://github.com/TengisCh/buuz"><svg class="gh" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span data-i18n="github">GitHub дээр нээлттэй эх</span></a>
         <span data-i18n-html="credit">Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.</span>
       </footer>
     </main>
