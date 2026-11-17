@@ -261,11 +261,79 @@ desktop keyboards: the website converts the whole text, not keystrokes.
   `clear_context()` call after a caret move now matters after every word, not
   only after abbreviations.
 
-Not done yet: automatically keeping URLs, emails and words with digits in
-Latin, a list of common English words, and per-app memory.
+Links and emails turn Latin by themselves: see section 9. Not done yet:
+words with digits, a list of common English words, and per-app memory.
 Background: [issue #10](https://github.com/TengisCh/buuz/issues/10).
 
-## 9. Cyrillic to Latin
+## 9. Keeping links and emails in Latin
+
+Links and emails are never Mongolian, so smart mode keeps them Latin
+without a key press (`Options::auto_latin`, on in smart mode, off in
+`Options::classic()`, separate from `keep_latin`). The website converter
+follows smart mode. There is no switch on the page.
+
+**Run.** A run is everything typed since the last Space, Enter or Tab:
+words and the symbols between them (`github.com`, `bat@gmail.com`). The
+composer keeps the raw keys of the run and the text it committed for it. It
+tracks at most 100 characters. A longer run is never changed. A caret move
+does not start a new run: it stops the tracking (and any Latin state) until
+the next Space, Enter or Tab. Backspace outside a word and Esc outside a word
+do the same.
+
+**Key::Symbol.** A printable character that is not a letter and not a space
+(`.` `@` `:` `/` `-` `_`, digits). Without `auto_latin` it acts exactly like
+`Key::Other`. Enter, Tab and other non-printing keys stay `Key::Other`.
+
+**Live triggers.** The run turns Latin at the key that completes one of:
+
+- `@` anywhere in the run (`bat@`).
+- `://` (`https://`).
+- `/` typed right after a run that is already a domain (`github.com/`), so
+  the path that follows stays Latin.
+
+`www.` is not a trigger, because `www.` is also the Mongolian `үүү.`.
+`www.google.com` turns Latin as a domain, at the end of the run.
+
+The composer consumes the trigger key. `delete_before` is the number of
+characters already committed for the run, and `commit` is the raw run plus
+the key. The word still in the preedit was not committed, so it is not
+counted. Words typed after this, in the same run, start in the Latin view
+(Esc shows the Cyrillic of the current word).
+
+**Domains at the end of a run.** At Space, Enter, Tab or the end of the
+text, a run that looks like `label.label...tld` turns Latin the same way.
+Before the check, the composer trims trailing `. , ; : ! ? ) ] " '` and
+leading `( [ " '` from the run, so `(github.com),` and `visit github.com.`
+work. The whole raw run is committed as typed, so the trimmed characters
+stay as typed. Labels are letters, digits or `-`. The last label is one of:
+com, net, org, edu, gov, io, dev, app, info, mn, ru, biz, xyz. Short country
+codes that are also Mongolian words (`us`, `ai`, `de`, `me`, `co`, `tv`...)
+are not in the list, because prose without a space after a full stop
+(`tsai.de`) must stay Cyrillic. So `github.com` stays Latin, and `bn.ok`,
+`sain.baina` and `ok.me` stay Cyrillic. A sentence end (`bn. sain`) is not a
+domain. `sn.mn` turns Latin, because `mn` is in the list.
+
+**Undo.** Backspace right after a domain turned Latin at a Space deletes the
+Latin run and the Space, and commits the Cyrillic that was shown before the
+change (what `auto_latin` off would have made, with abbreviations expanded
+and a last label viewed in Latin with Esc still in Latin). The preedit stays
+empty. Enter and the end of the text arm no undo. A live trigger has no
+special undo: use Esc on the current word, or Backspace.
+
+A run that turned Latin gives no evidence for the particle: `uu` after
+`github.dev` is `уу`.
+
+**Not done.** A caret move inside a word stops the detection for that run.
+Words that mix digits and letters (`mp3`, `4k`) are not handled: chat uses
+forms like `2r`, so this needs care (open on issue #10). A list of common
+English words needs [#11](https://github.com/TengisCh/buuz/issues/11).
+Per-app memory is shell work.
+
+For shell authors: send `Key::Symbol(ch)` for these characters. Apply a
+`KeyOutcome` in this order: delete `delete_before` characters before the
+caret, insert `commit`, then show the preedit.
+
+## 10. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -273,7 +341,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 10. Planned changes
+## 11. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults

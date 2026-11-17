@@ -14,8 +14,9 @@ pub fn convert(input: &str) -> String {
 }
 
 /// Like `convert`, with smart vowel harmony and abbreviation expansion switched
-/// on or off (`false, false` is the classic left-to-right behaviour of the
-/// original Buuz; `bn` -> `байна` needs `abbreviations`).
+/// on or off (`bn` -> `байна` needs `abbreviations`). Links and emails stay
+/// Latin here whatever the flags are; `false, false` is not the classic
+/// behaviour. Use `convert_classic` for the original Buuz.
 #[wasm_bindgen]
 pub fn convert_with(input: &str, smart_vowels: bool, abbreviations: bool) -> String {
     let opts = buuz_core::Options {
@@ -45,6 +46,13 @@ mod tests {
     #[test]
     fn matches_core() {
         assert_eq!(super::convert("sain baina uu"), "сайн байна уу");
+    }
+
+    #[test]
+    fn links_and_emails_stay_latin_except_in_classic() {
+        assert_eq!(super::convert("github.com"), "github.com");
+        assert_eq!(super::convert("bat@gmail.com"), "bat@gmail.com");
+        assert_ne!(super::convert_classic("github.com"), "github.com");
     }
 
     #[test]
