@@ -29,6 +29,71 @@
         "isBasedOn": { "@type": "SoftwareApplication", "name": "Buuz", "url": "https://github.com/odbayar/buuz", "author": { "@type": "Person", "name": "Odbayar Nyamtseren" } }
       }
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "inLanguage": "mn",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Латинаар кирилл хэрхэн бичих вэ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Дээрх нүдэнд латин үсгээр бичихэд шууд кирилл болно. Жишээ нь sain baina uu гэж бичвэл «сайн байна уу» болно. Гарсан кирилл текстээ «Хуулах» товчоор хуулаад хүссэн газраа буулгаарай."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Латин кирилл хөрвүүлэгч үнэгүй юу?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Тийм, үнэгүй бөгөөд нээлттэй эх. Бүртгүүлэх, нэвтрэх шаардлагагүй."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Ө, Ү үсгийг яаж бичих вэ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "q нь ө, w нь ү болно. o, u нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: gar → гар, geree → гэрээ."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Бичсэн зүйл маань хаа нэгтээ илгээгдэх үү?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Үгүй. Хөрвүүлэлт бүхэлдээ таны төхөөрөмж дээр ажиллана, бичсэн текст хаашаа ч илгээгдэхгүй."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Утсан дээр ашиглаж болох уу?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Болно. Утасны хөтөч дээр шууд ажиллана. Windows, macOS-ийн гар удахгүй гарна."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Уламжлалт монгол бичгээр (босоо) бичиж болох уу?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Одоохондоо болохгүй, зөвхөн кирилл үсгээр бичнэ."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Buuz гэж юу вэ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Нямцэрэнгийн Одбаярын бүтээсэн Buuz хөтөлбөрийн үргэлжлэл. Дүрэм нь адилхан, одоо нээлттэй эхээр шинэчлэгдэж байна."
+            }
+          }
+        ]
+      }
+    </script>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Buuz 2.0" />
     <meta property="og:url" content="https://buuz.thetengis.com/" />
@@ -86,7 +151,7 @@
             <svg class="moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a.6.6 0 0 0-.8-.7A9.5 9.5 0 1 0 21.2 15.4a.6.6 0 0 0-.7-.8Z"/></svg>
             <svg class="sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.8 4.8l1.7 1.7M17.5 17.5l1.7 1.7M4.8 19.2l1.7-1.7M17.5 6.5l1.7-1.7"/></g></svg>
           </button>
-          <button id="lang" type="button" class="ghost lang" lang="en" title="Switch to English" aria-label="Switch to English">EN</button>
+          <button id="lang" type="button" class="ghost lang" lang="en" title="Switch to English" aria-label="EN: Switch to English">EN</button>
           </div>
         </div>
         <p class="tag" data-i18n="tag">Латинаар бич, кирилл болоод гарчихна.</p>
@@ -175,6 +240,38 @@
           ашиглаарай.
         </p>
       </details>
+
+      <section class="faq" aria-labelledby="faq-h">
+        <h2 id="faq-h" data-i18n="faqTitle">Түгээмэл асуулт</h2>
+          <details>
+            <summary data-i18n="faq0q">Латинаар кирилл хэрхэн бичих вэ?</summary>
+            <p data-i18n-html="faq0a">Дээрх нүдэнд латин үсгээр бичихэд шууд кирилл болно. Жишээ нь <kbd>sain baina uu</kbd> гэж бичвэл «сайн байна уу» болно. Гарсан кирилл текстээ «Хуулах» товчоор хуулаад хүссэн газраа буулгаарай.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq1q">Латин кирилл хөрвүүлэгч үнэгүй юу?</summary>
+            <p data-i18n-html="faq1a">Тийм, үнэгүй бөгөөд нээлттэй эх. Бүртгүүлэх, нэвтрэх шаардлагагүй.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq2q">Ө, Ү үсгийг яаж бичих вэ?</summary>
+            <p data-i18n-html="faq2a"><kbd>q</kbd> нь ө, <kbd>w</kbd> нь ү болно. <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq3q">Бичсэн зүйл маань хаа нэгтээ илгээгдэх үү?</summary>
+            <p data-i18n-html="faq3a">Үгүй. Хөрвүүлэлт бүхэлдээ таны төхөөрөмж дээр ажиллана, бичсэн текст хаашаа ч илгээгдэхгүй.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq4q">Утсан дээр ашиглаж болох уу?</summary>
+            <p data-i18n-html="faq4a">Болно. Утасны хөтөч дээр шууд ажиллана. Windows, macOS-ийн гар удахгүй гарна.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq5q">Уламжлалт монгол бичгээр (босоо) бичиж болох уу?</summary>
+            <p data-i18n-html="faq5a">Одоохондоо болохгүй, зөвхөн кирилл үсгээр бичнэ.</p>
+          </details>
+          <details>
+            <summary data-i18n="faq6q">Buuz гэж юу вэ?</summary>
+            <p data-i18n-html="faq6a">Нямцэрэнгийн Одбаярын бүтээсэн Buuz хөтөлбөрийн үргэлжлэл. Дүрэм нь адилхан, одоо нээлттэй эхээр шинэчлэгдэж байна.</p>
+          </details>
+      </section>
 
       <section class="get-app">
         <h2><span aria-hidden="true">💻 </span><span data-i18n="appTitle">Ямар ч апп дээр монголоор бич</span></h2>

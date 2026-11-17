@@ -13,6 +13,8 @@
   --ember: #ff6a3d;
   --sun-press: #e9a52f;
   --accent: #2e6bff;      /* Khadag Blue: the one primary action */
+  --link: #2254e0;        /* text-safe blue on cream (AA contrast) */
+  --ember-text: #c2410c;  /* text-safe ember on light backgrounds */
   --accent-press: #1638b8;
   --accent-fg: #fff;
 }
@@ -27,6 +29,8 @@
   --press: #0e0b1f;
   --sun-press: #b9781c;
   --accent: #5b8cff;
+  --link: #5b8cff;
+  --ember-text: var(--ember);
   --accent-press: #2343b8;
 }
 :root[data-theme="dark"] #cyr { color: #1e1838; }
@@ -45,7 +49,7 @@ main { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
   display: flex; align-items: center; gap: 0.6rem;
   margin: 0; font-size: 2.4rem; font-weight: 900; letter-spacing: -0.02em; line-height: 1;
 }
-.wordmark sup { font-size: 0.45em; color: var(--ember); font-weight: 900; align-self: flex-start; margin: 0.1em 0 0 -0.5rem; }
+.wordmark sup { font-size: 0.45em; color: var(--ember-text); font-weight: 900; align-self: flex-start; margin: 0.1em 0 0 -0.5rem; }
 .mascot { width: 56px; height: 56px; filter: drop-shadow(0 6px 10px rgba(120, 50, 10, 0.2)); transform-origin: 50% 100%; }
 .mascot.puff { animation: puff 0.45s ease-out; }
 .mascot.hop { animation: hop 0.5s cubic-bezier(0.3, 1.6, 0.5, 1); }
@@ -111,7 +115,7 @@ kbd {
 .get-app p { margin: 0 0 0.5rem; color: var(--muted); }
 .get-app ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.25rem; flex-wrap: wrap; }
 .soon { font-weight: 900; }
-a { color: var(--accent); font-weight: 800; }
+a { color: var(--link); font-weight: 800; }
 .top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
 button.lang { min-width: 44px; padding: 0.25rem 0.75rem; font-size: 0.85rem; color: var(--muted); }
 .nw { white-space: nowrap; }
@@ -169,7 +173,7 @@ a.button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); 
 .f-brand { grid-column: 1 / -1; }
 @media (min-width: 900px) { .f-brand { grid-column: auto; } }
 .f-logo { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 900; font-size: 1.4rem; color: var(--fg); text-decoration: none; }
-.f-logo sup { color: var(--ember); font-size: 0.55em; align-self: flex-start; margin: 0.1em 0 0 -0.3rem; }
+.f-logo sup { color: var(--ember-text); font-size: 0.55em; align-self: flex-start; margin: 0.1em 0 0 -0.3rem; }
 .f-brand p { color: var(--muted); margin: 0.5rem 0 1rem; max-width: 22rem; }
 .f-social { display: flex; gap: 0.5rem; }
 .site-footer h2 { font-size: 0.8rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.75rem; }
@@ -180,7 +184,7 @@ a.button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); 
 .linklike:active { transform: none; box-shadow: none; }
 .muted { color: var(--muted); display: inline-flex; align-items: center; gap: 0.35rem; }
 .f-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
-.f-bottom a { color: var(--accent); }
+.f-bottom a { color: var(--link); }
 
 /* ---------- Floating feedback button + panel ---------- */
 .fab {
@@ -300,3 +304,10 @@ a.button.mail { width: 100%; justify-content: center; }
   body:has(#latin:focus) .fab { display: none; }
 }
 @media (min-width: 641px) { .toast { display: none; } }
+
+/* FAQ */
+.faq { background: var(--card); border-radius: 24px; padding: 1rem 1.25rem; margin-bottom: 1.1rem; box-shadow: 0 5px 0 var(--press); }
+.faq h2 { margin: 0 0 0.5rem; font-size: 1.2rem; }
+.faq details { padding: 0.5rem 0; border-top: 2px solid var(--line); }
+.faq details:first-of-type { border-top: 0; }
+.faq p { margin: 0.4rem 0 0; color: var(--muted); }
