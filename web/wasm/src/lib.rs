@@ -105,6 +105,7 @@ pub struct ConfigReport {
     completion: bool,
     autocorrect: bool,
     double_v: bool,
+    habit_keys: bool,
 }
 
 #[wasm_bindgen]
@@ -151,6 +152,11 @@ impl ConfigReport {
     pub fn double_v(&self) -> bool {
         self.double_v
     }
+    /// Habit keys (`ts` is ц, `zh` is ж) are on after the preset and overrides.
+    #[wasm_bindgen(getter)]
+    pub fn habit_keys(&self) -> bool {
+        self.habit_keys
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -174,6 +180,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         completion: o.completion,
         autocorrect: o.autocorrect,
         double_v: o.double_v,
+        habit_keys: o.habit_keys,
     })
 }
 
@@ -190,7 +197,7 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect` or `double_v` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v` or `habit_keys` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -209,6 +216,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         "completion" => config.set_completion((value != base.completion).then_some(value)),
         "autocorrect" => config.set_autocorrect((value != base.autocorrect).then_some(value)),
         "double_v" => config.set_double_v((value != base.double_v).then_some(value)),
+        "habit_keys" => config.set_habit_keys((value != base.habit_keys).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -904,6 +912,19 @@ mod tests {
         assert!(!super::config_normalize(&classic).unwrap().double_v());
         let classic_on = super::config_set_option(&classic, "double_v", true).unwrap();
         assert!(super::config_normalize(&classic_on).unwrap().double_v());
+    }
+
+    #[test]
+    fn habit_keys_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().habit_keys());
+        let off = super::config_set_option(&cfg, "habit_keys", false).unwrap();
+        assert!(off.contains("habit_keys = false"));
+        assert!(!super::config_normalize(&off).unwrap().habit_keys());
+        let on = super::config_set_option(&off, "habit_keys", true).unwrap();
+        assert_eq!(on, cfg);
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic).unwrap().habit_keys());
     }
 
     #[test]

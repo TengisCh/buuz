@@ -79,6 +79,46 @@ gives үү. A single `v` stays в.
 - The word list has few words with вв (`ввс`, `савва`). Type them with the
   option off, or in the Latin view.
 
+### Habit keys
+
+With `Options::habit_keys` (config `[options] habit_keys`), the key pair `ts`
+gives ц and `zh` gives ж. Many people type these two pairs for the letters.
+
+| Typed | Result |
+| --- | --- |
+| `tsagaan` | цагаан |
+| `gezh` | гэж |
+| `Tsagaan`, `TSAGAAN` | Цагаан, ЦАГААН |
+| `ZH` | Ж |
+
+- The option is on in smart mode and off in classic mode. With it off, `ts`
+  gives тс and `zh` gives зх.
+- ц and ж are consonants. They act like the keys `c` and `j` for vowel
+  harmony.
+- `ts` gives way when its `s` starts a longer key: `tsh` stays тш and
+  `tsxc` stays тщ. Trade-off: `tssh` gives цш, because the second `s` starts
+  `sh`, not the first. `zh` has no such exception: `dorzhhand` gives
+  доржханд.
+- A user key for `ts` or `zh` in `[keys]` wins over this rule.
+- **With a word list.** Some words have тс or зх: `хүртсэн`, `тогтсон`,
+  `багтсан`, `бүтсэн`. The composer checks the whole text so far. When it is
+  not the start of a listed word, the composer tries тс (зх) at each habit
+  key, then at both of two. It keeps the first result that starts a listed
+  word. If none does, the result keeps ц and ж.
+- The check uses the word list only, not the personal dictionary, like the
+  ий check (section 4.2). A word with ий after a habit key is also tried with
+  ий instead of ы: `batsuuriin` gives батсуурийн.
+- The last word of a sentence can keep ц. When the ц spelling starts other
+  listed words, it counts as a start of a word: `darts` gives дарц, not
+  дартс.
+- **The preedit can change while you type.** `bagts` shows `багц`, `bagtsa`
+  shows `багца`, and `bagtsan` shows `багтсан`, because `багцан` starts no
+  listed word. The word list is not a full spelling check: it decides only
+  between these two spellings.
+- **Without a word list** the keys always give ц and ж: `hwrtsen` gives
+  `хүрцэн`. Turn the option off to type тс and зх, or type `t` and `s` in
+  the Latin view.
+
 ### Vowels that follow vowel harmony
 
 | Keys | Masculine word | Feminine word |

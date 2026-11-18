@@ -193,6 +193,11 @@
           </label>
           <p class="hint" data-i18n="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p>
           <label class="toggle">
+            <input id="habit-keys" type="checkbox" checked />
+            <span data-i18n="habitKeys">ts-г ц, zh-г ж болгох (tsagaan → цагаан)</span>
+          </label>
+          <p class="hint" data-i18n="habitKeysHint">Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.</p>
+          <label class="toggle">
             <input id="autocorrect" type="checkbox" />
             <span data-i18n="autocorrect">Үсгийн алдаа засах</span>
           </label>
@@ -339,10 +344,10 @@
             <h3 data-i18n="consonants">Гийгүүлэгч</h3>
             <ul>
               <li><kbd>h</kbd><span>х</span></li>
-              <li><kbd>c</kbd><span>ц</span></li>
+              <li><kbd>c</kbd> <kbd>ts</kbd><span>ц</span></li>
               <li><kbd>ch</kbd><span>ч</span></li>
               <li><kbd>sh</kbd><span>ш</span></li>
-              <li><kbd>j</kbd><span>ж</span></li>
+              <li><kbd>j</kbd> <kbd>zh</kbd><span>ж</span></li>
               <li><kbd>z</kbd><span>з</span></li>
             </ul>
           </div>

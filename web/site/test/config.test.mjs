@@ -41,7 +41,7 @@ test("old keys migrate into a config, which is saved; the old keys go", () => {
   const cfg = loadConfig(store);
   assert.equal(store.getItem(CONFIG_KEY), cfg);
   assert.equal(store.data.has("buuz.mode") || store.data.has("buuz.smart") || store.data.has("buuz.abbr"), false);
-  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, doubleV: false, classicWithFeatures: false });
+  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, classicWithFeatures: false });
   assert.equal(convert_with_config("unee", cfg), "унээ");
 });
 
@@ -53,6 +53,7 @@ test("each old key migrates on its own", () => {
     completion: true,
     autocorrect: false,
     doubleV: true,
+    habitKeys: true,
     classicWithFeatures: false,
   });
   const abbr = migrateLegacy((k) => (k === "buuz.abbr" ? "off" : null));
@@ -165,7 +166,7 @@ test("a corrupt saved config is kept in buuz.config.bad before the default is us
 
 test("classic with overrides that turn smart features on is reported", () => {
   const s = switchesOf('buuz_config = 1\npreset = "classic"\n[options]\nsmart_vowels = true\n');
-  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, doubleV: false, classicWithFeatures: true });
+  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, classicWithFeatures: true });
 });
 
 test("the size limit has one wording, and entry counts have their own message", () => {
@@ -184,5 +185,19 @@ test("double v is a switch: on in smart, off in classic, and it types vv as үү
   assert.equal(switchesOf(classic).doubleV, false);
   // Only double v on in Classic counts as a smart feature.
   const classicOn = config_set_option(classic, "double_v", true);
+  assert.equal(switchesOf(classicOn).classicWithFeatures, true);
+});
+
+test("habit keys are a switch: on in smart, off in classic, and they type ts as ц", () => {
+  const cfg = default_config_text();
+  assert.equal(switchesOf(cfg).habitKeys, true);
+  assert.equal(convert_with_config("tsagaan", cfg), "цагаан");
+  assert.equal(convert_with_config("gezh", cfg), "гэж");
+  const off = config_set_option(cfg, "habit_keys", false);
+  assert.equal(switchesOf(off).habitKeys, false);
+  assert.equal(convert_with_config("tsagaan", off), "тсагаан");
+  const classic = config_set_classic(cfg, true);
+  assert.equal(switchesOf(classic).habitKeys, false);
+  const classicOn = config_set_option(classic, "habit_keys", true);
   assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
