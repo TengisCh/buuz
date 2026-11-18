@@ -274,8 +274,8 @@ Group (c): reject.
 
 | # | Change | Group | Evidence | Fixed / broken | First test pairs |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `ts` gives ц (also in the word `хүртсэн`, see the break) | (a) own switch for habit keys | Some, and the 2012 standard | 149 / 3 | `tsagaan` → цагаан, `tsereg` → цэрэг. Known break: `hwrtsen` → хүртсэн |
-| 2 | `zh` gives ж | (a) same switch as 1, low priority | None found | 281 / 0 | `gezh` → гэж, `baizhee` → байжээ |
+| 1 | `ts` gives ц (also in the word `хүртсэн`, see the break). Done in #63: `habit_keys` with a word list check | (a) own switch for habit keys | Some, and the 2012 standard | 149 / 3 | `tsagaan` → цагаан, `tsereg` → цэрэг. Known break: `hwrtsen` → хүртсэн |
+| 2 | `zh` gives ж. Done in #63 | (a) same switch as 1, low priority | None found | 281 / 0 | `gezh` → гэж, `baizhee` → байжээ |
 | 3 | `o` may be ө, chosen with the word list | (b) | Strong | 220 / 0 | `tov` → төв, `mon` → мөн, `torii'n` → төрийн |
 | 4 | `u` may be ө or ү, chosen with the word list | (b) | Strong for `u` as ү, some as ө | 324 / 1 | `uvul` → өвөл, `udur` → өдөр, `tuv` → төв, `uruu` → өрөө. Guard: `uuriin` → уурын |
 | 5 | ий or ы after л chosen with the word list | (b), also a bug | Some | see the bug below | `surguuliin` → сургуулийн. Done in #62: `ii_for_ий` smart mode with a list goes from 89.0% to 97.4% |
@@ -293,8 +293,9 @@ Notes:
   `o_for_ө` and 87.5% on `u_for_ү`. The estimates above are too good,
   because the test words come from the list itself. Measure again on
   held-out words before the build.
-- Row 1: the 3 breaks are words with тс typed as `ts`. A word-list check at
-  commit time can undo them later.
+- Row 1: the 3 breaks are words with тс typed as `ts`. The word list check
+  in #63 undoes them. After #63, smart mode gets 99.3% on `ts` (was 0.0%),
+  97.6% on `zh_for_ж` (was 0.0%) and 82.0% on `mixed` (was 77.7%).
 - Rows 10 to 12 break base-profile words. Row 12 stays a user choice. Calibration
   already offers it.
 

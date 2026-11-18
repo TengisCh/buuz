@@ -123,6 +123,7 @@ completion = true       # Tab accepts the rest of a likely word (needs the word 
 autocorrect = false     # fixes a misspelled word at Space (needs the word list)
 learning = true         # learns words you use (personal dictionary, stays on the device)
 double_v = true         # the key pair vv gives үү
+habit_keys = true       # the key pairs ts and zh give ц and ж
 
 # Added to the built-in list. Keys are not case sensitive.
 [abbreviations]

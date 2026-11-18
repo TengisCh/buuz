@@ -27,7 +27,7 @@ use crate::abbrev::Abbreviations;
 use crate::autocorrect::{self, Scratch};
 use crate::keys::KeyMap;
 use crate::rules::{
-    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_DV, X_F, X_II, X_M, X_MF, X_MM,
+    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_DV, X_F, X_HK, X_II, X_M, X_MF, X_MM,
 };
 use crate::userdict::{Learned, UserSnapshot};
 use crate::wordlist::WordList;
@@ -171,6 +171,11 @@ pub struct Options {
     /// `true` in smart mode, `false` in classic mode (the original Buuz gives
     /// вв).
     pub double_v: bool,
+    /// Habit keys: `ts` gives ц and `zh` gives ж. With a word list, a stem
+    /// that only exists with тс (`хүртсэн`) or зх keeps the two letters.
+    /// `true` in smart mode, `false` in classic mode (the original Buuz gives
+    /// тс and зх).
+    pub habit_keys: bool,
 }
 
 impl Default for Options {
@@ -187,6 +192,7 @@ impl Default for Options {
             user: None,
             learning: true,
             double_v: true,
+            habit_keys: true,
         }
     }
 }
@@ -208,6 +214,7 @@ impl Options {
             user: None,
             learning: true,
             double_v: true,
+            habit_keys: true,
         }
     }
 
@@ -226,6 +233,7 @@ impl Options {
             user: None,
             learning: false,
             double_v: false,
+            habit_keys: false,
         }
     }
 }
@@ -345,6 +353,8 @@ struct Context<'a> {
     words: Option<&'a WordList>,
     /// The `X_DV` rules (`vv`) are active.
     double_v: bool,
+    /// The `X_HK` rules (`ts`, `zh`) are active.
+    habit_keys: bool,
     /// Gender of the word before a space, if the last key was a space.
     prev_gender: Option<u8>,
 }
@@ -426,9 +436,117 @@ fn list_prefers_ii(words: &WordList, out: &[char], buf: &mut String) -> bool {
         buf.clear();
         buf.extend(out.iter().map(|&c| to_lower(c)));
         buf.push_str(tail);
-        words.top_two(buf).0.is_some()
+        words.has_prefix(buf)
     };
     !probe("ы") && probe("ий")
+}
+
+/// True when the keys `rest` (the part of a word that starts at the `s` of
+/// `ts`) start a key longer than one character, such as `sh` or `sxc`.
+fn s_starts_longer_key(rs: &RuleSet, rest: &[char]) -> bool {
+    rs.lengths
+        .iter()
+        .any(|&l| l >= 2 && l <= rest.len() && rs.get(&rest[..l]).is_some())
+}
+
+/// A change to `out` that the habit check may make: the letter at `at`
+/// becomes the two letters `alt`. A habit key (`ts`, `zh`) gives ц or ж that
+/// may become тс or зх. The smart ий rule gives ы that may become ий again
+/// when its stem changes.
+#[derive(Debug, Clone, Copy, Default)]
+struct Edit {
+    at: usize,
+    alt: [char; 2],
+}
+
+/// The habit keys of a word (at most `HABIT_MAX`, checked against the word
+/// list) and the first ы of the ий rule. They are in the order of `at`.
+#[derive(Debug, Default)]
+struct Edits {
+    list: [Edit; HABIT_MAX + 1],
+    n: usize,
+    /// Indexes into `list`.
+    habits: [usize; HABIT_MAX],
+    n_habits: usize,
+    ii: Option<usize>,
+}
+
+impl Edits {
+    fn push_habit(&mut self, e: Edit) {
+        if self.n_habits < HABIT_MAX {
+            self.habits[self.n_habits] = self.n;
+            self.n_habits += 1;
+            self.list[self.n] = e;
+            self.n += 1;
+        }
+    }
+
+    fn push_ii(&mut self, e: Edit) {
+        if self.ii.is_none() {
+            self.ii = Some(self.n);
+            self.list[self.n] = e;
+            self.n += 1;
+        }
+    }
+}
+
+/// At most this many habit keys in a word are checked against the word list.
+const HABIT_MAX: usize = 2;
+
+/// Word list check for the habit keys (typing-rules 3.1). `out` holds ц or ж
+/// at each habit position. When the whole text so far is not the start of a
+/// listed word, try тс (зх) at each single position, then at both, and keep
+/// the first variant that starts a listed word. A variant is tried with the
+/// ы of the ий rule as it is, then with ий: the stem changed, so the ий
+/// check no longer holds (`батсуурийн`). `buf` is a reused scratch string.
+/// Only a winning variant changes `out`.
+fn apply_habit_list(words: &WordList, edits: &Edits, out: &mut Vec<char>, buf: &mut String) {
+    let list = &edits.list[..edits.n];
+    let probe = |out: &[char], mask: u8, buf: &mut String| -> bool {
+        buf.clear();
+        for (i, &c) in out.iter().enumerate() {
+            match list.iter().position(|e| e.at == i) {
+                Some(k) if mask & (1 << k) != 0 => {
+                    buf.extend(list[k].alt.iter().map(|&a| to_lower(a)))
+                }
+                _ => buf.push(to_lower(c)),
+            }
+        }
+        words.has_prefix(buf)
+    };
+    if probe(out, 0, buf) {
+        return;
+    }
+    // Each single habit key, then both.
+    let mut masks = [0u8; HABIT_MAX + 1];
+    let mut n_masks = 0;
+    for &h in edits.habits.iter().take(edits.n_habits) {
+        masks[n_masks] = 1 << h;
+        n_masks += 1;
+    }
+    if edits.n_habits > 1 {
+        masks[n_masks] = masks[0] | masks[1];
+        n_masks += 1;
+    }
+    let ii_bit = edits.ii.map(|k| 1u8 << k);
+    let found = masks[..n_masks].iter().find_map(|&m| {
+        if probe(out, m, buf) {
+            return Some(m);
+        }
+        let with_ii = m | ii_bit?;
+        probe(out, with_ii, buf).then_some(with_ii)
+    });
+    let Some(mask) = found else {
+        return;
+    };
+    // Later positions first, so the earlier indexes stay valid.
+    for k in (0..edits.n).rev() {
+        if mask & (1 << k) != 0 {
+            let e = list[k];
+            out[e.at] = e.alt[0];
+            out.insert(e.at + 1, e.alt[1]);
+        }
+    }
 }
 
 /// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.
@@ -451,6 +569,16 @@ fn read_to_comp(
                 if let Some((g, rules)) = rs.get(&read[i..i + l]) {
                     // An `X_DV` rule (`vv`) exists only with the option on.
                     if !ctx.double_v && rules.iter().all(|r| r.flags & X_DV != 0) {
+                        continue;
+                    }
+                    // The same for an `X_HK` rule (`ts`, `zh`). `ts` also gives
+                    // way when the `s` starts a longer key: `tsh` stays т and
+                    // ш, `tsxc` stays т and щ.
+                    if rules.iter().all(|r| r.flags & X_HK != 0)
+                        && (!ctx.habit_keys
+                            || (to_lower(rules[0].to[0]) == 'ц'
+                                && s_starts_longer_key(rs, &read[i + 1..])))
+                    {
                         continue;
                     }
                     len = l;
@@ -486,6 +614,7 @@ fn read_to_comp(
     // Pass 2: convert left to right, starting from that gender.
     let mut word = initial;
     let mut out = Vec::with_capacity(read.len());
+    let mut edits = Edits::default();
     for tok in tokens.iter() {
         let chosen = tok_rules(rs, tok).iter().find(|r| word & r.flags == word);
         match chosen {
@@ -495,18 +624,47 @@ fn read_to_comp(
                 } else if rule.flags & X_MM != 0 {
                     word = X_M;
                 }
-                if ctx.smart
+                if rule.flags & X_HK != 0 {
+                    let (a, b) = if to_lower(rule.to[0]) == 'ж' {
+                        ('з', 'х')
+                    } else {
+                        ('т', 'с')
+                    };
+                    let cased = |l: char, key: char| {
+                        if key != to_lower(key) {
+                            l.to_uppercase().next().unwrap_or(l)
+                        } else {
+                            l
+                        }
+                    };
+                    edits.push_habit(Edit {
+                        at: out.len(),
+                        alt: [cased(a, read[tok.start]), cased(b, read[tok.start + 1])],
+                    });
+                    out.extend_from_slice(&rule.to);
+                } else if ctx.smart
                     && rule.flags & X_II != 0
                     && ii_is_y(&out, word)
                     && !ctx.words.is_some_and(|w| list_prefers_ii(w, &out, buf))
                 {
                     let upper = rule.to[0] != to_lower(rule.to[0]);
+                    if let [a, b, ..] = rule.to[..] {
+                        edits.push_ii(Edit {
+                            at: out.len(),
+                            alt: [a, b],
+                        });
+                    }
                     out.push(if upper { 'Ы' } else { 'ы' });
                 } else {
                     out.extend_from_slice(&rule.to);
                 }
             }
             None => out.extend_from_slice(&read[tok.start..tok.start + tok.len]),
+        }
+    }
+    if edits.n_habits > 0 {
+        if let Some(w) = ctx.words {
+            apply_habit_list(w, &edits, &mut out, buf);
         }
     }
     (out, last_ev.unwrap_or(initial))
@@ -839,6 +997,7 @@ impl Composer {
             smart: self.opts.smart_vowels,
             words: self.opts.words.as_deref(),
             double_v: self.opts.double_v,
+            habit_keys: self.opts.habit_keys,
             prev_gender: self.prev_gender,
         };
         let rs = match &self.opts.keys {

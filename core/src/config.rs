@@ -78,6 +78,7 @@ pub struct Config {
     autocorrect: Option<bool>,
     learning: Option<bool>,
     double_v: Option<bool>,
+    habit_keys: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -503,6 +504,11 @@ impl Config {
         self.double_v
     }
 
+    /// Override for [`Options::habit_keys`].
+    pub fn habit_keys(&self) -> Option<bool> {
+        self.habit_keys
+    }
+
     /// Whether the shell must load the word list and set [`Options::words`]:
     /// true when completion or autocorrect is on (the override, else the
     /// preset; autocorrect is off in both presets). `options()` cannot load
@@ -553,6 +559,11 @@ impl Config {
     /// Set or clear the learning override.
     pub fn set_learning(&mut self, value: Option<bool>) {
         self.learning = value;
+    }
+
+    /// Set or clear the habit keys override.
+    pub fn set_habit_keys(&mut self, value: Option<bool>) {
+        self.habit_keys = value;
     }
 
     /// Set or clear the double V override.
@@ -696,6 +707,7 @@ impl Config {
                         | "autocorrect"
                         | "learning"
                         | "double_v"
+                        | "habit_keys"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -747,7 +759,8 @@ impl Config {
                         "completion" => &mut config.completion,
                         "autocorrect" => &mut config.autocorrect,
                         "learning" => &mut config.learning,
-                        _ => &mut config.double_v,
+                        "double_v" => &mut config.double_v,
+                        _ => &mut config.habit_keys,
                     };
                     if slot.is_some() {
                         return Err(dup(line, &key));
@@ -805,6 +818,7 @@ impl Config {
             ("autocorrect", self.autocorrect),
             ("learning", self.learning),
             ("double_v", self.double_v),
+            ("habit_keys", self.habit_keys),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -870,6 +884,7 @@ impl Config {
             user: None,
             learning: self.learning.unwrap_or(base.learning),
             double_v: self.double_v.unwrap_or(base.double_v),
+            habit_keys: self.habit_keys.unwrap_or(base.habit_keys),
         }
     }
 }

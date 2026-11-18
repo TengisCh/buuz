@@ -207,6 +207,15 @@ impl WordList {
         best.into_iter().map(|r| self.word(r)).collect()
     }
 
+    /// True when some word starts with `prefix` (or equals it). One binary
+    /// search, no allocation. An empty prefix is true for a non-empty list.
+    pub fn has_prefix(&self, prefix: &str) -> bool {
+        let lo = self.sorted.partition_point(|&r| self.word(r) < prefix);
+        self.sorted
+            .get(lo)
+            .is_some_and(|&r| self.word(r).starts_with(prefix))
+    }
+
     /// The two best-ranked words that start with `prefix`, with their counts,
     /// best first. One scan, no allocation. An empty prefix gives ranks 0 and 1.
     #[allow(clippy::type_complexity)]

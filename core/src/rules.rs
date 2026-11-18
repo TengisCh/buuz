@@ -29,6 +29,7 @@ pub(crate) const X_MM: u8 = 0x08; // makes the word male
 pub(crate) const X_MF: u8 = 0x10; // makes the word female
 pub(crate) const X_II: u8 = 0x20; // smart mode may turn this ий into ы
 pub(crate) const X_DV: u8 = 0x40; // only with `Options::double_v`
+pub(crate) const X_HK: u8 = 0x80; // only with `Options::habit_keys`
 
 const ALL: u8 = X_M | X_F | X_AC;
 
@@ -131,6 +132,10 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("YO",  "Ё",  ALL | X_MM),
     ("YU",  "Ю",  ALL | X_MM),
     ("Z",   "З",  ALL),
+    // `ts` and `zh` are ц and ж, only with `Options::habit_keys` (the
+    // composer skips them otherwise, so classic output stays the original).
+    ("TS",  "Ц",  ALL | X_HK),
+    ("ZH",  "Ж",  ALL | X_HK),
 
     // Hard / soft signs: no case conversion.
     ("\"",   "ъ", X_M | X_F),
@@ -236,7 +241,7 @@ pub(crate) fn find_target(target: &str) -> Option<Donor> {
     want.dedup();
     let mut seen: Vec<&'static str> = Vec::new();
     for &(from, _, flags) in SOURCE_RULES {
-        if !is_latin_pattern(from) || seen.contains(&from) || flags & X_DV != 0 {
+        if !is_latin_pattern(from) || seen.contains(&from) || flags & (X_DV | X_HK) != 0 {
             continue;
         }
         seen.push(from);
@@ -263,8 +268,10 @@ pub(crate) fn default_letter_chunks() -> Vec<(char, String)> {
             out.push((c, k));
         }
     };
-    for &(from, to, _) in SOURCE_RULES {
-        if !is_latin_pattern(from) {
+    for &(from, to, flags) in SOURCE_RULES {
+        // The habit keys give one letter, so push them below with the other
+        // defaults; `ts` is not a target for `find_target` either.
+        if !is_latin_pattern(from) || flags & X_HK != 0 {
             continue;
         }
         let key = lower_text(from);
@@ -281,6 +288,9 @@ pub(crate) fn default_letter_chunks() -> Vec<(char, String)> {
     push('ы', "ii".to_string());
     // The double V (`vv`, үү) is a default too; it gives two letters.
     push('ү', "vv".to_string());
+    // The habit keys (`ts`, `zh`) are defaults as well.
+    push('ц', "ts".to_string());
+    push('ж', "zh".to_string());
     push('й', "ii'".to_string());
     push('й', "i'".to_string());
     out
@@ -419,7 +429,11 @@ pub(crate) fn rules() -> &'static RuleSet {
 pub fn export_rules() -> Vec<(String, String, bool, bool)> {
     let mut out = Vec::new();
     for (from, &i) in &rules().map {
-        for r in rules().group(i).iter().filter(|r| r.flags & X_DV == 0) {
+        for r in rules()
+            .group(i)
+            .iter()
+            .filter(|r| r.flags & (X_DV | X_HK) == 0)
+        {
             out.push((
                 from.iter().collect::<String>(),
                 r.to.iter().collect::<String>(),
@@ -430,4 +444,40 @@ pub fn export_rules() -> Vec<(String, String, bool, bool)> {
     }
     out.sort();
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn find_target_still_gives_the_c_donor_for_ц() {
+        let donor = find_target("ц").unwrap();
+        assert!(donor.rules.iter().all(|r| r.0 == "C" && r.2 & X_HK == 0));
+        let donor = find_target("ж").unwrap();
+        assert!(donor.rules.iter().all(|r| r.0 == "J" && r.2 & X_HK == 0));
+    }
+
+    #[test]
+    fn export_rules_is_the_table_without_the_option_rules() {
+        let mut map = HashMap::new();
+        for &(from, to, flags) in SOURCE_RULES {
+            if flags & (X_DV | X_HK) == 0 {
+                add_rule(&mut map, from, to, flags);
+            }
+        }
+        let mut want = Vec::new();
+        for (from, rules) in &map {
+            for r in rules {
+                want.push((
+                    from.iter().collect::<String>(),
+                    r.to.iter().collect::<String>(),
+                    r.flags & X_M != 0,
+                    r.flags & X_F != 0,
+                ));
+            }
+        }
+        want.sort();
+        assert_eq!(export_rules(), want);
+    }
 }

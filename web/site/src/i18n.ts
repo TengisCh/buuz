@@ -39,6 +39,9 @@ const mn = {
   doubleV: "vv-г үү болгох (svv → сүү)",
   doubleVHint:
     "Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.",
+  habitKeys: "ts-г ц, zh-г ж болгох (tsagaan → цагаан)",
+  habitKeysHint:
+    "Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -244,6 +247,9 @@ const en: Record<Key, string> = {
   doubleV: "Type vv as үү (svv → сүү)",
   doubleVHint:
     "Two <kbd>v</kbd> keys in a row give үү (svv gives сүү). A single v stays в (avah gives авах). Turn the checkbox off to type вв. It is on by default.",
+  habitKeys: "Type ts as ц and zh as ж (tsagaan → цагаан)",
+  habitKeysHint:
+    "Two keys <kbd>ts</kbd> give ц and <kbd>zh</kbd> gives ж (tsagaan gives цагаан, gezh gives гэж). When the word list is loaded, a word that has тс or зх keeps them (hwrtsen gives хүртсэн). Without the list the keys always give ц and ж. Turn the checkbox off to type тс and зх. It is on by default.",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",
