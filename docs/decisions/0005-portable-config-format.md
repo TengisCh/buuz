@@ -73,8 +73,11 @@ The rules:
   `Abbreviations::from_pairs`.
 - **Keys.** `[keys]` maps 1 to 3 input keys to Cyrillic text. Keys are not
   case sensitive: the core stores them in lowercase, and `O` and `o` are a
-  duplicate. The core checks and stores the mappings. It does not apply them
-  yet. Issue #3 does that.
+  duplicate. The value is a target: Cyrillic text that a built-in key gives
+  (`ү`), a pair (`у/ү`), or an empty value that removes the key. The new key
+  copies the rules of the built-in key that gives the target. A target that no
+  built-in key gives is `ConfigError::UnknownTarget`. `Config::options()`
+  applies the mappings (issue #3, `docs/typing-rules.md` section 10).
 - **Limits.** The text is at most 1 MiB. A section has at most 10,000
   entries. An abbreviation value or a `[keys]` value has at most 64
   characters. Above a limit, the parser gives `ConfigError::TooLarge`.
@@ -122,10 +125,10 @@ mgl = "Монгол"          # new entry
 bn = "байна аа"         # replaces the built-in entry
 tgd = ""                # empty value removes the built-in entry
 
-# Custom key mappings. Checked and stored, not applied yet (issue #3).
+# Custom key mappings. The value is a Cyrillic letter that a built-in key gives.
 [keys]
-"o'" = "ө"
-"u'" = "ү"
+x = "ш"
+kh = "ү"
 ```
 
 ## Consequences

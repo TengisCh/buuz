@@ -25,6 +25,7 @@ use std::sync::Arc;
 
 use crate::abbrev::{check_key, check_value, AbbrevError, Abbreviations};
 use crate::composer::{is_input_char, Options};
+use crate::keys::{check_mapping, KeyError, KeyMap};
 use crate::rules::to_lower;
 
 /// The newest config version this core can read.
@@ -134,6 +135,18 @@ pub enum ConfigError {
     Abbreviation(AbbrevError),
     /// A bad entry in `[keys]`.
     BadKeys { line: usize, key: String },
+    /// A `[keys]` value that no built-in key gives.
+    UnknownTarget {
+        line: usize,
+        key: String,
+        value: String,
+    },
+    /// A `[keys]` value with upper case letters. Targets are lower case.
+    UpperCaseTarget {
+        line: usize,
+        key: String,
+        value: String,
+    },
     /// The text or a section is over the size limit. `line` is 0 when the
     /// whole text is too long.
     TooLarge { line: usize, limit: usize },
@@ -172,12 +185,30 @@ impl fmt::Display for ConfigError {
             ConfigError::Abbreviation(e) => e.fmt(f),
             ConfigError::BadKeys { line: 0, key } => write!(
                 f,
-                "invalid key mapping {key:?} (use 1 to 3 input keys and Cyrillic text)"
+                "invalid key mapping {key:?} (use 1 to 3 input keys and Cyrillic text, a pair such as \"у/ү\", or an empty value to remove the key)"
             ),
             ConfigError::BadKeys { line, key } => write!(
                 f,
-                "line {line}: invalid key mapping {key:?} (use 1 to 3 input keys and Cyrillic text)"
+                "line {line}: invalid key mapping {key:?} (use 1 to 3 input keys and Cyrillic text, a pair such as \"у/ү\", or an empty value to remove the key)"
             ),
+            ConfigError::UnknownTarget { line, key, value } => {
+                if *line > 0 {
+                    write!(f, "line {line}: ")?;
+                }
+                write!(
+                    f,
+                    "key {key:?}: no built-in key gives {value:?} (use a letter the built-in keys give, or a pair such as \"у/ү\")"
+                )
+            }
+            ConfigError::UpperCaseTarget { line, key, value } => {
+                if *line > 0 {
+                    write!(f, "line {line}: ")?;
+                }
+                write!(
+                    f,
+                    "key {key:?}: the target {value:?} must be lower case (upper case follows the key you press)"
+                )
+            }
             ConfigError::TooLarge { line: 0, limit } => {
                 write!(f, "config is larger than {limit} bytes")
             }
@@ -376,13 +407,20 @@ fn norm_mapping(key: &str, value: &str, line: usize) -> Result<(String, String),
     let n = key.chars().count();
     let key_ok = (1..=3).contains(&n) && key.chars().all(is_input_char);
     let value_n = value.chars().count();
-    let value_ok = (1..=MAX_VALUE_CHARS).contains(&value_n) && value.chars().all(is_cyrillic);
+    let value_ok = value_n <= MAX_VALUE_CHARS && value.chars().all(|c| is_cyrillic(c) || c == '/');
     if !key_ok || !value_ok {
         return Err(ConfigError::BadKeys {
             line,
             key: key.to_string(),
         });
     }
+    check_mapping(key, value).map_err(|e| match e {
+        KeyError::BadKey { key } => ConfigError::BadKeys { line, key },
+        KeyError::UnknownTarget { key, value } => ConfigError::UnknownTarget { line, key, value },
+        KeyError::UpperCaseTarget { key, value } => {
+            ConfigError::UpperCaseTarget { line, key, value }
+        }
+    })?;
     Ok((key.chars().map(to_lower).collect(), value.to_string()))
 }
 
@@ -448,8 +486,9 @@ impl Config {
     }
 
     /// Custom key mappings from the `[keys]` section: a lowercase Latin key
-    /// of 1 to 3 input characters and a Cyrillic value. The core checks and
-    /// stores them but does not apply them yet (issue #3).
+    /// of 1 to 3 input characters and a target: Cyrillic text that a built-in
+    /// key gives, or an empty value that removes the key. `options()` applies
+    /// them.
     pub fn keys(&self) -> &[(String, String)] {
         &self.keys
     }
@@ -728,7 +767,9 @@ impl Config {
 
     /// The [`Options`] for the composer: the preset, then the overrides, then
     /// the abbreviation table (built-in list plus the user's additions, minus
-    /// the user's removals). `abbreviations = false` gives `None`.
+    /// the user's removals). `abbreviations = false` gives `None`. With
+    /// `[keys]` entries this builds a full rule table, so call it once per
+    /// config change and keep the result, not once per key press.
     pub fn options(&self) -> Options {
         let base = match self.preset {
             Preset::Smart => Options::smart(),
@@ -742,7 +783,16 @@ impl Config {
                 Arc::new(Abbreviations::builtin_with(&self.abbreviation_entries))
             }
         });
+        // A config without keys keeps the shared built-in table.
+        let keys = if self.keys.is_empty() {
+            None
+        } else {
+            Some(Arc::new(KeyMap::from_pairs(&self.keys).expect(
+                "keys were checked when they were added to the config",
+            )))
+        };
         Options {
+            keys,
             smart_vowels: self.smart_vowels.unwrap_or(base.smart_vowels),
             abbreviations,
             keep_latin: self.keep_latin.unwrap_or(base.keep_latin),

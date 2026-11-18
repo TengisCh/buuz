@@ -333,7 +333,64 @@ For shell authors: send `Key::Symbol(ch)` for these characters. Apply a
 `KeyOutcome` in this order: delete `delete_before` characters before the
 caret, insert `commit`, then show the preedit.
 
-## 10. Cyrillic to Latin
+## 10. Custom keys
+
+A user can add, replace or remove keys. The `[keys]` section of a config
+(see [ADR 0005](decisions/0005-portable-config-format.md)) lists them, and
+`KeyMap::from_pairs` builds them in the core. They work in both presets.
+
+```toml
+[keys]
+x = "ш"       # x gives ш, like sh
+kh = "ү"      # kh gives the same as w
+vv = "у/ү"    # vv follows the gender of the word, like u
+q = ""        # q is removed and stays q
+```
+
+- **The target.** The value names a lower case Cyrillic output that the
+  built-in table already gives. The new key copies the rules of a built-in
+  key that gives it: the vowel harmony flags, the gender variants and the case
+  rule. The user does not edit flags, so a profile cannot break vowel
+  harmony. An upper case target (`Ь`) is an error: upper case follows the key
+  you press.
+- **Which key is copied.** The first built-in key, in table order, whose
+  rules give exactly the target. For `ү` that is `w`. For `у` it is `u"`.
+  A pair such as `у/ү` copies the key that gives both: `u`. The pair `о/ө`
+  copies `o`.
+- **The `i` companion.** A key and the key plus `i` go together: `w` and
+  `wi` (үй). When the copied key has such a companion, the new key gets it
+  too, so `v = "ү"` gives `vi` = үй, and `v = "у/ү"` gives `vi` = уй or үй.
+  Replacing or removing a key also replaces or removes its companion, unless
+  another entry names the companion. Other longer built-in keys that start
+  with the key (such as `yo`) are not changed.
+- **Replace and remove.** A key that already exists loses its old rules, in
+  every case combination. An empty value removes the key. It then passes
+  through as Latin.
+- **Case.** A key in all lower case gives lower case, whatever the length of
+  the target: `y = "ий"` gives `ий`. In an upper case key, each key controls
+  the letter at its own position, as in the built-in table: `Y` gives `ИЙ`,
+  `V` gives `Ү`. A target without case conversion (`ь`, `ъ`) never changes
+  case, and its key works in every case combination.
+- **Longest match.** A new key of two or three characters takes part in the
+  longest match as usual: with `kh = "ү"`, `khaan` gives `үаан`.
+- **Smart rules follow the output.** The ий to ы rule, the rule that `ye`
+  (е) gives no evidence for the gender, and the -гүй rule look at what the
+  key gives, not at the letters typed. So `y = "ий"` gets ы where `ii`
+  would, and `ii = "х"` gives х with no swap. One limit: the particle rule
+  for `u` and `uu` still reads the typed keys, so a key mapped to `у/ү` is
+  not a particle.
+- **Errors.** A key must be 1 to 3 input characters. A target that no
+  built-in key gives is an error (`KeyError::UnknownTarget`; a config gives
+  `ConfigError::UnknownTarget` with the line number). Every entry copies from
+  the built-in table, so entries do not depend on each other. A later entry
+  for the same key wins.
+- **Cost.** `KeyMap` holds a full copy of the table, built once.
+  `Config::options()` builds it, so call that once per config change. The
+  composer looks keys up in it as in the built-in table, so a keystroke costs
+  the same and does not allocate. Without keys, the composer uses the shared
+  built-in table.
+
+## 11. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -341,9 +398,8 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 11. Planned changes
+## 12. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults
-- [#3](https://github.com/TengisCh/buuz/issues/3) custom key mappings
 - [#13](https://github.com/TengisCh/buuz/issues/13) the full smart typing plan

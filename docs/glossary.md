@@ -45,6 +45,8 @@ when a new concept appears; rename here first when a name changes.
 | Symbol key | A printable key that is not a letter and not a space (`.` `@` `/` digits). Acts like `Key::Other` when Auto Latin is off | `Key::Symbol` |
 | Config | The portable settings file shared by web, Windows and macOS. A small TOML subset: a preset, option overrides, user abbreviations and custom keys. Versioned with `buuz_config = 1`. Unknown options and sections give warnings, not errors. See ADR 0005 | `Config` |
 | Preset | The base of a config: `smart` (default) or `classic`. Options in the config only override it | `Preset` |
+| Key map | The built-in rule table with the user's `[keys]` changes applied. Built once and shared. Without one, the composer uses the built-in table. See `docs/typing-rules.md` §10 | `KeyMap`, `Options::keys` |
+| Target | The Cyrillic value of a `[keys]` entry (`ү`, or a pair such as `у/ү`). The new key copies the rules of the built-in key that gives it. Empty removes the key | `KeyMap::from_pairs`, `KeyError::UnknownTarget` |
 
 ## Project
 
