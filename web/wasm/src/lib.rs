@@ -216,6 +216,309 @@ pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, Str
     })
 }
 
+// --- Calibration (issue #4) ---------------------------------------------------
+//
+// The page sends the sentences and what the user typed as JSON, once, when the
+// test ends. Nothing is stored. There is no serde, so the JSON is read and
+// written by hand. Errors are tagged strings: `bad_pairs` for input that is
+// not `[["cyrillic", "typed"], ...]`, `bad_indexes` for a bad index list.
+
+/// The most bytes of JSON read, the most pairs, the longest sentence or typed
+/// line (in characters), and the most accepted indexes.
+const MAX_JSON_BYTES: usize = 64 * 1024;
+const MAX_PAIRS: usize = 50;
+const MAX_STRING_CHARS: usize = 500;
+const MAX_INDEXES: usize = 64;
+
+/// A tiny reader for the two JSON shapes the page sends.
+struct Json<'a> {
+    chars: std::iter::Peekable<std::str::Chars<'a>>,
+}
+
+impl<'a> Json<'a> {
+    fn new(text: &'a str) -> Self {
+        Json {
+            chars: text.chars().peekable(),
+        }
+    }
+
+    fn ws(&mut self) {
+        while matches!(self.chars.peek(), Some(' ' | '\t' | '\n' | '\r')) {
+            self.chars.next();
+        }
+    }
+
+    fn eat(&mut self, c: char) -> Option<()> {
+        self.ws();
+        (self.chars.next() == Some(c)).then_some(())
+    }
+
+    /// `,` or the closing bracket: true when the list goes on.
+    fn more(&mut self, close: char) -> Option<bool> {
+        self.ws();
+        match self.chars.next()? {
+            ',' => Some(true),
+            c if c == close => Some(false),
+            _ => None,
+        }
+    }
+
+    fn at_close(&mut self, close: char) -> bool {
+        self.ws();
+        if self.chars.peek() == Some(&close) {
+            self.chars.next();
+            true
+        } else {
+            false
+        }
+    }
+
+    fn hex4(&mut self) -> Option<u32> {
+        let mut n = 0;
+        for _ in 0..4 {
+            n = n * 16 + self.chars.next()?.to_digit(16)?;
+        }
+        Some(n)
+    }
+
+    fn string(&mut self) -> Option<String> {
+        self.eat('"')?;
+        let mut out = String::new();
+        loop {
+            match self.chars.next()? {
+                '"' => return Some(out),
+                '\\' => match self.chars.next()? {
+                    '"' => out.push('"'),
+                    '\\' => out.push('\\'),
+                    '/' => out.push('/'),
+                    'b' => out.push('\u{8}'),
+                    'f' => out.push('\u{c}'),
+                    'n' => out.push('\n'),
+                    'r' => out.push('\r'),
+                    't' => out.push('\t'),
+                    'u' => {
+                        let hi = self.hex4()?;
+                        let code = if (0xD800..0xDC00).contains(&hi) {
+                            if self.chars.next()? != '\\' || self.chars.next()? != 'u' {
+                                return None;
+                            }
+                            let lo = self.hex4()?;
+                            if !(0xDC00..0xE000).contains(&lo) {
+                                return None;
+                            }
+                            0x10000 + ((hi - 0xD800) << 10) + (lo - 0xDC00)
+                        } else {
+                            hi
+                        };
+                        out.push(char::from_u32(code)?);
+                    }
+                    _ => return None,
+                },
+                c if (c as u32) < 0x20 => return None,
+                c => out.push(c),
+            }
+            if out.chars().count() > MAX_STRING_CHARS {
+                return None;
+            }
+        }
+    }
+
+    fn index(&mut self) -> Option<usize> {
+        self.ws();
+        let mut n: usize = 0;
+        let mut any = false;
+        while let Some(d) = self.chars.peek().and_then(|c| c.to_digit(10)) {
+            n = n.checked_mul(10)?.checked_add(d as usize)?;
+            any = true;
+            self.chars.next();
+        }
+        any.then_some(n)
+    }
+
+    fn end(&mut self) -> Option<()> {
+        self.ws();
+        self.chars.next().is_none().then_some(())
+    }
+}
+
+fn read_pairs(text: &str) -> Option<Vec<(String, String)>> {
+    if text.len() > MAX_JSON_BYTES {
+        return None;
+    }
+    let mut j = Json::new(text);
+    j.eat('[')?;
+    let mut pairs = Vec::new();
+    if !j.at_close(']') {
+        loop {
+            j.eat('[')?;
+            let a = j.string()?;
+            j.eat(',')?;
+            let b = j.string()?;
+            j.eat(']')?;
+            pairs.push((a, b));
+            if pairs.len() > MAX_PAIRS {
+                return None;
+            }
+            if !j.more(']')? {
+                break;
+            }
+        }
+    }
+    j.end()?;
+    Some(pairs)
+}
+
+fn read_indexes(text: &str) -> Option<Vec<usize>> {
+    if text.len() > MAX_JSON_BYTES {
+        return None;
+    }
+    let mut j = Json::new(text);
+    j.eat('[')?;
+    let mut out = Vec::new();
+    if !j.at_close(']') {
+        loop {
+            let i = j.index()?;
+            if out.contains(&i) || out.len() >= MAX_INDEXES {
+                return None;
+            }
+            out.push(i);
+            if !j.more(']')? {
+                break;
+            }
+        }
+    }
+    j.end()?;
+    Some(out)
+}
+
+fn push_json_string(out: &mut String, s: &str) {
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+}
+
+fn push_char(out: &mut String, c: char) {
+    push_json_string(out, c.encode_utf8(&mut [0; 4]));
+}
+
+fn calibrate_pairs(pairs_json: &str) -> Result<buuz_core::Calibration, String> {
+    let pairs = read_pairs(pairs_json).ok_or_else(|| tag("bad_pairs", 0, ""))?;
+    let refs: Vec<(&str, &str)> = pairs
+        .iter()
+        .map(|(a, b)| (a.as_str(), b.as_str()))
+        .collect();
+    Ok(buuz_core::calibrate(&refs))
+}
+
+/// Compare what the user typed with the sentences and suggest keys. `pairs_json`
+/// is `[["cyrillic", "typed"], ...]`. The result is JSON:
+/// `{"suggestions":[{"letter","chunk","count","default_count","tie","displaces","pair","target"}],
+/// "conflicts":[{"letter","chunk","count","other","other_count"}],
+/// "unsupported":[{"letter","chunk","count"}],"unmatched":[index],"skipped_letters":[letter]}`.
+/// `displaces` is a letter or null. Sentence indexes in `unmatched` start at 0.
+#[wasm_bindgen]
+pub fn calibrate_json(pairs_json: &str) -> Result<String, String> {
+    let c = calibrate_pairs(pairs_json)?;
+    let mut o = String::from("{\"suggestions\":[");
+    for (i, s) in c.suggestions.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        o.push_str("{\"letter\":");
+        push_char(&mut o, s.letter);
+        o.push_str(",\"chunk\":");
+        push_json_string(&mut o, &s.chunk);
+        o.push_str(&format!(
+            ",\"count\":{},\"default_count\":{},\"tie\":{},\"displaces\":",
+            s.count, s.default_count, s.tie
+        ));
+        match s.displaces {
+            Some(d) => push_char(&mut o, d),
+            None => o.push_str("null"),
+        }
+        o.push_str(&format!(",\"pair\":{},\"target\":", s.pair));
+        push_json_string(&mut o, &s.target());
+        o.push('}');
+    }
+    o.push_str("],\"conflicts\":[");
+    for (i, k) in c.conflicts.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        o.push_str("{\"letter\":");
+        push_char(&mut o, k.letter);
+        o.push_str(",\"chunk\":");
+        push_json_string(&mut o, &k.chunk);
+        o.push_str(&format!(",\"count\":{},\"other\":", k.count));
+        push_char(&mut o, k.other);
+        o.push_str(&format!(",\"other_count\":{}}}", k.other_count));
+    }
+    o.push_str("],\"unsupported\":[");
+    for (i, u) in c.unsupported.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        o.push_str("{\"letter\":");
+        push_char(&mut o, u.letter);
+        o.push_str(",\"chunk\":");
+        push_json_string(&mut o, &u.chunk);
+        o.push_str(&format!(",\"count\":{}}}", u.count));
+    }
+    o.push_str("],\"unmatched\":[");
+    for (i, u) in c.unmatched.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        o.push_str(&u.to_string());
+    }
+    o.push_str("],\"skipped_letters\":[");
+    for (i, l) in c.skipped_letters.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        push_char(&mut o, *l);
+    }
+    o.push_str("]}");
+    Ok(o)
+}
+
+/// Add the accepted suggestions to a config and return the new canonical text.
+/// `accepted_indexes_json` is a list of positions in `calibrate_json`'s
+/// `suggestions`, such as `[0,2]`. The pairs are calibrated again, so the
+/// positions match. The config changes only when every accepted entry fits.
+#[wasm_bindgen]
+pub fn calibrate_apply(
+    config_text: &str,
+    pairs_json: &str,
+    accepted_indexes_json: &str,
+) -> Result<String, String> {
+    let mut config = parse_config(config_text)?.config;
+    let mut c = calibrate_pairs(pairs_json)?;
+    let wanted = read_indexes(accepted_indexes_json).ok_or_else(|| tag("bad_indexes", 0, ""))?;
+    if wanted.iter().any(|i| *i >= c.suggestions.len()) {
+        return Err(tag("bad_indexes", 0, ""));
+    }
+    c.suggestions = c
+        .suggestions
+        .into_iter()
+        .enumerate()
+        .filter(|(i, _)| wanted.contains(i))
+        .map(|(_, s)| s)
+        .collect();
+    c.apply(&mut config).map_err(|e| error_tag(&e))?;
+    Ok(config.to_text())
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -371,5 +674,180 @@ mod tests {
         for pair in strings.chunks(2) {
             assert_eq!(super::convert(&pair[0]), pair[1], "phrase {:?}", pair[0]);
         }
+    }
+
+    // "v" for ү, typed in a sentence with ү in it. "v" gives в by default.
+    const V_PAIRS: &str = r#"[["гүү","gvv"],["үнэ","vne"]]"#;
+
+    #[test]
+    fn calibrate_json_reports_suggestions() {
+        let j = super::calibrate_json(V_PAIRS).unwrap();
+        assert!(
+            j.starts_with("{\"suggestions\":[{\"letter\":\"ү\",\"chunk\":\"v\","),
+            "{j}"
+        );
+        assert!(j.contains("\"displaces\":\"в\""), "{j}");
+        assert!(j.contains("\"target\":\"ү\""), "{j}");
+        assert!(j.contains("\"unmatched\":[]"), "{j}");
+        assert!(j.contains("\"skipped_letters\":["), "{j}");
+        // Default typing: no suggestions.
+        let j = super::calibrate_json(r#"[["гэр","ger"]]"#).unwrap();
+        assert!(j.starts_with("{\"suggestions\":[],"), "{j}");
+    }
+
+    #[test]
+    fn calibrate_json_reads_escapes_and_reports_unmatched() {
+        // \u escapes, a surrogate pair and a quote in the typed text parse.
+        let j = super::calibrate_json(r#"[["\u0433\u044d\u0440 \"\ud83d\ude00\"","ger \"x\""]]"#)
+            .unwrap();
+        assert!(j.starts_with("{\"suggestions\":[],"), "{j}");
+        // A sentence that does not match is listed by index (from 0).
+        let j =
+            super::calibrate_json(r#"[["гэр","ger"],["сайн","qqqqqqqqqqqqqqqqqqqq"]]"#).unwrap();
+        assert!(j.contains("\"unmatched\":[1]"), "{j}");
+    }
+
+    #[test]
+    fn calibrate_json_rejects_bad_input() {
+        for bad in [
+            "",
+            "{}",
+            "[1]",
+            "[[\"a\"]]",
+            "[[\"a\",\"b\"]",
+            "[[\"a\",\"b\"]] x",
+            "[[\"\\x\",\"b\"]]",
+        ] {
+            assert_eq!(
+                super::calibrate_json(bad).err().unwrap(),
+                "bad_pairs\t0\t",
+                "{bad}"
+            );
+        }
+        assert!(super::calibrate_json("[]")
+            .unwrap()
+            .contains("\"suggestions\":[]"));
+    }
+
+    #[test]
+    fn calibrate_apply_takes_only_accepted_suggestions() {
+        let cfg = super::default_config_text();
+        let all = super::calibrate_apply(&cfg, V_PAIRS, "[0]").unwrap();
+        assert_eq!(super::convert_with_config("v", &all).unwrap(), "ү");
+        assert_eq!(super::convert_with_config("v", &cfg).unwrap(), "в");
+        // Nothing accepted: the config is unchanged.
+        assert_eq!(super::calibrate_apply(&cfg, V_PAIRS, "[]").unwrap(), cfg);
+        // Two suggestions, only the second accepted.
+        let pairs = r#"[["гүү","gvv"],["үнэ","vne"],["цай","hai"],["цай","hai"]]"#;
+        let j = super::calibrate_json(pairs).unwrap();
+        let n = j.matches("\"chunk\"").count();
+        assert!(n >= 2, "{j}");
+        let one = super::calibrate_apply(&cfg, pairs, "[0]").unwrap();
+        let two = super::calibrate_apply(&cfg, pairs, "[1]").unwrap();
+        assert_eq!(super::convert_with_config("h", &two).unwrap(), "ц");
+        assert_eq!(super::convert_with_config("h", &one).unwrap(), "х");
+        assert_eq!(super::convert_with_config("v", &one).unwrap(), "ү");
+        assert_ne!(one, two);
+        assert_ne!(one, cfg);
+    }
+
+    #[test]
+    fn calibrate_apply_rejects_bad_input() {
+        let cfg = super::default_config_text();
+        assert_eq!(
+            super::calibrate_apply(&cfg, V_PAIRS, "[5]").err().unwrap(),
+            "bad_indexes\t0\t"
+        );
+        assert_eq!(
+            super::calibrate_apply(&cfg, V_PAIRS, "nope").err().unwrap(),
+            "bad_indexes\t0\t"
+        );
+        assert_eq!(
+            super::calibrate_apply(&cfg, "x", "[]").err().unwrap(),
+            "bad_pairs\t0\t"
+        );
+        assert!(super::calibrate_apply("junk", V_PAIRS, "[]").is_err());
+    }
+
+    #[test]
+    fn json_escapes_decode_to_the_same_text() {
+        let plain = super::calibrate_json(r#"[["гүү","gvv"],["гэр 😀","ger 😀"]]"#).unwrap();
+        // \u escapes (lower and upper case hex), a surrogate pair, \/ and \"
+        let esc = super::calibrate_json(r#"[["гүү","gvv"],["гэр 😀","ger 😀"]]"#).unwrap();
+        assert_eq!(plain, esc);
+        let slash = super::calibrate_json(r#"[["гэр","ger\/"],["гэр","ger"]]"#).unwrap();
+        assert!(slash.contains("\"suggestions\":[]"), "{slash}");
+    }
+
+    #[test]
+    fn json_rejects_bad_strings() {
+        for bad in [
+            r#"[["\ud83d","a"]]"#,  // lone high surrogate
+            r#"[["\ude00","a"]]"#,  // lone low surrogate
+            r#"[["\ud83dA","a"]]"#, // high surrogate, then not a low one
+            r#"[["\u00zz","a"]]"#,  // bad hex
+            r#"[["\u00","a"]]"#,    // short hex
+            "[[\"a\nb\",\"a\"]]",   // raw control character
+        ] {
+            assert_eq!(
+                super::calibrate_json(bad).err().unwrap(),
+                "bad_pairs\t0\t",
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn json_input_is_bounded() {
+        let pair = r#"["а","a"]"#;
+        let many = |n: usize| format!("[{}]", vec![pair; n].join(","));
+        assert!(super::calibrate_json(&many(50)).is_ok());
+        assert_eq!(
+            super::calibrate_json(&many(51)).err().unwrap(),
+            "bad_pairs\t0\t"
+        );
+        let long = "а".repeat(501);
+        let one = format!("[[\"{long}\",\"a\"]]");
+        assert_eq!(super::calibrate_json(&one).err().unwrap(), "bad_pairs\t0\t");
+        let ok = "а".repeat(500);
+        assert!(super::calibrate_json(&format!("[[\"{ok}\",\"a\"]]")).is_ok());
+        let big = format!("[[\"а\",\"a\"]{}]", " ".repeat(64 * 1024));
+        assert_eq!(super::calibrate_json(&big).err().unwrap(), "bad_pairs\t0\t");
+        let cfg = super::default_config_text();
+        assert_eq!(
+            super::calibrate_apply(&cfg, &big, "[]").err().unwrap(),
+            "bad_pairs\t0\t"
+        );
+        let bigi = format!("[0{}]", " ".repeat(64 * 1024));
+        assert_eq!(
+            super::calibrate_apply(&cfg, V_PAIRS, &bigi).err().unwrap(),
+            "bad_indexes\t0\t"
+        );
+    }
+
+    #[test]
+    fn index_list_is_bounded_and_has_no_duplicates() {
+        let cfg = super::default_config_text();
+        for bad in [
+            "[0,0]",
+            "[99999999999999999999999999]",
+            &format!("[{}]", vec!["0"; 65].join(",")),
+            "[-1]",
+            "[1.5]",
+        ] {
+            assert_eq!(
+                super::calibrate_apply(&cfg, V_PAIRS, bad).err().unwrap(),
+                "bad_indexes\t0\t",
+                "{bad}"
+            );
+        }
+        let many: Vec<String> = (0..64).map(|i| i.to_string()).collect();
+        // 64 entries are read; they are then out of range here, still bad_indexes.
+        assert_eq!(
+            super::calibrate_apply(&cfg, V_PAIRS, &format!("[{}]", many.join(",")))
+                .err()
+                .unwrap(),
+            "bad_indexes\t0\t"
+        );
     }
 }
