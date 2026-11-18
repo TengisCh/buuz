@@ -226,3 +226,37 @@ fn builtin_round_trips() {
     let again = Abbreviations::parse(&b.to_text()).unwrap();
     assert_eq!(again.to_text(), b.to_text());
 }
+
+// Issue #45: the standalone particle `ni` expands to нь.
+#[test]
+fn ni_particle_expands_as_a_whole_word() {
+    eq("bi ni ", "би нь ");
+    eq("ni.", "нь.");
+    eq("Ni ", "Нь ");
+    eq("NI ", "НЬ ");
+    // The end of the text does not expand.
+    eq("ni", "ни");
+    eq("bi ni", "би ни");
+    // Longer words are untouched.
+    eq("nigen ", "нигэн ");
+    eq("huni ", "хуни ");
+    eq("nii ", "ний ");
+}
+
+#[test]
+fn ni_particle_off_in_classic_and_without_abbreviations() {
+    assert_eq!(convert_with("bi ni ", &Options::classic()), "би ни ");
+    assert_eq!(convert_with("bi ni ", &Options::default()), "би ни ");
+}
+
+#[test]
+fn ni_particle_undo_brings_back_ni() {
+    let mut c = composer();
+    type_keys(&mut c, &chars("ni"));
+    let r = c.process_key(Key::Space);
+    assert_eq!(r.commit.as_deref(), Some("нь"));
+    let r = c.process_key(Key::Backspace);
+    assert!(r.consumed);
+    assert_eq!(r.delete_before, 3);
+    assert_eq!(c.preedit(), "ни");
+}

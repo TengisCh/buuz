@@ -242,7 +242,9 @@ pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, Str
     let mut opts = options_of(config_text)?;
     if opts.autocorrect {
         opts.words = WORDS.with(|w| w.borrow().clone());
+        opts.user = user_snapshot();
     }
+    opts.learning = false;
     Ok(buuz_core::convert_with(input, &opts))
 }
 
@@ -342,6 +344,8 @@ pub fn complete_at(before_caret: &str, after_caret: &str, config_text: &str) -> 
     }
     opts.words = WORDS.with(|w| w.borrow().clone());
     opts.words.as_ref()?;
+    opts.user = user_snapshot();
+    opts.learning = false;
     let mut c = buuz_core::Composer::with_options(opts);
     for ch in word.chars() {
         c.process_key(buuz_core::Key::Char(ch));
@@ -352,6 +356,146 @@ pub fn complete_at(before_caret: &str, after_caret: &str, config_text: &str) -> 
         rest,
         replaces: word.encode_utf16().count(),
     })
+}
+
+// --- Personal dictionary (issue #12, docs/typing-rules.md section 14) ---------
+//
+// The page keeps the dictionary as text in localStorage. These functions read
+// and change that text; none of them stores anything. `set_user_dict` hands
+// the text to the converter and to completion. The web converter never
+// learns: it converts the whole box again on each input, so a use count would
+// count one word many times, and it has no Backspace undo to reject from.
+
+thread_local! {
+    // The text last given to `set_user_dict` and the snapshot built from it.
+    static USER: std::cell::RefCell<(String, Option<std::sync::Arc<buuz_core::UserSnapshot>>)> =
+        const { std::cell::RefCell::new((String::new(), None)) };
+}
+
+fn user_snapshot() -> Option<std::sync::Arc<buuz_core::UserSnapshot>> {
+    USER.with(|u| u.borrow().1.clone())
+}
+
+fn user_tag(p: buuz_core::UserDictProblem) -> &'static str {
+    use buuz_core::UserDictProblem as P;
+    match p {
+        P::BadLine => "ud_bad_line",
+        P::UnknownKind => "ud_unknown_kind",
+        P::BadCount => "ud_bad_count",
+        P::EmptyWord => "ud_empty_word",
+        P::BadWord => "ud_bad_word",
+        P::WordTooLong => "ud_word_too_long",
+        P::Duplicate => "ud_duplicate",
+    }
+}
+
+fn parse_user(text: &str) -> Result<buuz_core::ParsedUserDict, String> {
+    buuz_core::UserDict::parse(text).map_err(|_| tag("too_large", 0, "1 MiB"))
+}
+
+/// A dictionary text that was read and written back in canonical form.
+#[wasm_bindgen]
+pub struct UserDictReport {
+    text: String,
+    warnings: Vec<String>,
+}
+
+#[wasm_bindgen]
+impl UserDictReport {
+    /// The canonical text.
+    #[wasm_bindgen(getter)]
+    pub fn text(&self) -> String {
+        self.text.clone()
+    }
+
+    /// The skipped lines, as `code<TAB>line<TAB>` strings.
+    #[wasm_bindgen(getter)]
+    pub fn warnings(&self) -> Vec<String> {
+        self.warnings.clone()
+    }
+}
+
+/// Read a dictionary text (a saved one or an imported file). A bad line is
+/// skipped and reported; a text over 1 MiB gives the error `too_large`.
+#[wasm_bindgen]
+pub fn userdict_normalize(text: &str) -> Result<UserDictReport, String> {
+    let parsed = parse_user(text)?;
+    Ok(UserDictReport {
+        text: parsed.dict.to_text(),
+        warnings: parsed
+            .warnings
+            .iter()
+            .map(|w| tag(user_tag(w.problem), w.line, ""))
+            .collect(),
+    })
+}
+
+/// Add a word (Cyrillic letters, `-` and `'` only) and give the new text. The
+/// error is `ud_empty_word`, `ud_bad_word`, `ud_word_too_long` or
+/// `ud_not_cyrillic`.
+#[wasm_bindgen]
+pub fn userdict_add(text: &str, word: &str) -> Result<String, String> {
+    let word = word.trim();
+    let mut dict = parse_user(text)?.dict;
+    let code = if word.is_empty() {
+        "ud_empty_word"
+    } else if word.chars().count() > buuz_core::MAX_USERDICT_WORD_CHARS {
+        "ud_word_too_long"
+    } else if word.chars().any(|c| c.is_whitespace() || c.is_control()) {
+        "ud_bad_word"
+    } else if !word
+        .chars()
+        .all(|c| ('\u{400}'..='\u{4ff}').contains(&c) || c == '-' || c == '\'')
+    {
+        "ud_not_cyrillic"
+    } else if dict.add(word) {
+        return Ok(dict.to_text());
+    } else {
+        "ud_bad_word"
+    };
+    Err(tag(code, 0, ""))
+}
+
+/// Delete every entry of a word and give the new text.
+#[wasm_bindgen]
+pub fn userdict_remove(text: &str, word: &str) -> String {
+    match parse_user(text) {
+        Ok(mut p) => {
+            p.dict.remove(word);
+            p.dict.to_text()
+        }
+        Err(_) => String::new(),
+    }
+}
+
+/// The text of an empty dictionary.
+#[wasm_bindgen]
+pub fn userdict_clear() -> String {
+    String::new()
+}
+
+/// The entries as `kind<TAB>word<TAB>count` strings, the least recently used
+/// first.
+#[wasm_bindgen]
+pub fn userdict_entries(text: &str) -> Vec<String> {
+    parse_user(text).map_or_else(
+        |_| Vec::new(),
+        |p| p.dict.to_text().lines().map(str::to_string).collect(),
+    )
+}
+
+/// Use this dictionary text for autocorrect and completion. The snapshot is
+/// built again only when the text changes. A text that is too large is an
+/// error and changes nothing.
+#[wasm_bindgen]
+pub fn set_user_dict(text: &str) -> Result<(), String> {
+    if USER.with(|u| u.borrow().0 == text) {
+        return Ok(());
+    }
+    let dict = parse_user(text)?.dict;
+    let snap = (!dict.is_empty()).then(|| std::sync::Arc::new(dict.snapshot()));
+    USER.with(|u| *u.borrow_mut() = (text.to_string(), snap));
+    Ok(())
 }
 
 // --- Calibration (issue #4) ---------------------------------------------------
@@ -660,6 +804,71 @@ pub fn calibrate_apply(
 #[cfg(test)]
 mod tests {
     const LIST: &str = "# test\nгэрлэх\t100\nгэрлэлт\t10\nбайна\t500\n";
+
+    #[test]
+    fn userdict_normalize_reports_warnings_and_too_large() {
+        let r = super::userdict_normalize("add\tТэнгис\t1\nbad line\nadd\tтэнгис\t1\n").unwrap();
+        assert_eq!(r.text(), "add\tтэнгис\t1\n");
+        assert_eq!(r.warnings(), vec!["ud_bad_line\t2\t", "ud_duplicate\t3\t"]);
+        let big = "a".repeat(1024 * 1024 + 1);
+        assert!(super::userdict_normalize(&big)
+            .err()
+            .unwrap()
+            .starts_with("too_large\t0\t"));
+    }
+
+    #[test]
+    fn userdict_add_remove_list_clear() {
+        let t = super::userdict_add("", "Тэнгис").unwrap();
+        assert_eq!(t, "add\tтэнгис\t1\n");
+        for (w, code) in [
+            ("", "ud_empty_word"),
+            ("a b", "ud_bad_word"),
+            ("tengis", "ud_not_cyrillic"),
+        ] {
+            let e = super::userdict_add(&t, w).err().unwrap();
+            assert!(e.starts_with(code), "{w}: {e}");
+        }
+        let long = "а".repeat(65);
+        assert!(super::userdict_add(&t, &long)
+            .err()
+            .unwrap()
+            .starts_with("ud_word_too_long"));
+        let t = format!("{t}use\tтэнгис\t4\n");
+        assert_eq!(
+            super::userdict_entries(&t),
+            vec!["add\tтэнгис\t1", "use\tтэнгис\t4"]
+        );
+        assert_eq!(super::userdict_remove(&t, "Тэнгис"), "");
+        assert_eq!(super::userdict_clear(), "");
+    }
+
+    #[test]
+    fn user_dictionary_feeds_autocorrect_and_completion() {
+        let cfg =
+            super::config_set_option(&super::default_config_text(), "autocorrect", true).unwrap();
+        super::load_word_list("дэлгүүр\t100\n").unwrap();
+        super::set_user_dict("").unwrap();
+        assert_eq!(
+            super::convert_with_config("delgur ", &cfg).unwrap(),
+            "дэлгүүр "
+        );
+        // A rejected word is not corrected; an added word is not either.
+        super::set_user_dict("reject\tдэлгүр\t1\n").unwrap();
+        assert_eq!(
+            super::convert_with_config("delgur ", &cfg).unwrap(),
+            "дэлгүр "
+        );
+        // An added word shows up in completion.
+        super::set_user_dict("add\tтэнгис\t1\n").unwrap();
+        let c = super::complete_at("tengi", "", &cfg).expect("completion");
+        assert_eq!(c.word(), "тэнгис");
+        // Same text again keeps the cached snapshot; a new text replaces it.
+        super::set_user_dict("add\tтэнгис\t1\n").unwrap();
+        super::set_user_dict("").unwrap();
+        assert!(super::complete_at("tengi", "", &cfg).is_none());
+        assert!(super::set_user_dict(&"a".repeat(1024 * 1024 + 1)).is_err());
+    }
 
     #[test]
     fn completion_option_is_switchable_and_reported() {

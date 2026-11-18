@@ -200,6 +200,25 @@
             <button id="cal-open" type="button" class="ghost" aria-haspopup="dialog" aria-controls="calibrate" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</button>
           </div>
         </section>
+        <section class="cfg" aria-labelledby="ud-title">
+          <h3 id="ud-title" data-i18n="udTitle">Buuz-ийн сурсан үгс</h3>
+          <p class="hint" data-i18n="udHint">Энд таны нэмсэн үгс харагдана. Нэмсэн үгийг Buuz алдаа гэж засахгүй, Tab-аар гүйцээнэ. Энэ жагсаалт зөвхөн энэ төхөөрөмж дээрх хөтөч дотор хадгалагдаж, хаашаа ч илгээгдэхгүй. Тохиргооны файлд ордоггүй. Энэ сайт дээр Buuz өөрөө үг сурдаггүй: та нэмсэн үгээ л хадгална.</p>
+          <ul id="ud-list" class="ud-list" lang="mn"></ul>
+          <p id="ud-empty" class="hint" data-i18n="udEmpty">Одоогоор үг алга.</p>
+          <label class="cfg-label" for="ud-word" data-i18n="udAddLabel">Үг нэмэх (кириллээр)</label>
+          <div class="cfg-row">
+            <input id="ud-word" type="text" lang="mn" maxlength="64" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+            <button id="ud-add" type="button" class="ghost" data-i18n="udAdd">Нэмэх</button>
+          </div>
+          <div class="cfg-row">
+            <button id="ud-clear" type="button" class="ghost" data-i18n="udClear">Buuz-ийн сурсныг арилгах</button>
+            <button id="ud-export" type="button" class="ghost" data-i18n="udExport">Файл болгон татах</button>
+            <button id="ud-open" type="button" class="ghost" data-i18n="udImport">Файл нээх</button>
+            <input id="ud-file" type="file" accept=".txt,text/plain" hidden />
+          </div>
+          <div id="ud-msg" class="cfg-msg" role="status"></div>
+          <div id="ud-err" class="cfg-msg err" role="alert"></div>
+        </section>
         <section class="cfg" aria-labelledby="cfg-title">
           <h3 id="cfg-title" data-i18n="settingsFile">Тохиргооны файл</h3>
           <p class="hint" data-i18n="settingsFileHint">Тохиргоогоо хуулж эсвэл файл болгон хадгалаад өөр төхөөрөмж дээрээ оруулж болно. Файл тань энэ төхөөрөмжөөс гадагш илгээгдэхгүй.</p>
