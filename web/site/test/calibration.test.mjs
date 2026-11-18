@@ -29,8 +29,8 @@ test("a typist who follows the default table gets nothing to accept", () => {
 });
 
 test("accepting a subset changes only those keys", () => {
-  const flow = new CalibrationFlow(["гүү", "үнэ", "цай", "цай"]);
-  flow.setAnswer(0, "gvv");
+  const flow = new CalibrationFlow(["гүн", "үнэ", "цай", "цай"]);
+  flow.setAnswer(0, "gvn");
   flow.setAnswer(1, "vne");
   flow.setAnswer(2, "hai");
   flow.setAnswer(3, "hai");
@@ -60,8 +60,8 @@ test("sentences left empty are not sent, and unmatched ones are named by their n
 
 test("cancel leaves the config unchanged and drops what was typed", () => {
   const cfg = default_config_text();
-  const flow = new CalibrationFlow(["гүү"]);
-  flow.setAnswer(0, "gvv");
+  const flow = new CalibrationFlow(["гүн үнэ"]);
+  flow.setAnswer(0, "gvn vne");
   assert.equal(flow.finish().suggestions.length, 1);
   assert.equal(flow.answerCount(), 1);
   flow.cancel();
@@ -74,10 +74,10 @@ test("cancel leaves the config unchanged and drops what was typed", () => {
 });
 
 test("a new flow is independent of an older one that was cancelled", () => {
-  const old = new CalibrationFlow(["гүү"]);
-  old.setAnswer(0, "gvv");
-  const fresh = new CalibrationFlow(["гүү"]);
-  fresh.setAnswer(0, "gvv");
+  const old = new CalibrationFlow(["гүн үнэ"]);
+  old.setAnswer(0, "gvn vne");
+  const fresh = new CalibrationFlow(["гүн үнэ"]);
+  fresh.setAnswer(0, "gvn vne");
   old.cancel(); // a late "close" for the old flow
   assert.equal(fresh.answerCount(), 1);
   assert.equal(fresh.finish().suggestions.length, 1);
@@ -111,8 +111,8 @@ test("save errors: tagged strings are translated, JS errors get the fallback", (
 });
 
 test("typed text is dropped by cancel after a save too", () => {
-  const flow = new CalibrationFlow(["гүү"]);
-  flow.setAnswer(0, "gvv");
+  const flow = new CalibrationFlow(["гүн үнэ"]);
+  flow.setAnswer(0, "gvn vne");
   flow.finish();
   flow.save(default_config_text(), [0]);
   flow.cancel();
@@ -120,8 +120,8 @@ test("typed text is dropped by cancel after a save too", () => {
 });
 
 test("a bad accepted index is an error, not a silent change", () => {
-  const flow = new CalibrationFlow(["гүү"]);
-  flow.setAnswer(0, "gvv");
+  const flow = new CalibrationFlow(["гүн үнэ"]);
+  flow.setAnswer(0, "gvn vne");
   flow.finish();
   assert.throws(() => flow.save(default_config_text(), [9]));
 });

@@ -56,6 +56,29 @@ A key that matches nothing is copied as is.
 A vowel followed by `i` becomes vowel + й: `ai` ай, `ei` эй, `oi` ой/өй,
 `ui` уй/үй, `qi` өй, `wi` үй.
 
+### Double V
+
+With `Options::double_v` (config `[options] double_v`), the key pair `vv`
+gives үү. A single `v` stays в.
+
+| Typed | Result |
+| --- | --- |
+| `svv` | сүү |
+| `VV` | ҮҮ |
+| `Vv` | Үү |
+| `avah` | авах (a single `v`) |
+
+- The option is on in smart mode and off in classic mode. With it off, `vv`
+  gives вв.
+- `vv` counts as feminine for vowel harmony, like `w` (section 4). So
+  `hvvhduud` gives хүүхдүүд.
+- `vvi` gives үүй, like `wi` gives үй.
+- `gvv` gives гүү and follows the same look-ahead as `gww` (section 4.1).
+- A user key for `vv` in `[keys]` wins over this rule. A user key for `v`
+  does not change `vv`: turn `double_v` off for that.
+- The word list has few words with вв (`ввс`, `савва`). Type them with the
+  option off, or in the Latin view.
+
 ### Vowels that follow vowel harmony
 
 | Keys | Masculine word | Feminine word |
@@ -87,7 +110,7 @@ Every vowel rule carries flags: which kind of word it may appear in, and
 whether it decides the word's gender.
 
 - **Masculine:** `a`, `ya`, `yo`, `yu`, `o"`, `u"`.
-- **Feminine:** `e`, `q`, `w`, `ö`, `ü`, `o'`, `u'` (and `ye`, see below).
+- **Feminine:** `e`, `q`, `w`, `vv` (with `double_v`), `ö`, `ü`, `o'`, `u'` (and `ye`, see below).
 - **Neutral:** `i`, `ii`, `iii`, `y`, all consonants and signs. Plain `o` and
   `u` do not decide anything; they follow the word.
 
@@ -366,6 +389,8 @@ q = ""        # q is removed and stays q
   Replacing or removing a key also replaces or removes its companion, unless
   another entry names the companion. Other longer built-in keys that start
   with the key (such as `yo`) are not changed.
+- **Double V.** A key for `v` does not change `vv` (үү, section 3). Turn
+  `double_v` off to type вв, or map `vv` itself.
 - **Replace and remove.** A key that already exists loses its old rules, in
   every case combination. An empty value removes the key. It then passes
   through as Latin.

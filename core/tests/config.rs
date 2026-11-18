@@ -771,6 +771,7 @@ fn adr_example_parses() {
     let c = p.config;
     assert_eq!(c.preset(), Preset::Smart);
     assert_eq!(c.auto_latin(), Some(true));
+    assert_eq!(c.double_v(), Some(true));
     assert_eq!(
         c.abbreviation_entries(),
         pairs(&[("mgl", "Монгол"), ("bn", "байна аа"), ("tgd", "")])

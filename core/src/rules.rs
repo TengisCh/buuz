@@ -28,6 +28,7 @@ pub(crate) const X_F: u8 = 0x04; // usable in female words
 pub(crate) const X_MM: u8 = 0x08; // makes the word male
 pub(crate) const X_MF: u8 = 0x10; // makes the word female
 pub(crate) const X_II: u8 = 0x20; // smart mode may turn this ий into ы
+pub(crate) const X_DV: u8 = 0x40; // only with `Options::double_v`
 
 const ALL: u8 = X_M | X_F | X_AC;
 
@@ -119,6 +120,10 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("'UI",  "ҮЙ", ALL | X_MF),
 
     ("V",   "В",  ALL),
+    // `vv` is үү, only with `Options::double_v` (the composer skips it
+    // otherwise, so classic output stays the original).
+    ("VV",  "ҮҮ", ALL | X_MF | X_DV),
+    ("VVI", "ҮҮЙ", ALL | X_MF | X_DV),
     ("X",   "Х",  ALL),
     ("Y",   "Ы",  ALL),
     ("YA",  "Я",  ALL | X_MM),
@@ -230,8 +235,8 @@ pub(crate) fn find_target(target: &str) -> Option<Donor> {
     want.sort();
     want.dedup();
     let mut seen: Vec<&'static str> = Vec::new();
-    for &(from, _, _) in SOURCE_RULES {
-        if !is_latin_pattern(from) || seen.contains(&from) {
+    for &(from, _, flags) in SOURCE_RULES {
+        if !is_latin_pattern(from) || seen.contains(&from) || flags & X_DV != 0 {
             continue;
         }
         seen.push(from);
@@ -274,6 +279,8 @@ pub(crate) fn default_letter_chunks() -> Vec<(char, String)> {
     // masculine stem (`aaviin` is аавын), and `ii'` forces ий. Typing these
     // is typing the built-in table, so they are not a custom habit.
     push('ы', "ii".to_string());
+    // The double V (`vv`, үү) is a default too; it gives two letters.
+    push('ү', "vv".to_string());
     push('й', "ii'".to_string());
     push('й', "i'".to_string());
     out
@@ -412,7 +419,7 @@ pub(crate) fn rules() -> &'static RuleSet {
 pub fn export_rules() -> Vec<(String, String, bool, bool)> {
     let mut out = Vec::new();
     for (from, &i) in &rules().map {
-        for r in rules().group(i) {
+        for r in rules().group(i).iter().filter(|r| r.flags & X_DV == 0) {
             out.push((
                 from.iter().collect::<String>(),
                 r.to.iter().collect::<String>(),

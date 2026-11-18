@@ -66,8 +66,9 @@ fn v_for_u_front_with_no_v_vowel_proposes_and_displaces() {
     assert_eq!(c.suggestions.len(), 1, "{:?}", c.suggestions);
     let s = &c.suggestions[0];
     assert_eq!((s.letter, s.chunk.as_str()), ('ү', "v"));
-    assert_eq!(s.count, 4);
-    assert_eq!(s.default_count, 0);
+    // `shvv` is the built-in double V (үү), not a habit: only `zvgeer` counts.
+    assert_eq!(s.count, 2);
+    assert_eq!(s.default_count, 1);
     assert!(!s.tie);
     assert_eq!(s.displaces, Some('в'));
     assert!(c.conflicts.is_empty());
@@ -126,7 +127,9 @@ fn h_for_ts_with_h_for_kh_is_a_conflict() {
 }
 
 #[test]
-fn mixed_v_and_vv_for_u_front_gives_both_with_a_tie() {
+fn vv_is_a_default_so_it_is_not_a_second_suggestion() {
+    // `vv` is the built-in double V: it counts as a default use of ү, so
+    // two single `v` for ү do not beat it, and `vv` is never proposed.
     let c = run(&[
         pair("zwgeer zwgeer 😎", "zvgeer zvgeer 😎"),
         pair(
@@ -138,14 +141,12 @@ fn mixed_v_and_vv_for_u_front_gives_both_with_a_tie() {
             "Ulaanbaatar hvviten baina ❄️",
         ),
     ]);
-    let got: Vec<(char, &str, usize, bool)> = c
-        .suggestions
-        .iter()
-        .map(|s| (s.letter, s.chunk.as_str(), s.count, s.tie))
-        .collect();
-    assert_eq!(got.len(), 2, "{got:?}");
-    assert!(got.contains(&('ү', "v", 2, true)), "{got:?}");
-    assert!(got.contains(&('ү', "vv", 2, true)), "{got:?}");
+    assert!(
+        c.suggestions.iter().all(|s| s.chunk != "vv"),
+        "{:?}",
+        c.suggestions
+    );
+    assert!(c.conflicts.is_empty(), "{:?}", c.conflicts);
 }
 
 #[test]
@@ -164,11 +165,12 @@ fn a_built_in_key_is_not_suggested_even_when_mixed() {
 
 #[test]
 fn long_vowels_align_letter_by_letter() {
-    // шүү typed shvv: two ү, each typed v.
+    // шүү typed shww: two ү, each typed w (built-in). shvv is the built-in
+    // double V and gives no suggestion either.
     let c = run(&[pair("hairtai shww ❤️", "hairtai shvv ❤️")]);
-    assert_eq!(c.suggestions.len(), 1, "{:?}", c.suggestions);
-    assert_eq!(c.suggestions[0].chunk, "v");
-    assert_eq!(c.suggestions[0].count, 2);
+    assert!(c.suggestions.is_empty(), "{:?}", c.suggestions);
+    let c = run(&[pair("hairtai shww ❤️", "hairtai shvw ❤️")]);
+    assert_eq!(c.suggestions.len(), 0, "{:?}", c.suggestions);
 }
 
 #[test]

@@ -56,7 +56,7 @@
             "name": "Ө, Ү үсгийг яаж бичих вэ?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "q, ö нь ө; w, ü нь ү болно. o, u нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: gar → гар, geree → гэрээ."
+              "text": "q, ö нь ө; w, ü нь ү болно. vv нь үү болно (svv → сүү). o, u нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: gar → гар, geree → гэрээ."
             }
           },
           {
@@ -188,6 +188,11 @@
           <p class="hint" data-i18n="completionHint">Үгийн эхийг бичихэд (3-аас дээш үсэг) Buuz хамгийн магадлалтай үгийг ард нь сааралаар харуулна. Санал харагдаж байхад Tab дарвал үг бүтнээрээ орно. Esc дарвал тухайн үгийн санал арилж, дараагийн Tab ердийнхөөрөө (дараагийн талбар руу) шилжинэ. Санал байхгүй үед Tab ердийнхөөрөө ажиллана. Үгийн жагсаалт энэ сайтаас нэг удаа татагдаж, таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
           <p class="hint" data-i18n-html="completionCredit">Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.</p>
           <label class="toggle">
+            <input id="double-v" type="checkbox" checked />
+            <span data-i18n="doubleV">vv-г үү болгох (svv → сүү)</span>
+          </label>
+          <p class="hint" data-i18n="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p>
+          <label class="toggle">
             <input id="autocorrect" type="checkbox" />
             <span data-i18n="autocorrect">Үсгийн алдаа засах</span>
           </label>
@@ -314,7 +319,7 @@
             <h3 data-i18n="vowels">Эгшиг</h3>
             <ul>
               <li><kbd>e</kbd><span>э</span></li>
-              <li><kbd>w</kbd> <kbd>ü</kbd><span>ү</span></li>
+              <li><kbd>w</kbd> <kbd>ü</kbd> <kbd>vv</kbd><span>ү / үү</span></li>
               <li><kbd>q</kbd> <kbd>ö</kbd><span>ө</span></li>
               <li><kbd>y</kbd><span>ы</span></li>
               <li><kbd>ii</kbd><span>ий / ы</span></li>
@@ -353,7 +358,7 @@
           <kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг
           нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd>
           гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г
-          (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай. Үгийн хойно орох эгшгийг
+          (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай, үү гаргах бол <kbd>vv</kbd> гэж бичээрэй. Үгийн хойно орох эгшгийг
           ч харж сонгодог тул <kbd>unee</kbd> гэвэл үнээ болно. Эр үгэнд
           <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий
           гаргах бол <kbd>ii'</kbd>.
@@ -372,7 +377,7 @@
           </details>
           <details>
             <summary data-i18n="faq2q">Ө, Ү үсгийг яаж бичих вэ?</summary>
-            <p data-i18n-html="faq2a"><kbd>q</kbd>, <kbd>ö</kbd> нь ө, <kbd>w</kbd>, <kbd>ü</kbd> нь ү болно. <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.</p>
+            <p data-i18n-html="faq2a"><kbd>q</kbd>, <kbd>ö</kbd> нь ө, <kbd>w</kbd>, <kbd>ü</kbd> нь ү болно. <kbd>vv</kbd> нь үү болно (<kbd>svv</kbd> → сүү). <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.</p>
           </details>
           <details>
             <summary data-i18n="faq3q">Бичсэн зүйл маань хаа нэгтээ илгээгдэх үү?</summary>

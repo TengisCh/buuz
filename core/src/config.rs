@@ -77,6 +77,7 @@ pub struct Config {
     completion: Option<bool>,
     autocorrect: Option<bool>,
     learning: Option<bool>,
+    double_v: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -497,6 +498,11 @@ impl Config {
         self.learning
     }
 
+    /// Override for [`Options::double_v`].
+    pub fn double_v(&self) -> Option<bool> {
+        self.double_v
+    }
+
     /// Whether the shell must load the word list and set [`Options::words`]:
     /// true when completion or autocorrect is on (the override, else the
     /// preset; autocorrect is off in both presets). `options()` cannot load
@@ -547,6 +553,11 @@ impl Config {
     /// Set or clear the learning override.
     pub fn set_learning(&mut self, value: Option<bool>) {
         self.learning = value;
+    }
+
+    /// Set or clear the double V override.
+    pub fn set_double_v(&mut self, value: Option<bool>) {
+        self.double_v = value;
     }
 
     /// Set or clear the autocorrect override.
@@ -684,6 +695,7 @@ impl Config {
                         | "completion"
                         | "autocorrect"
                         | "learning"
+                        | "double_v"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -734,7 +746,8 @@ impl Config {
                         "auto_latin" => &mut config.auto_latin,
                         "completion" => &mut config.completion,
                         "autocorrect" => &mut config.autocorrect,
-                        _ => &mut config.learning,
+                        "learning" => &mut config.learning,
+                        _ => &mut config.double_v,
                     };
                     if slot.is_some() {
                         return Err(dup(line, &key));
@@ -791,6 +804,7 @@ impl Config {
             ("completion", self.completion),
             ("autocorrect", self.autocorrect),
             ("learning", self.learning),
+            ("double_v", self.double_v),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -855,6 +869,7 @@ impl Config {
             autocorrect: self.autocorrect.unwrap_or(base.autocorrect),
             user: None,
             learning: self.learning.unwrap_or(base.learning),
+            double_v: self.double_v.unwrap_or(base.double_v),
         }
     }
 }
