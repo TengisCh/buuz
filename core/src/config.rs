@@ -79,6 +79,7 @@ pub struct Config {
     learning: Option<bool>,
     double_v: Option<bool>,
     habit_keys: Option<bool>,
+    word_choice: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -561,6 +562,16 @@ impl Config {
         self.learning = value;
     }
 
+    /// Override for [`Options::word_choice`].
+    pub fn word_choice(&self) -> Option<bool> {
+        self.word_choice
+    }
+
+    /// Set or clear the word choice override.
+    pub fn set_word_choice(&mut self, value: Option<bool>) {
+        self.word_choice = value;
+    }
+
     /// Set or clear the habit keys override.
     pub fn set_habit_keys(&mut self, value: Option<bool>) {
         self.habit_keys = value;
@@ -708,6 +719,7 @@ impl Config {
                         | "learning"
                         | "double_v"
                         | "habit_keys"
+                        | "word_choice"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -760,7 +772,8 @@ impl Config {
                         "autocorrect" => &mut config.autocorrect,
                         "learning" => &mut config.learning,
                         "double_v" => &mut config.double_v,
-                        _ => &mut config.habit_keys,
+                        "habit_keys" => &mut config.habit_keys,
+                        _ => &mut config.word_choice,
                     };
                     if slot.is_some() {
                         return Err(dup(line, &key));
@@ -819,6 +832,7 @@ impl Config {
             ("learning", self.learning),
             ("double_v", self.double_v),
             ("habit_keys", self.habit_keys),
+            ("word_choice", self.word_choice),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -885,6 +899,7 @@ impl Config {
             learning: self.learning.unwrap_or(base.learning),
             double_v: self.double_v.unwrap_or(base.double_v),
             habit_keys: self.habit_keys.unwrap_or(base.habit_keys),
+            word_choice: self.word_choice.unwrap_or(base.word_choice),
         }
     }
 }

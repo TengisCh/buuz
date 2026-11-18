@@ -176,6 +176,12 @@ pub struct Options {
     /// `true` in smart mode, `false` in classic mode (the original Buuz gives
     /// тс and зх).
     pub habit_keys: bool,
+    /// Word choice: when Space or punctuation ends a word whose `о` or `у`
+    /// may be ө or ү (`tov`, `uvul`), commit the variant the word list
+    /// clearly prefers (`төв`, `өвөл`). Active only with `words` set.
+    /// Backspace right after the Space undoes it. `true` in smart mode,
+    /// `false` in classic mode.
+    pub word_choice: bool,
 }
 
 impl Default for Options {
@@ -193,6 +199,7 @@ impl Default for Options {
             learning: true,
             double_v: true,
             habit_keys: true,
+            word_choice: true,
         }
     }
 }
@@ -215,6 +222,7 @@ impl Options {
             learning: true,
             double_v: true,
             habit_keys: true,
+            word_choice: true,
         }
     }
 
@@ -234,6 +242,7 @@ impl Options {
             learning: false,
             double_v: false,
             habit_keys: false,
+            word_choice: false,
         }
     }
 }
@@ -1077,11 +1086,23 @@ impl Composer {
     /// Runs once per word.
     fn autocorrected(&mut self, may_correct: bool) -> Option<String> {
         let words = match &self.opts.words {
-            Some(w) if self.opts.autocorrect => w,
+            Some(w) if self.opts.autocorrect || self.opts.word_choice => w,
             _ => return None,
         };
         if !may_correct || self.no_correct || self.latin || self.run_latin || self.reseeded {
             return None;
+        }
+        if self.opts.word_choice {
+            let chosen = autocorrect::choose(
+                words,
+                &self.comp,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+            if chosen.is_some() || !self.opts.autocorrect {
+                return chosen;
+            }
         }
         autocorrect::correct(
             words,
