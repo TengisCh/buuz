@@ -1,0 +1,96 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2026 the Buuz contributors
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import init, { convert_with_config, config_set_option, default_config_text, load_word_list } from "../src/wasm/buuz.js";
+import { accept, completionAt, ensureWordList, resetWordListState, sameOrigin } from "../src/completion.ts";
+
+await init({ module_or_path: await readFile(new URL("../src/wasm/buuz_bg.wasm", import.meta.url)) });
+
+const BASE = "https://buuz.example/";
+const cfg = default_config_text();
+const LIST = "# test\nгэрлэх\t100\nгэрлэлт\t10\nбайна\t500\n";
+
+test("a failed load keeps completion off and says nothing", async () => {
+  const bad = async () => {
+    throw new Error("offline");
+  };
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, bad), false);
+  resetWordListState();
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, async () => ({ ok: false, text: async () => "" })), false);
+  resetWordListState();
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, async () => ({ ok: true, text: async () => "no tab here" })), false);
+  assert.equal(completionAt("gerl", 4, cfg), null);
+});
+
+test("the list loads only from the site's own origin", async () => {
+  assert.equal(sameOrigin("/assets/mn.txt", BASE), true);
+  assert.equal(sameOrigin("https://evil.example/mn.txt", BASE), false);
+  let called = false;
+  const f = async () => {
+    called = true;
+    return { ok: true, text: async () => LIST };
+  };
+  assert.equal(await ensureWordList("https://evil.example/mn.txt", BASE, f), false);
+  assert.equal(called, false);
+});
+
+test("a failed load stays failed for the visit", async () => {
+  resetWordListState();
+  let calls = 0;
+  const f = async () => {
+    calls++;
+    throw new Error("offline");
+  };
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, f), false);
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, f), false);
+  assert.equal(calls, 1);
+});
+
+test("a good load is parsed once and completion works", async () => {
+  resetWordListState();
+  let calls = 0;
+  const f = async (url, init) => {
+    calls++;
+    assert.equal(init.credentials, "omit");
+    return { ok: true, text: async () => LIST };
+  };
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, f), true);
+  assert.equal(await ensureWordList("/assets/mn.txt", BASE, f), true);
+  assert.equal(calls, 1);
+  const c = completionAt("sain gerl", 9, cfg);
+  assert.deepEqual(c, { rest: "эх", word: "гэрлэх", replaces: 4 });
+  assert.equal(completionAt("gerl", 4, config_set_option(cfg, "completion", false)), null);
+});
+
+test("accepting replaces the Latin word and the box stays convertible", () => {
+  load_word_list(LIST);
+  const value = "sain gerl baina";
+  const c = completionAt(value, 9, cfg);
+  const r = accept(value, 9, c);
+  assert.equal(r.value, "sain гэрлэх baina");
+  assert.equal(r.caret, 11);
+  assert.equal(convert_with_config(r.value, cfg), "сайн гэрлэх байна");
+});
+
+test("no completion in the middle of a non-word", () => {
+  load_word_list(LIST);
+  assert.equal(completionAt("gerl ", 5, cfg), null);
+  assert.equal(completionAt("", 0, cfg), null);
+});
+
+test("no completion when the caret is inside a word", () => {
+  load_word_list("# t\nмонгол\t50\n");
+  assert.equal(completionAt("mongxyz", 4, cfg), null);
+  assert.equal(completionAt("mongol", 4, cfg), null);
+  assert.deepEqual(completionAt("mong", 4, cfg), { rest: "ол", word: "монгол", replaces: 4 });
+  assert.deepEqual(completionAt("mong xyz", 4, cfg), { rest: "ол", word: "монгол", replaces: 4 });
+});
+
+test("Ulaanb gives Улаанбаатар, and a Latin run after Cyrillic or a digit is a new word", () => {
+  load_word_list("# t\nулаанбаатар\t50\nулаан\t5\n");
+  assert.deepEqual(completionAt("Ulaanb", 6, cfg), { rest: "аатар", word: "Улаанбаатар", replaces: 6 });
+  assert.equal(completionAt("1Ulaanb", 7, cfg)?.replaces, 6);
+  assert.equal(completionAt("гэрUlaanb", 9, cfg)?.replaces, 6);
+});

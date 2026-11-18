@@ -9,6 +9,8 @@ import { setupLang, t, fmt, issueText, type Key } from "./i18n";
 import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
 import calibrationSentences from "./calibration.json";
+import { accept, completionAt, ensureWordList, type Completion } from "./completion";
+import wordListUrl from "../../../data/wordlist/mn.txt?url";
 import { CalibrationFlow, saveError, type Outcome } from "./calibration";
 
 setupLang();
@@ -78,6 +80,7 @@ const features = document.getElementById("features") as HTMLFieldSetElement;
 const modeRadios = document.querySelectorAll<HTMLInputElement>('input[name="mode"]');
 const smartBox = document.getElementById("smart") as HTMLInputElement;
 const abbrBox = document.getElementById("abbr") as HTMLInputElement;
+const completionBox = document.getElementById("completion") as HTMLInputElement;
 // The typewriter demo never expands abbreviations.
 let ghostConfig = "";
 
@@ -90,6 +93,9 @@ function applyConfig(): void {
   (document.getElementById("classic-note") as HTMLElement).hidden = !s.classicWithFeatures;
   smartBox.checked = s.smartVowels;
   abbrBox.checked = s.abbreviations;
+  completionBox.checked = s.completion;
+  // Turned on while the box has focus: load the list now (see loadWords).
+  if (document.activeElement === latin) loadWords();
   ghostConfig = config_set_option(config, "abbreviations", false);
 }
 
@@ -111,6 +117,73 @@ for (const r of modeRadios) {
 smartBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "smart_vowels", smartBox.checked)));
 // "Abbreviations" (on by default): bn + space or punctuation -> байна (never at the end of the text).
 abbrBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "abbreviations", abbrBox.checked)));
+
+// "Finish words with Tab" (on by default): see docs/typing-rules.md section 12.
+completionBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "completion", completionBox.checked)));
+
+// Completion hint: under the Latin box, the whole Cyrillic word with the
+// ghost part in grey. It shows only while the box has focus, nothing is
+// selected, and the caret is at the end of a word. Tab accepts the word only
+// while the hint is visible; Esc hides the hint for the current word, so the
+// next Tab moves focus. The hint comes back when the word changes. With no
+// hint, Tab keeps its normal focus behaviour.
+const hintEl = document.getElementById("completion-hint") as HTMLElement;
+let pending: Completion | null = null;
+let dismissed: string | null = null; // "start:latin word" that Esc hid
+
+/** Load the word list (a separate asset) the first time it is needed. */
+function loadWords(): void {
+  if (!ready || !switchesOf(config).completion) return;
+  void ensureWordList(wordListUrl, location.href, fetch).then(updateHint);
+}
+function wordKey(c: Completion): string {
+  const end = latin.selectionStart;
+  return `${end - c.replaces}:${latin.value.slice(end - c.replaces, end)}`;
+}
+function currentCompletion(): Completion | null {
+  if (!ready || latin.selectionStart !== latin.selectionEnd) return null;
+  const c = completionAt(latin.value, latin.selectionStart, config);
+  return c && wordKey(c) !== dismissed ? c : null;
+}
+function updateHint(): void {
+  pending = document.activeElement === latin ? currentCompletion() : null;
+  hintEl.hidden = !pending;
+  hintEl.replaceChildren();
+  if (!pending) return;
+  const head = pending.word.slice(0, pending.word.length - pending.rest.length);
+  const word = document.createElement("span");
+  word.lang = "mn";
+  const ghostEl = document.createElement("span");
+  ghostEl.className = "ghost-rest";
+  ghostEl.textContent = pending.rest;
+  word.append(head, ghostEl);
+  hintEl.append(`${t("completionHintLabel")} `, word);
+}
+document.addEventListener("selectionchange", updateHint);
+document.addEventListener("buuz:lang", updateHint);
+latin.addEventListener("focus", loadWords);
+latin.addEventListener("input", loadWords);
+latin.addEventListener("blur", updateHint);
+latin.addEventListener("keydown", (e) => {
+  if (e.isComposing || e.ctrlKey || e.altKey || e.metaKey) return;
+  if (e.key === "Escape" && pending) {
+    dismissed = wordKey(pending);
+    updateHint();
+    return;
+  }
+  if (e.key !== "Tab" || e.shiftKey || !pending) return;
+  const c = pending;
+  e.preventDefault();
+  const caret = latin.selectionStart;
+  latin.setSelectionRange(caret - c.replaces, caret);
+  // insertText keeps the browser's undo history and fires "input".
+  if (!document.execCommand("insertText", false, c.word)) {
+    const next = accept(latin.value, caret, c);
+    latin.value = next.value;
+    latin.setSelectionRange(next.caret, next.caret);
+    latin.dispatchEvent(new Event("input"));
+  }
+});
 
 function render(): void {
   // convert_with_config() is microseconds even for long pastes (the core reads

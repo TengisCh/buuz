@@ -27,6 +27,12 @@ const mn = {
   abbreviations: "Товчлол (bn → байна)",
   abbreviationsHint:
     "Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.",
+  completion: "Tab-аар үг гүйцээх",
+  completionHint:
+    "Үгийн эхийг бичихэд (3-аас дээш үсэг) Buuz хамгийн магадлалтай үгийг ард нь сааралаар харуулна. Санал харагдаж байхад Tab дарвал үг бүтнээрээ орно. Esc дарвал тухайн үгийн санал арилж, дараагийн Tab ердийнхөөрөө (дараагийн талбар руу) шилжинэ. Санал байхгүй үед Tab ердийнхөөрөө ажиллана. Үгийн жагсаалт энэ сайтаас нэг удаа татагдаж, таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.",
+  completionCredit:
+    'Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.',
+  completionHintLabel: "Tab — гүйцээх, Esc — хаах:",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -189,6 +195,12 @@ const en: Record<Key, string> = {
   abbreviations: "Abbreviations (bn → байна)",
   abbreviationsHint:
     "A short form expands when you type a space or punctuation after it (bn then a space gives байна). On this website, deleting that space brings the abbreviation back; in the upcoming desktop keyboards, Backspace right after the space undoes it. Turn the checkbox off to never expand.",
+  completion: "Finish words with Tab",
+  completionHint:
+    "When you type the start of a word (more than 2 letters), Buuz shows the most likely word in grey after it. While the hint shows, press Tab to take the whole word. Press Esc to hide the hint for that word, and the next Tab moves focus as usual. With no hint, Tab works as usual. The word list loads once from this site and works on your device. What you type is never sent anywhere.",
+  completionCredit:
+    'Word list: Mongolian Wikipedia (its contributors), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Details</a>.',
+  completionHintLabel: "Tab to finish, Esc to dismiss:",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",
