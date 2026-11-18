@@ -555,8 +555,8 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
   rejected set. Space then commits it as typed: a flag on the reopened word
   makes sure of this, also when the set is full. The set holds at most 256
   words for the session. When it is full, a new undo is not remembered, so
-  that word can be corrected again later.
-  Remembering across sessions is issue #12.
+  that word can be corrected again later. The personal dictionary
+  (section 14) remembers the undo across sessions.
 - **Shells.** `KeyOutcome::corrected` is true when the commit holds a changed
   word, so a shell can flash or underline it.
 - **Web.** The converter turns the whole Latin box into Cyrillic in one call
@@ -573,7 +573,81 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
   0.4 to 0.8 milliseconds on the development machine. A usual word takes
   about 50 microseconds.
 
-## 14. Cyrillic to Latin
+## 14. Personal dictionary
+
+The personal dictionary (issue #12) holds the words Buuz learned from the
+user. It stays on the device. The core has the `UserDict` type and the
+learning events. It does no I/O: each shell keeps the text itself.
+
+- **What it holds.** Three kinds of entry:
+  - `add`: a word the user added. It is always valid and never corrected.
+  - `reject`: a word whose correction the user undid. It is never corrected
+    again, also in a later session.
+  - `use`: a known word (in the word list or the dictionary) that the user
+    committed, with a count.
+- **Limits.** At most 5,000 entries. A word has 64 characters at most, and no
+  white space. When the dictionary is full, a new entry evicts the least
+  recently used `use` entry. It evicts an `add` or `reject` entry only when
+  no `use` entry is left, so normal typing never removes a word the user
+  added or a rejection. When only added and rejected entries are left, a new
+  `use` count is dropped. Using an added word keeps it fresh. A logical
+  counter orders the use, not the system time.
+- **Text format.** One `kind<TAB>word<TAB>count` line per entry, oldest use
+  first. `UserDict::parse` skips a bad line and reports it as a warning, so one
+  bad line does not cost the whole file. It refuses a text over 1 MiB. A text
+  with more than 5,000 entries keeps the last 5,000 (`use` entries go first).
+  A line after the cap still gets a `Duplicate` warning. The count of an
+  `add` line is always 1. A 1 MiB file parses in about 20 milliseconds in
+  release. `UserDict::to_text` writes the format. The dictionary is not part of the shareable config
+  (section 10 and ADR 0005), because it holds what the user typed.
+- **Learning without a lock.** The composer reads a snapshot,
+  `Options::user: Option<Arc<UserSnapshot>>`, built by `UserDict::snapshot()`,
+  and never changes it. It returns events in `KeyOutcome::learned`:
+  - `Learned::Used(word)` on the key that commits a word at Space or
+    punctuation, when the word is in the word list or added to the dictionary.
+    A word that Tab accepted counts too.
+  - `Learned::Rejected(word)` on the Backspace that undoes a correction
+
+  The words are lower case. A key that is not one of these has `None`, and
+  allocates nothing for learning.
+- **No learning.** The composer returns no event when `Options::learning` is
+  false, in classic mode, in the Latin view, in a run that turned Latin, for a
+  word that was re-seeded, for a word that Backspace reopened, for an
+  abbreviation expansion, and for a corrected word. `Options::learning` is true
+  in `default()` and `smart()`, and off by default in `classic()`. The config
+  option `[options] learning` overrides it, so a config can turn it on in
+  classic mode. Shells turn learning off for password fields and, where the
+  platform tells them, for private windows.
+- **Domains.** A known word before a `.` is learned when the `.` commits it,
+  before the run turns Latin at the end (`sain.mn` gives `Used("сайн")`). A
+  word before `@` gives no event, because the `@` turns the run Latin first.
+- **Shells.** The shell applies each event with `UserDict::apply` to its own
+  dictionary, and saves it later, not on the typing path. It builds a new
+  snapshot with `UserDict::snapshot()` (a sort of at most 5,000 words) and
+  gives it to the composer with `Composer::set_options` when a field gets
+  focus or after an idle pause, not after every word. The new snapshot shows the
+  change from then on. Autocorrect also skips the words rejected in the
+  session (section 13), so an undo works at once.
+- **Completion.** Completion (section 12) first asks the snapshot. A user
+  word is an added word, or a word with 3 uses or more, and not a rejected
+  word. The word as typed counts: if it has the most uses, no ghost shows.
+  Otherwise the user word with the most uses wins, and the most recent one
+  wins a tie. It beats every list word with the same prefix, and it needs no
+  clear margin. The snapshot keeps the candidates sorted, finds the prefix
+  range with a binary search and scans only that range, with no allocation.
+  With 5,000 entries spread over many prefixes, a key takes about 1
+  microsecond in release (the test holds it under 10 microseconds). If all
+  5,000 words share one prefix, the scan covers all of them and takes about 25
+  microseconds.
+- **Autocorrect.** Autocorrect (section 13) never corrects an added or a
+  rejected word. An added word is known, like a list word.
+- **Rejection.** An undo of a correction stores the word as the user typed
+  it. That word may not be in the word list: it can be a name.
+- **Privacy.** The dictionary is in memory in the core and goes to the shell
+  only as return values. The core makes no network call and writes no file.
+  The user must be able to see, delete and clear it in the shell.
+
+## 15. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -581,7 +655,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 15. Planned changes
+## 16. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults

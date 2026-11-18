@@ -29,6 +29,7 @@ use crate::keys::KeyMap;
 use crate::rules::{
     rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_F, X_II, X_M, X_MF, X_MM,
 };
+use crate::userdict::{Learned, UserSnapshot};
 use crate::wordlist::WordList;
 
 /// Maximum number of raw input characters in one composition (as original).
@@ -91,6 +92,11 @@ pub struct KeyOutcome {
     /// [`Options::autocorrect`]). Shells can flash or underline it. Backspace
     /// right after the Space undoes the change.
     pub corrected: bool,
+    /// What the composer learned from this key (see [`Options::learning`]). It
+    /// is set only on a key that commits a word, or on the Backspace that
+    /// undoes a correction, so it costs nothing on other keys. The shell
+    /// applies it to its own [`crate::UserDict`] with [`crate::UserDict::apply`].
+    pub learned: Option<Learned>,
 }
 
 /// True for characters that start/extend a composition: ASCII letters,
@@ -145,6 +151,21 @@ pub struct Options {
     /// Space undoes it. `false` is the original Buuz behaviour, and the
     /// default in every preset.
     pub autocorrect: bool,
+    /// A read-only snapshot of the personal dictionary. `None` (the default,
+    /// also for [`Options::smart`] and [`Options::classic`]) means no user
+    /// words. The composer never changes it and takes no lock. The shell owns
+    /// the live [`crate::UserDict`], applies [`KeyOutcome::learned`] to it, builds a
+    /// new snapshot with [`crate::UserDict::snapshot`] and sets it with
+    /// [`Composer::set_options`] when it wants the change to show.
+    /// Recommended: refresh at the start of a field or after an idle pause,
+    /// not after every word.
+    pub user: Option<Arc<UserSnapshot>>,
+    /// Learning: return [`KeyOutcome::learned`] events. `true` in smart mode,
+    /// off by default in classic mode (a config override can turn it on).
+    /// Shells set it to `false` for password fields and, where the platform
+    /// tells them, for private windows. With `false` the composer records
+    /// nothing.
+    pub learning: bool,
 }
 
 impl Default for Options {
@@ -158,6 +179,8 @@ impl Default for Options {
             words: None,
             completion: true,
             autocorrect: false,
+            user: None,
+            learning: true,
         }
     }
 }
@@ -176,6 +199,8 @@ impl Options {
             words: None,
             completion: true,
             autocorrect: false,
+            user: None,
+            learning: true,
         }
     }
 
@@ -191,6 +216,8 @@ impl Options {
             words: None,
             completion: false,
             autocorrect: false,
+            user: None,
+            learning: false,
         }
     }
 }
@@ -464,6 +491,9 @@ pub struct Composer {
     prev_gender: Option<u8>,
     /// The composition was re-seeded from Cyrillic (caret moved): never expands.
     reseeded: bool,
+    /// The preedit holds a word that Tab (or Right) accepted from the ghost
+    /// text. It is re-seeded, but it still counts as a use of that word.
+    accepted: bool,
     /// Backspace just undid an expansion: this word will not expand again.
     no_expand: bool,
     /// Esc switched the preedit to the raw Latin keys.
@@ -521,6 +551,7 @@ impl Composer {
             word_gender: X_M,
             prev_gender: None,
             reseeded: false,
+            accepted: false,
             no_expand: false,
             latin: false,
             no_correct: false,
@@ -594,8 +625,20 @@ impl Composer {
         }
         self.lower.clear();
         self.lower.extend(self.comp.iter().map(|&c| to_lower(c)));
-        let (top, second) = words.top_two(&self.lower);
-        let Some((word, count)) = top else { return };
+        // A user word wins over a list word with the same prefix.
+        let user_word = self
+            .opts
+            .user
+            .as_ref()
+            .and_then(|u| u.completion(&self.lower));
+        let (word, count, second) = match user_word {
+            Some(w) => (w, 0, None),
+            None => {
+                let (top, second) = words.top_two(&self.lower);
+                let Some((word, count)) = top else { return };
+                (word, count, second)
+            }
+        };
         let clear = match second {
             None => true,
             Some((_, c2)) => u64::from(count) >= 2 * u64::from(c2),
@@ -623,6 +666,7 @@ impl Composer {
     /// Cyrillic like after a caret move.
     fn accept_ghost(&mut self) {
         let suffix = std::mem::take(&mut self.ghost);
+        self.accepted = true;
         self.comp.extend(suffix.chars());
         self.ghost = suffix;
         self.comp_to_read();
@@ -735,6 +779,7 @@ impl Composer {
     fn clear_buffer(&mut self) {
         self.ghost_on = false;
         self.reseeded = false;
+        self.accepted = false;
         self.no_expand = false;
         self.no_correct = false;
         self.latin = false;
@@ -785,7 +830,7 @@ impl Composer {
         &mut self,
         space: bool,
         may_correct: bool,
-    ) -> (Option<String>, Option<u8>, bool) {
+    ) -> (Option<String>, Option<u8>, bool, Option<Learned>) {
         let expansion = match &self.opts.abbreviations {
             Some(abbr)
                 if !self.reseeded && !self.no_expand && !self.latin && !self.comp.is_empty() =>
@@ -801,7 +846,7 @@ impl Composer {
                     self.arm_undo(false, text.chars().count() + 1);
                 }
                 self.clear_buffer();
-                (Some(text), gender, false)
+                (Some(text), gender, false, None)
             }
             None => {
                 if let Some(text) = self.autocorrected(may_correct) {
@@ -813,14 +858,15 @@ impl Composer {
                         }
                     }
                     self.clear_buffer();
-                    return (Some(text), gender, true);
+                    return (Some(text), gender, true, None);
                 }
                 // A re-seeded word reopens from its Cyrillic text, still frozen.
                 if space && self.opts.keep_latin && !self.comp.is_empty() {
                     self.arm_undo(self.latin, self.comp.len() + 1);
                 }
                 let gender = Some(self.word_gender);
-                (self.take_composition(), gender, false)
+                let learned = self.used_event(may_correct);
+                (self.take_composition(), gender, false, learned)
             }
         }
     }
@@ -837,12 +883,54 @@ impl Composer {
         if !may_correct || self.no_correct || self.latin || self.run_latin || self.reseeded {
             return None;
         }
-        autocorrect::correct(words, &self.comp, &self.rejected, &mut self.fix)
+        autocorrect::correct(
+            words,
+            &self.comp,
+            &self.rejected,
+            self.opts.user.as_deref(),
+            &mut self.fix,
+        )
+    }
+
+    /// The word in `comp` in lower case.
+    fn lower_comp(&self) -> String {
+        self.comp.iter().map(|&c| to_lower(c)).collect()
+    }
+
+    /// The `Used` event for the word in `comp` that Space or punctuation
+    /// commits as typed: only with learning on, in the Cyrillic view, and for
+    /// a word that is in the word list or the user dictionary. A word that
+    /// Backspace reopened is not counted again. The check
+    /// reuses a buffer; only an event allocates.
+    fn used_event(&mut self, may_correct: bool) -> Option<Learned> {
+        if !self.opts.learning
+            || !may_correct
+            || self.latin
+            || self.run_latin
+            || (self.reseeded && !self.accepted)
+            || self.no_expand
+            || self.comp.is_empty()
+        {
+            return None;
+        }
+        self.lower.clear();
+        self.lower.extend(self.comp.iter().map(|&c| to_lower(c)));
+        let known = self
+            .opts
+            .words
+            .as_ref()
+            .is_some_and(|w| w.contains(&self.lower))
+            || self
+                .opts
+                .user
+                .as_ref()
+                .is_some_and(|u| u.is_added(&self.lower));
+        known.then(|| Learned::Used(self.lower.clone()))
     }
 
     /// Remember the word in `comp` as one the user does not want corrected.
     fn reject_current(&mut self) {
-        let word: String = self.comp.iter().map(|&c| to_lower(c)).collect();
+        let word = self.lower_comp();
         if self.rejected.len() < autocorrect::MAX_REJECTED {
             self.rejected.insert(word);
         }
@@ -999,6 +1087,9 @@ impl Composer {
                     if u.corrected {
                         self.no_correct = true;
                         self.reject_current();
+                        if self.opts.learning {
+                            out.learned = Some(Learned::Rejected(self.lower_comp()));
+                        }
                     }
                     out.consumed = true;
                     out.delete_before = u.delete;
@@ -1026,12 +1117,13 @@ impl Composer {
                 }
             }
             // Not ours: finish any composition, let the key through.
-            let (commit, gender, corrected) = self.finish_word(
+            let (commit, gender, corrected, learned) = self.finish_word(
                 key == Key::Space,
                 (key == Key::Space || punctuation) && domain.is_none(),
             );
             out.commit = commit;
             out.corrected = corrected;
+            out.learned = learned;
             if auto {
                 match key {
                     Key::Symbol(c) if self.run_ok => {

@@ -29,6 +29,7 @@ mod composer;
 mod config;
 mod keys;
 mod rules;
+mod userdict;
 mod wordlist;
 
 pub use abbrev::{AbbrevError, Abbreviations};
@@ -42,4 +43,9 @@ pub use config::{
 };
 pub use keys::{KeyError, KeyMap};
 pub use rules::export_rules;
+pub use userdict::{
+    Learned, ParsedUserDict, UserDict, UserDictEntry, UserDictError, UserDictKind, UserDictProblem,
+    UserDictWarning, UserSnapshot, MAX_USERDICT_BYTES, MAX_USERDICT_ENTRIES,
+    MAX_USERDICT_WORD_CHARS,
+};
 pub use wordlist::{WordList, WordListError};

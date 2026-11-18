@@ -226,7 +226,8 @@ fn classic_mode_passes_tab_through() {
             commit: Some("баярл".into()),
             rejected: false,
             delete_before: 0,
-            corrected: false
+            corrected: false,
+            learned: None
         }
     );
     assert_eq!(c.completion(), None);

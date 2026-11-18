@@ -336,6 +336,23 @@ suggestions and autocorrect (issues #1 and #2).
   of section 4. Autocorrect runs once per word, not per key, with a budget of
   1 ms.
 
+### Personal dictionary
+
+`core/src/userdict.rs` holds the `UserDict` type: added words, rejected
+corrections and use counts, at most 5,000 entries. The least recently used
+`use` entry is evicted first, so normal typing never removes an added word. Details are in `docs/typing-rules.md` section 14.
+
+- **Where it lives.** The shell owns the live `UserDict` and its file or
+  `localStorage`. The composer only reads an immutable snapshot
+  (`UserDict::snapshot()`, shared as `Options::user`, an `Arc`) and takes no
+  lock. The snapshot is sorted, so a key scans only the prefix range.
+- **How it learns.** The composer returns `KeyOutcome::learned` on the key that
+  commits a word or undoes a correction. The shell applies it and saves it
+  later, off the typing path.
+- **Privacy.** The core does no I/O and makes no network call. The dictionary
+  is not in the shareable config. Shells set `Options::learning` to false for
+  password fields and private windows. See `SECURITY.md`.
+
 ## 7. Open core boundary
 
 | Open source, this repo (MIT OR Apache-2.0; `core/` Apache-2.0) | Paid, separate private repo |
