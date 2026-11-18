@@ -14,3 +14,9 @@ unless stated otherwise. See core/NOTICE for the specific derived portions.
 
 Licensing: core/ is Apache-2.0 only. All other code in this repository is
 licensed under MIT OR Apache-2.0 (see LICENSE, LICENSE-MIT, LICENSE-APACHE).
+
+data/wordlist/ is derived from Mongolian Wikipedia (Mongolian Wikipedia
+contributors; dump mnwiki-20261101,
+https://dumps.wikimedia.org/mnwiki/20261101/) and is licensed under
+CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
+See data/wordlist/LICENSE.

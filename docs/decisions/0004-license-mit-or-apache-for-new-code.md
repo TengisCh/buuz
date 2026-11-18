@@ -3,6 +3,7 @@
 Status: Accepted
 Date: 2026-11-17
 Amends: [0002](0002-apache-2-open-core.md)
+Amended by: [0006](0006-word-list-data-licence.md) (word list data is CC BY-SA 4.0)
 
 ## Context
 

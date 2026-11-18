@@ -34,6 +34,8 @@ the names in [docs/glossary.md](docs/glossary.md) in code, tests and issues.
    behaviour goes into smart mode, on by default, with its own toggle.
 3. **SPDX header on new source files.** `// SPDX-License-Identifier: Apache-2.0`
    in `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
+   Data files under `data/wordlist/` are CC BY-SA 4.0 and take no
+   code-style header; the header line of `mn.txt` carries it.
 4. **No new dependency without the add-dependency checklist** (below).
 5. **Never** commit secrets or `.env` files, force-push `main`, publish
    packages, or change GitHub or Vercel settings. Ask the maintainer.

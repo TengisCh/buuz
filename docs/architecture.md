@@ -125,7 +125,10 @@ buuz/
 │   ├── windows/          TSF text service (C++), installer, settings app
 │   └── macos/            InputMethodKit app (Swift), installer
 ├── mobile/               later: android/, ios/
+├── data/
+│   └── wordlist/         Mongolian word list (CC BY-SA 4.0)
 ├── tools/
+│   ├── wordlist/         builds the word list from a Wikipedia dump
 │   ├── difftest/         compares buuz-core with the original C++ Composer
 │   └── bench/            per-keystroke latency benchmarks
 └── docs/
@@ -306,6 +309,29 @@ reads it with `Config::parse` and gives the composer the `Options` from
 - A file with a newer `buuz_config` version is refused with `TooNew`.
 - The `[keys]` section is checked and stored. The core does not apply it yet.
 - The core does no I/O. Each shell reads and writes the file itself.
+
+### Word list
+
+`data/wordlist/mn.txt` holds the most frequent words of Mongolian Wikipedia
+(up to 50,000, about 48,000 now), one `word<TAB>count` line per word, under
+1 MB of text. It feeds
+suggestions and autocorrect (issues #1 and #2).
+
+- **Built by** `tools/wordlist/build.mjs` from a Wikipedia dump. The dump is
+  never committed. The build is deterministic.
+- **Licence:** the file is derived from Wikipedia text, so it is CC BY-SA 4.0,
+  with attribution to Mongolian Wikipedia contributors. It is a separate data
+  file, so share-alike does not reach the app code. The root `LICENSE` says
+  so, and [ADR 0006](decisions/0006-word-list-data-licence.md) records why.
+  Shells must show the attribution (Mongolian Wikipedia contributors, CC
+  BY-SA 4.0) in their licence screens and load `mn.txt` as a separate asset,
+  never compile it into the binary.
+- **In the core:** `WordList::parse` takes the text (the core does no I/O) and
+  builds a sorted index once, about 10 ms in release. `contains`, `rank`, `count`,
+  `prefix` and the allocation-free `top_two` then answer in microseconds.
+- **Loaded on demand.** It is not on the typing path. Nothing parses it until
+  a feature that needs it is switched on, and no shell bundles it yet. Issue
+  #2 decides how each shell loads it.
 
 ## 7. Open core boundary
 

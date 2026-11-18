@@ -1,10 +1,15 @@
-Buuz 2.0 uses two licensing rules, depending on where the code came from.
+Buuz 2.0 uses three licensing rules, depending on where the code came from.
 
 1. core/ (the buuz-core crate) is derived from the original Buuz by
    Odbayar Nyamtseren and is licensed under the Apache License 2.0 only.
    See core/LICENSE and core/NOTICE.
 
-2. Everything else in this repository is new code, licensed under either of
+2. data/wordlist/ (the Mongolian word list) is derived from Mongolian
+   Wikipedia and is licensed under CC BY-SA 4.0
+   (https://creativecommons.org/licenses/by-sa/4.0/). See
+   data/wordlist/LICENSE and data/wordlist/README.md.
+
+3. Everything else in this repository is new code, licensed under either of
 
      * Apache License, Version 2.0 (LICENSE-APACHE), or
      * MIT License (LICENSE-MIT)
@@ -17,5 +22,6 @@ See docs/decisions/0004-license-mit-or-apache-for-new-code.md for the
 reasoning.
 
 SPDX summary:
-  core/**    Apache-2.0
+  core/**            Apache-2.0
+  data/wordlist/**   CC-BY-SA-4.0
   all other  MIT OR Apache-2.0

@@ -30,6 +30,8 @@ test in `core/tests/` before fixing it.
 
 - New source files start with an SPDX line: `// SPDX-License-Identifier: Apache-2.0`
   inside `core/`, `// SPDX-License-Identifier: MIT OR Apache-2.0` elsewhere.
+  Data files under `data/wordlist/` are CC BY-SA 4.0 and take no code-style
+  header; the first line of `mn.txt` carries `SPDX-License-Identifier: CC-BY-SA-4.0`.
 
 ## Writing docs
 
@@ -44,6 +46,8 @@ Unless you say otherwise, any contribution you submit:
 
 - to `core/` is licensed under the Apache License 2.0, because that code is
   derived from the original Buuz;
+- to `data/wordlist/` is licensed under CC BY-SA 4.0, like the Wikipedia text
+  it is derived from (see [decision 0006](docs/decisions/0006-word-list-data-licence.md));
 - anywhere else is dual-licensed under MIT OR Apache-2.0, as described in
   `LICENSE`, without any additional terms or conditions.
 
