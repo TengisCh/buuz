@@ -102,6 +102,41 @@ const mn = {
   fbGithub: "GitHub дээр бичих",
   themeDark: "Харанхуй горим",
   themeLight: "Цайвар горим",
+  settingsFile: "Тохиргооны файл",
+  settingsFileHint:
+    "Тохиргоогоо хуулж эсвэл файл болгон хадгалаад өөр төхөөрөмж дээрээ оруулж болно. Файл тань энэ төхөөрөмжөөс гадагш илгээгдэхгүй.",
+  exportCopy: "Тохиргоо хуулах",
+  exportDownload: "Файл болгон татах",
+  exportCopied: "Тохиргоо хуулагдлаа",
+  exportDownloaded: "Файл татагдлаа",
+  importTitle: "Тохиргоо оруулах",
+  importPh: "Тохиргооны текстээ энд буулгана уу",
+  importApply: "Оруулах",
+  importFile: "Файл нээх",
+  importEmpty: "Эхлээд тохиргооны текстээ буулгана уу.",
+  importOk: "Тохиргоо орлоо.",
+  importIgnored: "Тохиргоо орлоо. Ойлгоогүй тул алгассан зүйл:",
+  copyByHand: "Хуулах эрхийг хөтөч өгсөнгүй. Дээрх нүдэнд тохиргоог гаргалаа: бүгдийг нь сонгоод гараар хуулаарай.",
+  classicFeaturesOn: "Сонгодог горимд зарим ухаалаг боломж асаалттай байна.",
+  configReset: "Хадгалсан тохиргоо уншигдсангүй тул үндсэн тохиргоог ашиглаж байна. Муу текстийг buuz.config.bad дээр хадгалсан.",
+  cfg_too_many_entries: "{line}-р мөр: нэг хэсэгт хэт олон мөр байна (дээд хэмжээ {name}).",
+  importNotSaved: "Тохиргоо орлоо, гэхдээ хөтөч хадгалахыг зөвшөөрөхгүй байна. Хуудсыг хаатал л ажиллана.",
+  importFileError: "Файлыг уншиж чадсангүй.",
+  cfg_missing_version: "{line}-р мөр: файлын эхний мөр заавал buuz_config = 1 байх ёстой.",
+  cfg_too_new: "Энэ тохиргоо Buuz-ийн шинэ хувилбарынх ({line}-р хувилбар). Энэ хуудас {name}-р хувилбар хүртэл уншина.",
+  cfg_syntax: "{line}-р мөр: ойлгосонгүй. «нэр = утга» эсвэл [хэсэг] гэж бичнэ.",
+  cfg_unknown_key: "{line}-р мөр: «{name}» гэсэн нэр байхгүй.",
+  cfg_bad_value: "{line}-р мөр: «{name}»-ийн утга буруу байна.",
+  cfg_bad_escape: `{line}-р мөр: текст дотор зөвхөн \\", \\\\, \\n гэсэн тэмдэгтийг хэрэглэнэ.`,
+  cfg_single_quotes: "{line}-р мөр: ганц хашилт биш, давхар хашилт хэрэглэнэ.",
+  cfg_duplicate_key: "{line}-р мөр: «{name}» хоёр удаа бичигдсэн байна.",
+  cfg_duplicate_section: "{line}-р мөр: [{name}] хэсэг хоёр удаа бичигдсэн байна.",
+  cfg_bad_abbreviation: "{line}-р мөр: «{name}» товчлол буруу байна. Товчлол хоосон, хэт урт байж болохгүй, утга нь нэг мөр байна.",
+  cfg_bad_keys: "{line}-р мөр: «{name}» товчлуурын тохиргоо буруу байна. 1-3 товчлуур, кирилл утга хэрэгтэй.",
+  cfg_too_large: "Тохиргоо хэт том байна (дээд хэмжээ {name}).",
+  cfg_other: "Тохиргоог уншиж чадсангүй.",
+  cfg_unknown_option: "{line}-р мөр: «{name}» гэсэн сонголт байхгүй.",
+  cfg_unknown_section: "{line}-р мөр: [{name}] гэсэн хэсэг байхгүй.",
 };
 
 export type Key = keyof typeof mn;
@@ -199,9 +234,51 @@ const en: Record<Key, string> = {
   fbGithub: "Write on GitHub",
   themeDark: "Dark mode",
   themeLight: "Light mode",
+  settingsFile: "Settings file",
+  settingsFileHint:
+    "Copy your settings, or save them as a file, and load them on another device. Your file is never sent away from this device.",
+  exportCopy: "Copy settings",
+  exportDownload: "Download as a file",
+  exportCopied: "Settings copied",
+  exportDownloaded: "File downloaded",
+  importTitle: "Import settings",
+  importPh: "Paste your settings text here",
+  importApply: "Import",
+  importFile: "Open a file",
+  importEmpty: "Paste your settings text first.",
+  importOk: "Settings imported.",
+  importIgnored: "Settings imported. Not understood, so skipped:",
+  copyByHand: "The browser did not allow copying. The settings are in the box above: select all of it and copy it by hand.",
+  classicFeaturesOn: "Some smart features are on in Classic mode.",
+  configReset: "The saved settings could not be read, so the defaults are in use. The bad text is kept in buuz.config.bad.",
+  cfg_too_many_entries: "Line {line}: too many entries in one section (the limit is {name}).",
+  importNotSaved: "Settings imported, but the browser does not let the page save them. They last until you close the page.",
+  importFileError: "Could not read the file.",
+  cfg_missing_version: "Line {line}: the first line of the file must be buuz_config = 1.",
+  cfg_too_new: "These settings come from a newer Buuz (version {line}). This page reads up to version {name}.",
+  cfg_syntax: 'Line {line}: not understood. Write "name = value" or [section].',
+  cfg_unknown_key: 'Line {line}: there is no setting named "{name}".',
+  cfg_bad_value: 'Line {line}: the value of "{name}" is not right.',
+  cfg_bad_escape: `Line {line}: in text, use only \\", \\\\ and \\n.`,
+  cfg_single_quotes: "Line {line}: use double quotes, not single quotes.",
+  cfg_duplicate_key: 'Line {line}: "{name}" is written twice.',
+  cfg_duplicate_section: "Line {line}: the [{name}] section is written twice.",
+  cfg_bad_abbreviation: 'Line {line}: the abbreviation "{name}" is not right. It cannot be empty or too long, and its text must be one line.',
+  cfg_bad_keys: 'Line {line}: the key setting "{name}" is not right. It needs 1 to 3 keys and Cyrillic text.',
+  cfg_too_large: "The settings are too large (the limit is {name}).",
+  cfg_other: "Could not read the settings.",
+  cfg_unknown_option: 'Line {line}: there is no option named "{name}".',
+  cfg_unknown_section: "Line {line}: there is no section named [{name}].",
 };
 
-const strings: Record<Lang, Record<Key, string>> = { mn, en };
+export const strings: Record<Lang, Record<Key, string>> = { mn, en };
+
+/** A parse error or warning from the config, in the current language. */
+export function issueText(issue: { code: string; number: number; detail: string }): string {
+  const key = `cfg_${issue.code}` as Key;
+  const template = strings[current][key] ?? strings[current].cfg_other;
+  return template.replace("{line}", () => String(issue.number)).replace("{name}", () => issue.detail);
+}
 
 const STORE = "buuz.lang";
 let current: Lang = "mn";
