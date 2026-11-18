@@ -6,7 +6,17 @@ as top priority.
 ## What Buuz promises
 
 - The input method makes no network connections.
-- It does not store, log or transmit typed text.
+- It does not log or transmit typed text.
+- It stores only the personal dictionary (the words you add, the corrections
+  you undo and how often you use known words). The dictionary stays on the
+  device. You can see, delete and clear it. The core never writes it to
+  disk: the shell does.
+- Undoing a correction stores the word as you typed it. That word may not
+  be in the word list: it can be a name.
+- Learning is off by default in classic mode. A config setting can turn it
+  on.
+- Shells turn learning off for password fields and, where the platform tells
+  them, for private windows.
 - It does not run in password fields where the operating system marks them
   secure.
 

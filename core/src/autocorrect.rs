@@ -10,6 +10,7 @@
 use std::collections::HashSet;
 
 use crate::rules::to_lower;
+use crate::userdict::UserSnapshot;
 use crate::wordlist::WordList;
 
 /// The shortest word (in letters) that autocorrect looks at.
@@ -49,11 +50,13 @@ struct Tally {
 }
 
 /// The corrected word for `comp`, or `None` to leave it as typed. `comp` is
-/// the preedit. `rejected` holds lower-case words the user undid.
+/// the preedit. `rejected` holds lower-case words the user undid in this
+/// session; `user` is the personal dictionary snapshot.
 pub(crate) fn correct(
     words: &WordList,
     comp: &[char],
     rejected: &HashSet<String>,
+    user: Option<&UserSnapshot>,
     s: &mut Scratch,
 ) -> Option<String> {
     let n = comp.len();
@@ -69,7 +72,9 @@ pub(crate) fn correct(
     s.word.extend(comp.iter().map(|&c| to_lower(c)));
     s.text.clear();
     s.text.extend(s.word.iter());
-    if words.contains(&s.text) || rejected.contains(s.text.as_str()) {
+    // A word the user added or rejected is never corrected.
+    let user_knows = user.is_some_and(|u| u.is_added(&s.text) || u.is_rejected(&s.text));
+    if words.contains(&s.text) || rejected.contains(s.text.as_str()) || user_knows {
         return None;
     }
 
