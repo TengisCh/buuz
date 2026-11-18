@@ -63,6 +63,8 @@ const BUILTIN: &[(&str, &str)] = &[
     ("sn", "сайн"),
     ("sbnu", "сайн байна уу"),
     ("tgd", "тэгээд"),
+    // The particle нь. `ни` is not in the word list, so `ni` never hides a word.
+    ("ni", "нь"),
 ];
 
 /// A table of abbreviations: lowercase Latin keys and their Cyrillic text.

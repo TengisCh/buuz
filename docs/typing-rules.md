@@ -198,7 +198,8 @@ does not expand, so `bn` alone stays `бн`; on the web converter (which
 converts the whole text again on every change) deleting the space therefore
 brings the abbreviation back. The built-in list is small and
 conservative; the literal conversion of every key (`bn` → бн) is not a real
-word, so an entry never hides a word typed in full.
+word, so an entry never hides a word typed in full. `ni` gives the
+particle нь; `ни` is not in the word list (issue #45).
 
 | Type | Get | Type | Get |
 | --- | --- | --- | --- |
@@ -207,6 +208,7 @@ word, so an entry never hides a word typed in full.
 | `bhgui`, `bhgwi` | байхгүй | `sn` | сайн |
 | `ym` | юм | `zgr` | зүгээр |
 | `mdku` | мэдэхгүй | `tgd` | тэгээд |
+| `ni` | нь | | |
 
 - **Case** follows the keys: `Bn` → Байна, `BN` → БАЙНА.
 - **Particle:** the expansion hands its gender to a following `uu`
