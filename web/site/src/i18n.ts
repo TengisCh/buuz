@@ -137,6 +137,35 @@ const mn = {
   cfg_other: "Тохиргоог уншиж чадсангүй.",
   cfg_unknown_option: "{line}-р мөр: «{name}» гэсэн сонголт байхгүй.",
   cfg_unknown_section: "{line}-р мөр: [{name}] гэсэн хэсэг байхгүй.",
+  calButton: "Би яаж бичдэгийг Buuz-д зааж өгөх",
+  calHint: "Хэдэн өгүүлбэрийг өөрийн ердийн аргаар латинаар бичихэд Buuz таны товчлуурыг сурна. Бичсэн зүйл тань хадгалагдахгүй, цонхыг хаахад хаягдана.",
+  calIntro: "Доорх өгүүлбэрийг өөрийн ердийн аргаар латинаар бичнэ үү. Энд кирилл болгохгүй, бичсэнээр нь харуулна.",
+  calProgress: "{n} / {total}",
+  calSentenceLabel: "Энэ өгүүлбэрийг латинаар бичнэ үү",
+  calBack: "Өмнөх",
+  calNext: "Дараах",
+  calFinish: "Дүн харах",
+  calCancel: "Болих",
+  calResultTitle: "Дүн",
+  calNone: "Buuz таны бичдэг аргаар аль хэдийн бичиж байна.",
+  calSuggestLead: "Та үндсэн дүрмээс өөр товчлуур хэрэглэсэн байна. Хадгалахыг нь сонгоно уу:",
+  calSuggestion: "{letter}: та {chunk} гэж бичсэн ({count} удаа)",
+  calPair: "{target} хоёуланд хэрэглэнэ.",
+  calDisplaces: "{chunk} товчлуур өөр үсэг гаргахаа болино. Өмнөх үсэг: {other}.",
+  calTie: "Өөр товчлуурыг мөн адил олон удаа хэрэглэсэн тул хоёулаа санал болгов.",
+  calConflict: "{chunk} товчлуурыг {letter} ({count} удаа), {other} ({other_count} удаа) хоёуланд хэрэглэсэн тул санал болгохгүй.",
+  calUnsupported: "Үсэг: {letter}. Та {chunk} ({count} удаа) гэж бичсэн. Үүнийг тохиргоонд хийх боломжгүй тул алгаслаа.",
+  calUnmatched: "Өгүүлбэр {n} таарсангүй тул алгаслаа.",
+  calNotTyped: "Өгүүлбэр {n} бичигдээгүй тул алгаслаа.",
+  calSkipped: "Шалгаагүй үсэг: {letters}.",
+  calSave: "Хадгалах",
+  calDefault: "Үндсэнийг ашиглах",
+  calSavedOne: "Тохиргоо хадгалагдлаа. 1 товчлуур нэмэгдлээ.",
+  calSaved: "Тохиргоо хадгалагдлаа. {n} товчлуур нэмэгдлээ.",
+  calNothing: "Ашиглах боломжтой зүйл бичигдсэнгүй. Дахин оролдоно уу.",
+  calRetry: "Дахин оролдох",
+  calError: "Тохиргоог шинэчилж чадсангүй.",
+  calNotReady: "Хуудас ачаалж дуусаагүй байна. Түр хүлээгээд дахин оролдоно уу.",
 };
 
 export type Key = keyof typeof mn;
@@ -269,6 +298,35 @@ const en: Record<Key, string> = {
   cfg_other: "Could not read the settings.",
   cfg_unknown_option: 'Line {line}: there is no option named "{name}".',
   cfg_unknown_section: "Line {line}: there is no section named [{name}].",
+  calButton: "Teach Buuz how you type",
+  calHint: "Type a few sentences the way you usually do, and Buuz learns your keys. What you type is not stored and is discarded when the window closes.",
+  calIntro: "Type the sentence below in Latin letters, the way you usually do. It is not converted here: you see what you type.",
+  calProgress: "{n} / {total}",
+  calSentenceLabel: "Type this sentence in Latin letters",
+  calBack: "Back",
+  calNext: "Next",
+  calFinish: "See the result",
+  calCancel: "Cancel",
+  calResultTitle: "Result",
+  calNone: "Buuz already types the way you do.",
+  calSuggestLead: "You used keys that differ from the default. Choose which to keep:",
+  calSuggestion: "{letter}: you typed {chunk} ({count} times)",
+  calPair: "Applies to both {target}.",
+  calDisplaces: "{chunk} will stop giving {other}.",
+  calTie: "You used another key just as often, so both are suggested.",
+  calConflict: "You typed {chunk} for {letter} ({count} times) and for {other} ({other_count} times), so it is not suggested.",
+  calUnsupported: "You typed {chunk} for {letter} ({count} times). Settings cannot hold this, so it was skipped.",
+  calUnmatched: "Sentence {n} did not match; it was skipped.",
+  calNotTyped: "Sentence {n} was not typed; it was skipped.",
+  calSkipped: "Letters not tested: {letters}.",
+  calSave: "Save",
+  calDefault: "Use the default",
+  calSavedOne: "Settings saved. 1 key added.",
+  calSaved: "Settings saved. {n} keys added.",
+  calNothing: "Nothing usable was typed. Try again.",
+  calRetry: "Try again",
+  calError: "Could not update the settings.",
+  calNotReady: "The page is still loading. Wait a moment and try again.",
 };
 
 export const strings: Record<Lang, Record<Key, string>> = { mn, en };
@@ -278,6 +336,11 @@ export function issueText(issue: { code: string; number: number; detail: string 
   const key = `cfg_${issue.code}` as Key;
   const template = strings[current][key] ?? strings[current].cfg_other;
   return template.replace("{line}", () => String(issue.number)).replace("{name}", () => issue.detail);
+}
+
+/** A string with `{name}` placeholders filled in (no markup, so use textContent). */
+export function fmt(key: Key, vars: Record<string, string | number>): string {
+  return strings[current][key].replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m));
 }
 
 const STORE = "buuz.lang";

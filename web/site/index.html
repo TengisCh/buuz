@@ -182,6 +182,13 @@
           </label>
           <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
         </fieldset>
+        <section class="cfg" aria-labelledby="cal-open-title">
+          <h3 id="cal-open-title" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</h3>
+          <p class="hint" data-i18n="calHint">Хэдэн өгүүлбэрийг өөрийн ердийн аргаар латинаар бичихэд Buuz таны товчлуурыг сурна. Бичсэн зүйл тань хадгалагдахгүй, цонхыг хаахад хаягдана.</p>
+          <div class="cfg-row">
+            <button id="cal-open" type="button" class="ghost" aria-haspopup="dialog" aria-controls="calibrate" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</button>
+          </div>
+        </section>
         <section class="cfg" aria-labelledby="cfg-title">
           <h3 id="cfg-title" data-i18n="settingsFile">Тохиргооны файл</h3>
           <p class="hint" data-i18n="settingsFileHint">Тохиргоогоо хуулж эсвэл файл болгон хадгалаад өөр төхөөрөмж дээрээ оруулж болно. Файл тань энэ төхөөрөмжөөс гадагш илгээгдэхгүй.</p>
@@ -199,6 +206,39 @@
           <div id="cfg-msg" class="cfg-msg" role="status"></div>
           <div id="cfg-err" class="cfg-msg err" role="alert"></div>
         </section>
+      </dialog>
+
+      <dialog id="calibrate" class="settings calibrate" aria-labelledby="cal-title">
+        <div class="fb-head">
+          <h2 id="cal-title" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</h2>
+          <button id="cal-close" type="button" class="fb-close" data-i18n-aria="calCancel" aria-label="Болих" title="Болих"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <section id="cal-step" aria-labelledby="cal-title">
+          <p class="hint" data-i18n="calIntro">Доорх өгүүлбэрийг өөрийн ердийн аргаар латинаар бичнэ үү. Энд кирилл болгохгүй, бичсэнээр нь харуулна.</p>
+          <div class="cal-live" aria-live="polite" aria-atomic="true">
+            <p id="cal-progress" class="cal-progress"></p>
+            <p id="cal-sentence" class="cal-sentence" lang="mn"></p>
+          </div>
+          <label class="cfg-label" for="cal-input" data-i18n="calSentenceLabel">Энэ өгүүлбэрийг латинаар бичнэ үү</label>
+          <input id="cal-input" class="cal-input" type="text" aria-describedby="cal-progress cal-sentence" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" />
+          <div class="cfg-row">
+            <button id="cal-back" type="button" class="ghost" data-i18n="calBack">Өмнөх</button>
+            <button id="cal-next" type="button" class="primary"></button>
+            <button id="cal-cancel" type="button" class="ghost" data-i18n="calCancel">Болих</button>
+          </div>
+        </section>
+        <section id="cal-result" aria-labelledby="cal-result-title" hidden>
+          <h3 id="cal-result-title" class="cal-h" data-i18n="calResultTitle">Дүн</h3>
+          <p id="cal-lead" class="hint"></p>
+          <ul id="cal-list" class="cal-list"></ul>
+          <ul id="cal-notes" class="cal-notes"></ul>
+          <div class="cfg-row">
+            <button id="cal-save" type="button" class="primary" data-i18n="calSave">Хадгалах</button>
+            <button id="cal-retry" type="button" class="primary" data-i18n="calRetry" hidden>Дахин оролдох</button>
+            <button id="cal-default" type="button" class="ghost" data-i18n="calDefault">Үндсэнийг ашиглах</button>
+          </div>
+        </section>
+        <div id="cal-err" class="cfg-msg err" role="alert"></div>
       </dialog>
 
       <section class="converter" aria-label="Converter">

@@ -5,9 +5,11 @@ import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
 import init, { config_set_classic, config_set_option, convert_with_config } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t, issueText, type Key } from "./i18n";
-import { applyImport, browserStore, loadConfigState, saveConfig, switchesOf, type Issue } from "./config";
+import { setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
+import calibrationSentences from "./calibration.json";
+import { CalibrationFlow, saveError, type Outcome } from "./calibration";
 
 setupLang();
 
@@ -205,6 +207,178 @@ cfgFile.addEventListener("change", () => {
   if (!file) return;
   if (file.size > 1024 * 1024) return cfgSay([issueText({ code: "too_large", number: 0, detail: "1 MiB" })], true);
   file.text().then(importText, () => cfgSay([t("importFileError")], true));
+});
+
+// Teach Buuz how you type (issue #4): a second dialog on top of the settings.
+// The user types each sentence in Latin with conversion off (a plain input),
+// then sees the suggestions and chooses which to keep. What was typed lives
+// only in `flow` and in the input; closing the dialog in any way (Esc, Cancel,
+// Save, Use the default) drops both. Text is set with textContent only.
+const cal = document.getElementById("calibrate") as HTMLDialogElement;
+const calStep = document.getElementById("cal-step") as HTMLElement;
+const calResult = document.getElementById("cal-result") as HTMLElement;
+const calInput = document.getElementById("cal-input") as HTMLInputElement;
+const calProgress = document.getElementById("cal-progress") as HTMLElement;
+const calSentence = document.getElementById("cal-sentence") as HTMLElement;
+const calBack = document.getElementById("cal-back") as HTMLButtonElement;
+const calNext = document.getElementById("cal-next") as HTMLButtonElement;
+const calList = document.getElementById("cal-list") as HTMLUListElement;
+const calNotes = document.getElementById("cal-notes") as HTMLUListElement;
+const calLead = document.getElementById("cal-lead") as HTMLElement;
+const calRetry = document.getElementById("cal-retry") as HTMLButtonElement;
+const calSaveBtn = document.getElementById("cal-save") as HTMLButtonElement;
+const calErr = document.getElementById("cal-err") as HTMLElement; // role="alert"
+let flow: CalibrationFlow | null = null;
+let calIndex = 0;
+let outcome: Outcome | null = null;
+let calChecks: boolean[] = [];
+
+function calFail(message: string): void {
+  calErr.replaceChildren();
+  requestAnimationFrame(() => calErr.replaceChildren(document.createTextNode(message)));
+}
+
+function calShowStep(): void {
+  if (!flow) return;
+  calStep.hidden = false;
+  calResult.hidden = true;
+  const last = calIndex === flow.sentences.length - 1;
+  calProgress.textContent = fmt("calProgress", { n: calIndex + 1, total: flow.sentences.length });
+  calSentence.textContent = flow.sentences[calIndex];
+  calInput.value = flow.getAnswer(calIndex);
+  calBack.disabled = calIndex === 0;
+  calNext.textContent = t(last ? "calFinish" : "calNext");
+  calInput.focus();
+}
+
+function calLine(parent: HTMLElement, text: string, tag: "li" | "p" = "li", cls = ""): void {
+  const el = document.createElement(tag);
+  el.textContent = text;
+  if (cls) el.className = cls;
+  parent.append(el);
+}
+
+function calShowResult(): void {
+  if (!flow || !outcome) return;
+  calStep.hidden = true;
+  calResult.hidden = false;
+  calList.replaceChildren();
+  calNotes.replaceChildren();
+  const o = outcome;
+  const none = o.suggestions.length === 0;
+  const nothing = o.usable === 0; // nothing typed matched: "already fine" would be wrong
+  calLead.textContent = t(nothing ? "calNothing" : none ? "calNone" : "calSuggestLead");
+  calSaveBtn.hidden = none;
+  calRetry.hidden = !nothing;
+  o.suggestions.forEach((s, i) => {
+    const li = document.createElement("li");
+    const label = document.createElement("label");
+    label.className = "toggle";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = calChecks[i] ?? true;
+    box.addEventListener("change", () => (calChecks[i] = box.checked));
+    const text = document.createElement("span");
+    text.textContent = fmt("calSuggestion", { letter: s.target, chunk: s.chunk, count: s.count });
+    label.append(box, text);
+    li.append(label);
+    if (s.pair) calLine(li, fmt("calPair", { target: s.target }), "p", "hint");
+    if (s.displaces) calLine(li, fmt("calDisplaces", { chunk: s.chunk, other: s.displaces }), "p", "hint");
+    if (s.tie) calLine(li, t("calTie"), "p", "hint");
+    calList.append(li);
+  });
+  for (const c of o.conflicts) calLine(calNotes, fmt("calConflict", { ...c }));
+  for (const u of o.unsupported) calLine(calNotes, fmt("calUnsupported", { ...u }));
+  for (const n of o.unmatchedSentences) calLine(calNotes, fmt("calUnmatched", { n }));
+  for (const n of o.notTyped) calLine(calNotes, fmt("calNotTyped", { n }));
+  if (o.skippedLetters.length > 0) calLine(calNotes, fmt("calSkipped", { letters: o.skippedLetters.join(", ") }));
+  (nothing ? calRetry : none ? document.getElementById("cal-default") : calSaveBtn)?.focus();
+}
+
+function calGo(delta: number): void {
+  if (!flow) return;
+  flow.setAnswer(calIndex, calInput.value);
+  if (delta > 0 && calIndex === flow.sentences.length - 1) {
+    try {
+      outcome = flow.finish();
+    } catch {
+      return calFail(t("calError"));
+    }
+    calChecks = outcome.suggestions.map(() => true);
+    return calShowResult();
+  }
+  calIndex = Math.min(Math.max(calIndex + delta, 0), flow.sentences.length - 1);
+  calShowStep();
+}
+
+/** Forget what was typed and clear the screens. Safe to call twice. */
+function calDiscard(): void {
+  flow?.cancel();
+  flow = null;
+  outcome = null;
+  calChecks = [];
+  calInput.value = "";
+  calList.replaceChildren();
+  calNotes.replaceChildren();
+  calErr.replaceChildren();
+}
+
+/** Start from the first sentence with a fresh flow. */
+function calStart(): void {
+  calDiscard();
+  flow = new CalibrationFlow(calibrationSentences);
+  calIndex = 0;
+  calShowStep();
+}
+
+document.getElementById("cal-open")?.addEventListener("click", () => {
+  if (!ready) return cfgSay([t("calNotReady")], true);
+  // A "close" event from an earlier dialog can still be queued; calStart
+  // always builds new state, and the close handler below ignores an open dialog.
+  if (!cal.open) cal.showModal();
+  calStart();
+});
+calRetry.addEventListener("click", calStart);
+calNext.addEventListener("click", () => calGo(1));
+calBack.addEventListener("click", () => calGo(-1));
+calInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.isComposing) {
+    e.preventDefault();
+    calGo(1);
+  }
+});
+for (const id of ["cal-cancel", "cal-close", "cal-default"]) {
+  document.getElementById(id)?.addEventListener("click", () => {
+    cal.close();
+    calDiscard();
+  });
+}
+calSaveBtn.addEventListener("click", () => {
+  if (!flow || !outcome) return;
+  const accepted = calChecks.flatMap((on, i) => (on ? [i] : []));
+  if (accepted.length === 0) return cal.close();
+  let text: string;
+  try {
+    text = flow.save(config, accepted);
+  } catch (e) {
+    return calFail(saveError(e, (raw) => issueText(parseIssue(raw)), t("calError")));
+  }
+  setConfig(text);
+  cal.close();
+  calDiscard();
+  cfgSay([accepted.length === 1 ? t("calSavedOne") : fmt("calSaved", { n: accepted.length })]);
+});
+// Every way out lands here (Esc, buttons, close() from script): forget what
+// was typed. The event is queued after close(), so a dialog that was already
+// reopened is left alone; calStart and calDiscard cover that case.
+cal.addEventListener("close", () => {
+  if (!cal.open) calDiscard();
+});
+document.addEventListener("buuz:lang", () => {
+  if (!cal.open || !flow) return;
+  if (!outcome) flow.setAnswer(calIndex, calInput.value); // keep what was typed
+  if (outcome) calShowResult();
+  else calShowStep();
 });
 
 const toast = document.getElementById("toast") as HTMLElement;
