@@ -102,6 +102,7 @@ pub struct ConfigReport {
     classic: bool,
     smart_vowels: bool,
     abbreviations: bool,
+    completion: bool,
 }
 
 #[wasm_bindgen]
@@ -131,6 +132,12 @@ impl ConfigReport {
     pub fn abbreviations(&self) -> bool {
         self.abbreviations
     }
+    /// Completion is on after the preset and overrides. It needs the word
+    /// list (`load_word_list`) to show anything.
+    #[wasm_bindgen(getter)]
+    pub fn completion(&self) -> bool {
+        self.completion
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -151,6 +158,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         classic: parsed.config.preset() == buuz_core::Preset::Classic,
         smart_vowels: o.smart_vowels,
         abbreviations: o.abbreviations.is_some(),
+        completion: parsed.config.needs_word_list(),
     })
 }
 
@@ -167,7 +175,7 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels` or `abbreviations` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations` or `completion` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -183,6 +191,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         "abbreviations" => {
             config.set_abbreviations((value != base.abbreviations.is_some()).then_some(value))
         }
+        "completion" => config.set_completion((value != base.completion).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -195,10 +204,8 @@ thread_local! {
         const { std::cell::RefCell::new(Vec::new()) };
 }
 
-/// Transliterate with the options of a config text. The error is a tagged
-/// string (see above).
-#[wasm_bindgen]
-pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
+/// The options of a config text, from the two-entry cache.
+fn options_of(config_text: &str) -> Result<buuz_core::Options, String> {
     RECENT.with(|recent| {
         let mut recent = recent.borrow_mut();
         let at = match recent.iter().position(|(t, _)| t == config_text) {
@@ -212,7 +219,122 @@ pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, Str
                 recent.len() - 1
             }
         };
-        Ok(buuz_core::convert_with(input, &recent[at].1))
+        Ok(recent[at].1.clone())
+    })
+}
+
+/// Transliterate with the options of a config text. The error is a tagged
+/// string (see above).
+#[wasm_bindgen]
+pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
+    Ok(buuz_core::convert_with(input, &options_of(config_text)?))
+}
+
+// --- Completion (issue #2) ---------------------------------------------------
+//
+// The page converts the whole Latin box at once, so it has no composer of its
+// own. For the word at the caret it asks here: the core composer runs the
+// word with the word list and gives the ghost text, so the core stays the one
+// source of the rules. An accepted word goes into the Latin box as Cyrillic:
+// the converter copies Cyrillic through unchanged (a test holds this).
+
+thread_local! {
+    // The word list, parsed once by `load_word_list`.
+    static WORDS: std::cell::RefCell<Option<std::sync::Arc<buuz_core::WordList>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Parse the word list text (`data/wordlist/mn.txt`) once and keep it. Gives
+/// the number of words. The error is a tagged string `bad_word_list`, with
+/// the line number.
+#[wasm_bindgen]
+pub fn load_word_list(text: &str) -> Result<usize, String> {
+    let list = buuz_core::WordList::parse(text).map_err(|e| tag("bad_word_list", e.line(), ""))?;
+    let n = list.len();
+    WORDS.with(|w| *w.borrow_mut() = Some(std::sync::Arc::new(list)));
+    Ok(n)
+}
+
+/// Whether `load_word_list` has kept a list.
+#[wasm_bindgen]
+pub fn word_list_loaded() -> bool {
+    WORDS.with(|w| w.borrow().is_some())
+}
+
+/// The word at the end of `before_caret`: its trailing run of input
+/// characters (Latin letters, `'`, `"`, `ö`, `ü`).
+fn trailing_word(before_caret: &str) -> &str {
+    let start = before_caret
+        .char_indices()
+        .rev()
+        .take_while(|&(_, c)| buuz_core::is_input_char(c))
+        .last()
+        .map_or(before_caret.len(), |(i, _)| i);
+    &before_caret[start..]
+}
+
+/// A completion for the word at the caret.
+#[wasm_bindgen]
+pub struct Completion {
+    rest: String,
+    word: String,
+    replaces: usize,
+}
+
+#[wasm_bindgen]
+impl Completion {
+    /// The ghost text: the Cyrillic rest of the word.
+    #[wasm_bindgen(getter)]
+    pub fn rest(&self) -> String {
+        self.rest.clone()
+    }
+    /// The whole completed word in Cyrillic (what Tab puts in the box).
+    #[wasm_bindgen(getter)]
+    pub fn word(&self) -> String {
+        self.word.clone()
+    }
+    /// How many UTF-16 units of Latin before the caret the word replaces.
+    #[wasm_bindgen(getter)]
+    pub fn replaces(&self) -> usize {
+        self.replaces
+    }
+}
+
+/// Complete the word at the caret. `before_caret` and `after_caret` are the
+/// text on each side. The word is the run of input characters that ends at
+/// the caret; a run after Cyrillic, a digit or any other character starts a
+/// new word. Gives nothing when the caret is inside a word (an input
+/// character follows it), completion is off, no list is loaded, or no word is
+/// a clear winner. One `Composer` runs the word, so the rest and the whole
+/// word always agree.
+#[wasm_bindgen]
+pub fn complete_at(before_caret: &str, after_caret: &str, config_text: &str) -> Option<Completion> {
+    if after_caret
+        .chars()
+        .next()
+        .is_some_and(buuz_core::is_input_char)
+    {
+        return None;
+    }
+    let word = trailing_word(before_caret);
+    if word.is_empty() {
+        return None;
+    }
+    let mut opts = options_of(config_text).ok()?;
+    if !opts.completion {
+        return None;
+    }
+    opts.words = WORDS.with(|w| w.borrow().clone());
+    opts.words.as_ref()?;
+    let mut c = buuz_core::Composer::with_options(opts);
+    for ch in word.chars() {
+        c.process_key(buuz_core::Key::Char(ch));
+    }
+    let rest = c.completion()?.to_string();
+    Some(Completion {
+        word: c.preedit() + &rest,
+        rest,
+        replaces: word.encode_utf16().count(),
     })
 }
 
@@ -521,6 +643,107 @@ pub fn calibrate_apply(
 
 #[cfg(test)]
 mod tests {
+    const LIST: &str = "# test\nгэрлэх\t100\nгэрлэлт\t10\nбайна\t500\n";
+
+    #[test]
+    fn completion_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().completion());
+        let off = super::config_set_option(&cfg, "completion", false).unwrap();
+        assert!(off.contains("completion"));
+        assert!(!super::config_normalize(&off).unwrap().completion());
+        let on = super::config_set_option(&off, "completion", true).unwrap();
+        assert_eq!(on, cfg);
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic).unwrap().completion());
+    }
+
+    /// (rest, word, replaces) of a completion.
+    fn at(before: &str, after: &str, cfg: &str) -> Option<(String, String, usize)> {
+        super::complete_at(before, after, cfg).map(|c| (c.rest(), c.word(), c.replaces()))
+    }
+
+    fn got(rest: &str, word: &str, n: usize) -> Option<(String, String, usize)> {
+        Some((rest.to_string(), word.to_string(), n))
+    }
+
+    #[test]
+    fn complete_needs_a_list_and_the_switch() {
+        let cfg = super::default_config_text();
+        assert_eq!(at("gerl", "", &cfg), None);
+        assert!(!super::word_list_loaded());
+        assert_eq!(super::load_word_list(LIST), Ok(3));
+        assert!(super::word_list_loaded());
+        assert_eq!(at("gerl", "", &cfg), got("эх", "гэрлэх", 4));
+        let off = super::config_set_option(&cfg, "completion", false).unwrap();
+        assert_eq!(at("gerl", "", &off), None);
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert_eq!(at("gerl", "", &classic), None);
+    }
+
+    #[test]
+    fn complete_uses_only_the_word_at_the_caret() {
+        let cfg = super::default_config_text();
+        super::load_word_list(LIST).unwrap();
+        assert_eq!(at("sain gerl", "", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("gerl ", "", &cfg), None);
+        assert_eq!(at("", "", &cfg), None);
+        assert_eq!(at("ge", "", &cfg), None); // under 3 letters
+        assert_eq!(at("zzzz", "", &cfg), None);
+        // Text after a non-letter is fine.
+        assert_eq!(at("gerl", " baina", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("gerl", "\n", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("gerl", "123", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("gerl", "эх", &cfg), got("эх", "гэрлэх", 4));
+    }
+
+    #[test]
+    fn no_completion_when_the_caret_is_inside_a_word() {
+        let cfg = super::default_config_text();
+        super::load_word_list(LIST).unwrap();
+        for after in ["x", "xyz", "ö", "'", "\"", "Ü"] {
+            assert_eq!(at("gerl", after, &cfg), None, "{after}");
+        }
+    }
+
+    #[test]
+    fn a_latin_run_after_cyrillic_or_a_digit_is_a_new_word() {
+        let cfg = super::default_config_text();
+        super::load_word_list(LIST).unwrap();
+        assert_eq!(at("гэр gerl", "", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("1gerl", "", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("монголgerl", "", &cfg), got("эх", "гэрлэх", 4));
+        assert_eq!(at("12", "", &cfg), None);
+    }
+
+    #[test]
+    fn complete_gives_the_whole_cyrillic_word() {
+        let cfg = super::default_config_text();
+        super::load_word_list("# t\nулаанбаатар\t50\nулаан\t5\n").unwrap();
+        assert_eq!(at("Ulaanb", "", &cfg), got("аатар", "Улаанбаатар", 6));
+        // A tie of two close candidates gives no ghost.
+        super::load_word_list("гэрлэх\t10\nгэрлэлт\t9\n").unwrap();
+        assert_eq!(at("gerl", "", &cfg), None);
+    }
+
+    #[test]
+    fn accepted_cyrillic_passes_through_the_converter() {
+        let cfg = super::default_config_text();
+        for (input, expected) in [
+            ("гэрлэх baina", "гэрлэх байна"),
+            ("sain гэрлэх, Монгол uu", "сайн гэрлэх, Монгол уу"),
+            ("гэрлэх", "гэрлэх"),
+        ] {
+            assert_eq!(super::convert_with_config(input, &cfg).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn bad_word_list_gives_a_tagged_error() {
+        let e = super::load_word_list("# c\nbad line without tab\n").unwrap_err();
+        assert!(e.starts_with("bad_word_list\t2\t"), "{e}");
+    }
+
     #[test]
     fn default_config_is_smart_with_abbreviations() {
         let cfg = super::default_config_text();

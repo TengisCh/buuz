@@ -124,6 +124,7 @@ export function switchesOf(text: string): {
   classic: boolean;
   smartVowels: boolean;
   abbreviations: boolean;
+  completion: boolean;
   /** Classic preset, but overrides turn a smart feature on. */
   classicWithFeatures: boolean;
 } {
@@ -132,7 +133,8 @@ export function switchesOf(text: string): {
     classic: r.classic,
     smartVowels: r.smart_vowels,
     abbreviations: r.abbreviations,
-    classicWithFeatures: r.classic && (r.smart_vowels || r.abbreviations),
+    completion: r.completion,
+    classicWithFeatures: r.classic && (r.smart_vowels || r.abbreviations || r.completion),
   };
   r.free();
   return out;

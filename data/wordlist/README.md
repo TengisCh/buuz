@@ -3,7 +3,10 @@
 `mn.txt` holds the most frequent words of Mongolian Wikipedia (about 48,000), one
 `word<TAB>count` line per word, best rank first. The first two lines are `#`
 comments: the SPDX licence line and the attribution. Buuz uses it for suggestions and autocorrect (issues #1 and #2). The
-core parses it with `WordList` and loads it on demand.
+core parses it with `WordList` and loads it on demand. The website
+serves it as a separate static asset and loads it once, from its own origin,
+when Tab completion is on (see `docs/typing-rules.md` section 12). The
+settings dialog shows the attribution below.
 
 - **Source:** Mongolian Wikipedia, dump `mnwiki-20261101`
   (`mnwiki-20261101-pages-articles.xml.bz2`, sha1

@@ -360,3 +360,9 @@ a.button.mail { width: 100%; justify-content: center; }
 
 /* Belt and braces: never show placeholder text behind the caret. */
 #latin:focus::placeholder, #latin:focus::-webkit-input-placeholder { color: transparent; opacity: 0; }
+
+/* Tab completion hint under the Latin box */
+.completion-hint { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.95rem; }
+.completion-hint[hidden] { display: none; }
+.completion-hint .ghost-rest { opacity: 0.55; }
+@media (pointer: coarse) { .completion-hint { display: none; } } /* no Tab key on touch screens */
