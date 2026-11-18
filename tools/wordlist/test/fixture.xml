@@ -1,0 +1,46 @@
+<mediawiki>
+  <siteinfo><sitename>Fixture</sitename></siteinfo>
+  <page>
+    <title>Нэг</title>
+    <ns>0</ns>
+    <revision>
+      <text bytes="1" xml:space="preserve">Монгол улс '''болон''' [[Хот|хотууд]] [[Азия]] байна.
+{{Infobox
+| name = {{nested|аа}} зохиомол
+}}
+== Гарчигхэсэг ==
+Хоёр-гурван өгүүлбэр.&lt;ref name="a"&gt;Эшлэлтэнэмэгдэл https://example.com/абв&lt;/ref&gt;
+&lt;!-- коммент ноорог --&gt;
+[[Файл:Зураг.jpg|thumb|Тайлбар [[холбоос]] зургийн]]
+[[Ангилал:Ангиллын нэр]]
+{| class="wikitable"
+| хүснэгтэнтэг
+|}
+Latin abc ба mixedлатин &amp;nbsp; 123 өө ү а.
+Монгол Монгол байна байна байна болон болон ӨӨ ЁЖ.</text>
+    </revision>
+  </page>
+  <page>
+    <title>Хоёр</title>
+    <ns>0</ns>
+    <redirect title="Нэг" />
+    <revision>
+      <text xml:space="preserve">#REDIRECT [[Нэг]] редирект редирект редирект</text>
+    </revision>
+  </page>
+  <page>
+    <title>Хэрэглэгч:Тест</title>
+    <ns>2</ns>
+    <revision>
+      <text xml:space="preserve">хэрэглэгчийнтуршилт хэрэглэгчийнтуршилт хэрэглэгчийнтуршилт</text>
+    </revision>
+  </page>
+  <page>
+    <title>Гурав</title>
+    <ns>0</ns>
+    <revision>
+      <text xml:space="preserve">байна. Нэмэлт ётой ётой ётой. Дэндүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүүү.
+сүүлийн</text>
+    </revision>
+  </page>
+</mediawiki>

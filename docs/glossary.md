@@ -27,6 +27,7 @@ when a new concept appears; rename here first when a name changes.
 | Deciding vowel | The first vowel in a word that fixes its gender |
 | Particle | The question word уу/үү, which takes the gender of the previous word |
 | Long vowel | A doubled vowel (оо, уу, ээ, өө, үү) |
+| Word list | The most frequent Mongolian words (up to 50,000) with their counts, by rank, built from Mongolian Wikipedia (CC BY-SA 4.0). Loaded on demand, never on the per-key path. In code: `WordList`, `data/wordlist/mn.txt` |
 
 ## Modes and features
 

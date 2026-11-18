@@ -28,6 +28,7 @@ mod composer;
 mod config;
 mod keys;
 mod rules;
+mod wordlist;
 
 pub use abbrev::{AbbrevError, Abbreviations};
 pub use calibrate::{calibrate, Calibration, Conflict, Suggestion, Unsupported};
@@ -40,3 +41,4 @@ pub use config::{
 };
 pub use keys::{KeyError, KeyMap};
 pub use rules::export_rules;
+pub use wordlist::{WordList, WordListError};

@@ -11,7 +11,7 @@
   <a href="https://buuz.thetengis.com"><img src="https://img.shields.io/badge/try_it-buuz.thetengis.com-FFB648?style=flat&logo=googlechrome&logoColor=white" alt="Try it live"></a>
   <a href="https://github.com/TengisCh/buuz/stargazers"><img src="https://img.shields.io/github/stars/TengisCh/buuz?style=flat&logo=github&color=FF6A3D" alt="GitHub stars"></a>
   <a href="https://github.com/TengisCh/buuz/actions/workflows/core.yml"><img src="https://img.shields.io/github/actions/workflow/status/TengisCh/buuz/core.yml?branch=main&label=core%20tests" alt="Core tests"></a>
-  <a href="#-license"><img src="https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-2E6BFF" alt="License: MIT or Apache-2.0"></a>
+  <a href="#-license"><img src="https://img.shields.io/badge/license-MIT%20%7C%20Apache--2.0-2E6BFF" alt="License: MIT or Apache-2.0; word list data CC BY-SA 4.0"></a>
   <a href="https://github.com/sponsors/TengisCh"><img src="https://img.shields.io/badge/sponsor-%E2%99%A5-FF8E8E?style=flat&logo=githubsponsors&logoColor=white" alt="Sponsor"></a>
 </p>
 
@@ -87,6 +87,6 @@ Buuz is free. Donations pay for things like the Apple developer account that let
 
 ## 📜 License
 
-New code is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. The transliteration core in [`core/`](core/) is ported from the original Buuz (Copyright 2009 Odbayar Nyamtseren) and is Apache-2.0 only. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [decision 0004](docs/decisions/0004-license-mit-or-apache-for-new-code.md).
+New code is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. The transliteration core in [`core/`](core/) is ported from the original Buuz (Copyright 2009 Odbayar Nyamtseren) and is Apache-2.0 only. The Mongolian word list in [`data/wordlist/`](data/wordlist/) is derived from Mongolian Wikipedia and is CC BY-SA 4.0 (see [decision 0006](docs/decisions/0006-word-list-data-licence.md)). See [LICENSE](LICENSE), [NOTICE](NOTICE) and [decision 0004](docs/decisions/0004-license-mit-or-apache-for-new-code.md).
 
 "Buuz 2.0" is an independent continuation and is not affiliated with or endorsed by the original author unless stated otherwise.

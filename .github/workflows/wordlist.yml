@@ -1,0 +1,31 @@
+name: wordlist
+
+on:
+  push:
+    branches: [main]
+    paths: ["tools/wordlist/**", ".github/workflows/wordlist.yml"]
+  pull_request:
+    paths: ["tools/wordlist/**", ".github/workflows/wordlist.yml"]
+  workflow_dispatch:
+
+# Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).
+permissions:
+  contents: read
+
+concurrency:
+  group: wordlist-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Word list builder tests
+        run: node --test tools/wordlist/test

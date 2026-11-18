@@ -1,0 +1,11 @@
+Mongolian word list (data/wordlist/mn.txt)
+
+Derived from Mongolian Wikipedia (dump mnwiki-20261101). Attribution:
+Mongolian Wikipedia contributors. Changes: word counts derived; no text kept.
+
+This data is licensed under the Creative Commons Attribution-ShareAlike 4.0
+International License (CC BY-SA 4.0). To view a copy of the licence, visit
+https://creativecommons.org/licenses/by-sa/4.0/
+
+This licence covers the files in this folder only. The Buuz code is under its
+own licences, see the LICENSE file in the repository root.
