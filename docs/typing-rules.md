@@ -483,6 +483,30 @@ and Tab accepts it (issue #2). It reads the word list
   test holds the worst key plus query under 10 microseconds (the budget of
   `docs/architecture.md` section 4); CI runs debug.
 
+- **Web converter.** The page converts the whole Latin box at once and has no
+  key-by-key composer. For the word at the caret it asks the wasm wrapper.
+  `complete_at(before_caret, after_caret, config)` runs the word through one
+  core `Composer` with the loaded list. It gives the ghost text, the whole
+  Cyrillic word and how many Latin units the word replaces, or nothing. The
+  rules stay in the core.
+- **Word at the caret.** The word is the run of input characters that ends at
+  the caret. A Latin run right after Cyrillic, a digit or any other character
+  starts a new word. With an input character right after the caret (the caret
+  is inside a word) there is no completion.
+- **List loading.** The page loads `mn.txt` once with `load_word_list`, from
+  its own origin, as a separate asset (not in the JavaScript). It loads on the
+  first focus or input in the Latin box while completion is on, and when the
+  switch is turned on while the box has focus. It does not load on page
+  load. If the load fails, completion stays off with no message and the page
+  does not try again in that visit.
+- **Hint and Tab.** The hint under the Latin box shows the word. It shows only
+  while the box has focus, nothing is selected and the caret is at the end of
+  a word. Tab accepts the word only while the hint shows. It puts the Cyrillic
+  word into the Latin box: the converter copies Cyrillic through unchanged, so
+  the output is the same. Esc hides the hint for the current word, so the next
+  Tab moves focus; the hint comes back when the word changes. With no hint,
+  Tab keeps its normal focus behaviour. Touch screens do not show the hint.
+
 ## 13. Autocorrect
 
 Autocorrect fixes a misspelled word when Space or punctuation ends it

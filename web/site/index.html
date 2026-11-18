@@ -181,6 +181,12 @@
             <span data-i18n="abbreviations">Товчлол (bn → байна)</span>
           </label>
           <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
+          <label class="toggle">
+            <input id="completion" type="checkbox" checked />
+            <span data-i18n="completion">Tab-аар үг гүйцээх</span>
+          </label>
+          <p class="hint" data-i18n="completionHint">Үгийн эхийг бичихэд (3-аас дээш үсэг) Buuz хамгийн магадлалтай үгийг ард нь сааралаар харуулна. Санал харагдаж байхад Tab дарвал үг бүтнээрээ орно. Esc дарвал тухайн үгийн санал арилж, дараагийн Tab ердийнхөөрөө (дараагийн талбар руу) шилжинэ. Санал байхгүй үед Tab ердийнхөөрөө ажиллана. Үгийн жагсаалт энэ сайтаас нэг удаа татагдаж, таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
+          <p class="hint" data-i18n-html="completionCredit">Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.</p>
         </fieldset>
         <section class="cfg" aria-labelledby="cal-open-title">
           <h3 id="cal-open-title" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</h3>
@@ -251,8 +257,10 @@
             autocapitalize="off"
             autocorrect="off"
             spellcheck="false"
+            aria-describedby="completion-hint"
             autofocus
           ></textarea>
+          <p id="completion-hint" class="completion-hint" hidden></p>
           <button id="clear-x" type="button" class="in-btn clear-x" data-i18n-aria="clear" aria-label="Цэвэрлэх" title="Цэвэрлэх" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
           <div class="actions">
             <button id="clear" type="button" class="ghost" data-i18n="clear">Цэвэрлэх</button>
