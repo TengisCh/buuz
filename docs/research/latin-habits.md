@@ -278,7 +278,7 @@ Group (c): reject.
 | 2 | `zh` gives ж | (a) same switch as 1, low priority | None found | 281 / 0 | `gezh` → гэж, `baizhee` → байжээ |
 | 3 | `o` may be ө, chosen with the word list | (b) | Strong | 220 / 0 | `tov` → төв, `mon` → мөн, `torii'n` → төрийн |
 | 4 | `u` may be ө or ү, chosen with the word list | (b) | Strong for `u` as ү, some as ө | 324 / 1 | `uvul` → өвөл, `udur` → өдөр, `tuv` → төв, `uruu` → өрөө. Guard: `uuriin` → уурын |
-| 5 | ий or ы after л chosen with the word list | (b), also a bug | Some | see the bug below | `surguuliin` → сургуулийн |
+| 5 | ий or ы after л chosen with the word list | (b), also a bug | Some | see the bug below | `surguuliin` → сургуулийн. Done in #62: `ii_for_ий` smart mode with a list goes from 89.0% to 97.4% |
 | 6 | `e` may be ye | (b) | Some | 94 / 0 | `wed` → үед, `erqnhii'` → ерөнхий |
 | 7 | A single vowel may be a long vowel | (b) | Anecdotal | 249 / 0 | `terer` → тэрээр, `zwn` → зүүн |
 | 8 | `i` or a missing letter may be ь | (b) | Some for `i`. None found for dropped | 72 / 0 (`i`), 59 / 0 (add) | `huuli` → хууль, `surguul` → сургууль |
