@@ -104,6 +104,7 @@ pub struct ConfigReport {
     abbreviations: bool,
     completion: bool,
     autocorrect: bool,
+    double_v: bool,
 }
 
 #[wasm_bindgen]
@@ -145,6 +146,11 @@ impl ConfigReport {
     pub fn autocorrect(&self) -> bool {
         self.autocorrect
     }
+    /// Double V (`vv` is үү) is on after the preset and overrides.
+    #[wasm_bindgen(getter)]
+    pub fn double_v(&self) -> bool {
+        self.double_v
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -167,6 +173,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         abbreviations: o.abbreviations.is_some(),
         completion: o.completion,
         autocorrect: o.autocorrect,
+        double_v: o.double_v,
     })
 }
 
@@ -183,7 +190,7 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations`, `completion` or `autocorrect` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect` or `double_v` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -201,6 +208,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         }
         "completion" => config.set_completion((value != base.completion).then_some(value)),
         "autocorrect" => config.set_autocorrect((value != base.autocorrect).then_some(value)),
+        "double_v" => config.set_double_v((value != base.double_v).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -881,6 +889,21 @@ mod tests {
         assert_eq!(on, cfg);
         let classic = super::config_set_classic(&cfg, true).unwrap();
         assert!(!super::config_normalize(&classic).unwrap().completion());
+    }
+
+    #[test]
+    fn double_v_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().double_v());
+        let off = super::config_set_option(&cfg, "double_v", false).unwrap();
+        assert!(off.contains("double_v = false"));
+        assert!(!super::config_normalize(&off).unwrap().double_v());
+        let on = super::config_set_option(&off, "double_v", true).unwrap();
+        assert_eq!(on, cfg);
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic).unwrap().double_v());
+        let classic_on = super::config_set_option(&classic, "double_v", true).unwrap();
+        assert!(super::config_normalize(&classic_on).unwrap().double_v());
     }
 
     #[test]
