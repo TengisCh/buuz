@@ -20,7 +20,7 @@ mgl = "Монгол"          # new entry
 bn = "байна аа"         # replaces the built-in entry
 tgd = ""                # empty value removes the built-in entry
 
-# Custom key mappings. Checked and stored, not applied yet (issue #3).
+# Custom key mappings. The value is a Cyrillic letter that a built-in key gives.
 [keys]
-"o'" = "ө"
-"u'" = "ү"
+x = "ш"
+kh = "ү"

@@ -23,7 +23,10 @@
 use std::sync::Arc;
 
 use crate::abbrev::Abbreviations;
-use crate::rules::{rules, to_lower, Rule, II_FINAL_STEMS, KEEP_II, X_F, X_M, X_MF, X_MM};
+use crate::keys::KeyMap;
+use crate::rules::{
+    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_F, X_II, X_M, X_MF, X_MM,
+};
 
 /// Maximum number of raw input characters in one composition (as original).
 pub const MAX_COMP_LEN: usize = 50;
@@ -113,6 +116,10 @@ pub struct Options {
     /// ends as a domain (`github.com`), turns Latin by itself. Separate from
     /// `keep_latin`. `false` is the original Buuz behaviour.
     pub auto_latin: bool,
+    /// Custom key mappings. `None` (the default, also for [`Options::smart`]
+    /// and [`Options::classic`]) uses the shared built-in table. Build a
+    /// [`KeyMap`] once and share it; keys cost nothing extra per keystroke.
+    pub keys: Option<Arc<KeyMap>>,
 }
 
 impl Default for Options {
@@ -122,6 +129,7 @@ impl Default for Options {
             abbreviations: None,
             keep_latin: true,
             auto_latin: true,
+            keys: None,
         }
     }
 }
@@ -136,6 +144,7 @@ impl Options {
             abbreviations: Some(Abbreviations::builtin()),
             keep_latin: true,
             auto_latin: true,
+            keys: None,
         }
     }
 
@@ -147,6 +156,7 @@ impl Options {
             abbreviations: None,
             keep_latin: false,
             auto_latin: false,
+            keys: None,
         }
     }
 }
@@ -249,7 +259,8 @@ fn text_gender(text: &str) -> Option<u8> {
 pub(crate) struct Token {
     start: usize,
     len: usize,
-    cands: &'static [Rule],
+    /// Index of the rule group in the table, if the keys matched.
+    group: Option<usize>,
 }
 
 /// What `read_to_comp` needs to know besides the raw keys.
@@ -260,24 +271,33 @@ struct Context {
     prev_gender: Option<u8>,
 }
 
-/// True if the lowercased keys of `tok` are exactly `pat` (lower case ASCII).
-fn token_is(read: &[char], tok: &Token, pat: &str) -> bool {
-    let keys = &read[tok.start..tok.start + tok.len];
-    keys.len() == pat.len() && keys.iter().zip(pat.chars()).all(|(&k, p)| to_lower(k) == p)
+/// True if the first rule of `tok` gives exactly the lower case letter `ch`.
+/// The smart rules look at what a key gives, so a custom key that gives the
+/// same letter acts the same.
+fn gives(rs: &RuleSet, tok: &Token, ch: char) -> bool {
+    matches!(tok_rules(rs, tok).first(), Some(r) if r.to.len() == 1 && to_lower(r.to[0]) == ch)
+}
+
+/// The rules of a token: none when the keys matched nothing.
+fn tok_rules<'a>(rs: &'a RuleSet, tok: &Token) -> &'a [Rule] {
+    match tok.group {
+        Some(g) => rs.group(g),
+        None => &[],
+    }
 }
 
 /// The gender this token proves for the word, if any.
-fn evidence(read: &[char], tokens: &[Token], idx: usize) -> Option<u8> {
+fn evidence(rs: &RuleSet, tokens: &[Token], idx: usize) -> Option<u8> {
     let tok = &tokens[idx];
     // `ye` (е) is mostly a loanword vowel and says nothing about the word.
-    if token_is(read, tok, "ye") {
+    if gives(rs, tok, 'е') {
         return None;
     }
-    for rule in tok.cands {
+    for rule in tok_rules(rs, tok) {
         if rule.flags & X_MF != 0 {
             // An explicit ү right after г is the suffix -гүй (болохгүй).
             let explicit_u = rule.to.first().map(|&c| to_lower(c)) == Some('ү');
-            if explicit_u && idx > 0 && token_is(read, &tokens[idx - 1], "g") {
+            if explicit_u && idx > 0 && gives(rs, &tokens[idx - 1], 'г') {
                 return None;
             }
             return Some(X_F);
@@ -320,19 +340,23 @@ fn ii_is_y(out: &[char], word: u8) -> bool {
 
 /// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.
 /// Returns the text and the gender the word leaves for a following particle.
-fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<char>, u8) {
-    let rs = rules();
+fn read_to_comp(
+    rs: &RuleSet,
+    read: &[char],
+    ctx: Context,
+    tokens: &mut Vec<Token>,
+) -> (Vec<char>, u8) {
     // Pass 0: split the keys into longest-match tokens.
     tokens.clear();
     let mut i = 0;
     while i < read.len() {
         let mut len = 1;
-        let mut cands: &'static [Rule] = &[];
+        let mut group = None;
         for &l in &rs.lengths {
             if l <= read.len() - i {
-                if let Some(c) = rs.get(&read[i..i + l]) {
+                if let Some((g, _)) = rs.get(&read[i..i + l]) {
                     len = l;
-                    cands = c;
+                    group = Some(g);
                     break;
                 }
             }
@@ -340,7 +364,7 @@ fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<ch
         tokens.push(Token {
             start: i,
             len,
-            cands,
+            group,
         });
         i += len;
     }
@@ -350,7 +374,7 @@ fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<ch
     if ctx.smart {
         let mut first_ev = None;
         for idx in 0..tokens.len() {
-            if let Some(g) = evidence(read, tokens, idx) {
+            if let Some(g) = evidence(rs, tokens, idx) {
                 first_ev.get_or_insert(g);
                 last_ev = Some(g);
             }
@@ -365,7 +389,7 @@ fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<ch
     let mut word = initial;
     let mut out = Vec::with_capacity(read.len());
     for tok in tokens.iter() {
-        let chosen = tok.cands.iter().find(|r| word & r.flags == word);
+        let chosen = tok_rules(rs, tok).iter().find(|r| word & r.flags == word);
         match chosen {
             Some(rule) => {
                 if rule.flags & X_MF != 0 {
@@ -373,7 +397,7 @@ fn read_to_comp(read: &[char], ctx: Context, tokens: &mut Vec<Token>) -> (Vec<ch
                 } else if rule.flags & X_MM != 0 {
                     word = X_M;
                 }
-                if ctx.smart && token_is(read, tok, "ii") && ii_is_y(&out, word) {
+                if ctx.smart && rule.flags & X_II != 0 && ii_is_y(&out, word) {
                     let upper = rule.to[0] != to_lower(rule.to[0]);
                     out.push(if upper { 'Ы' } else { 'ы' });
                 } else {
@@ -604,7 +628,11 @@ impl Composer {
             smart: self.opts.smart_vowels,
             prev_gender: self.prev_gender,
         };
-        let (comp, gender) = read_to_comp(&self.read, ctx, &mut self.tokens);
+        let rs = match &self.opts.keys {
+            Some(k) => k.rules(),
+            None => rules(),
+        };
+        let (comp, gender) = read_to_comp(rs, &self.read, ctx, &mut self.tokens);
         self.comp = comp;
         self.word_gender = gender;
     }

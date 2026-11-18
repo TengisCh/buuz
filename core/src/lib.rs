@@ -25,6 +25,7 @@
 mod abbrev;
 mod composer;
 mod config;
+mod keys;
 mod rules;
 
 pub use abbrev::{AbbrevError, Abbreviations};
@@ -35,4 +36,5 @@ pub use config::{
     Config, ConfigError, ConfigWarning, Parsed, Preset, CONFIG_VERSION, MAX_CONFIG_BYTES,
     MAX_SECTION_ENTRIES, MAX_VALUE_CHARS,
 };
+pub use keys::{KeyError, KeyMap};
 pub use rules::export_rules;

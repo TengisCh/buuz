@@ -27,6 +27,7 @@ pub(crate) const X_M: u8 = 0x02; // usable in male words
 pub(crate) const X_F: u8 = 0x04; // usable in female words
 pub(crate) const X_MM: u8 = 0x08; // makes the word male
 pub(crate) const X_MF: u8 = 0x10; // makes the word female
+pub(crate) const X_II: u8 = 0x20; // smart mode may turn this ий into ы
 
 const ALL: u8 = X_M | X_F | X_AC;
 
@@ -63,7 +64,7 @@ const SOURCE_RULES: &[(&str, &str, u8)] = &[
     ("G",   "Г",  ALL),
     ("H",   "Х",  ALL),
     ("I",   "И",  ALL),
-    ("II",  "ИЙ", ALL),
+    ("II",  "ИЙ", ALL | X_II),
     ("III", "Ы",  ALL),
     ("II'", "ИЙ", ALL),
     ("J",   "Ж",  ALL),
@@ -148,16 +149,140 @@ pub(crate) struct Rule {
     pub flags: u8,
 }
 
+/// A conversion table: pattern to a group of rules, plus the distinct pattern
+/// lengths. Lookups stay one hash lookup; a group is found by its index, so a
+/// scratch token can hold the index without borrowing the table.
 pub(crate) struct RuleSet {
-    map: HashMap<Vec<char>, Vec<Rule>>,
+    map: HashMap<Vec<char>, usize>,
+    groups: Vec<Vec<Rule>>,
     /// Distinct pattern lengths, longest first.
     pub lengths: Vec<usize>,
 }
 
 impl RuleSet {
-    pub fn get(&self, from: &[char]) -> Option<&[Rule]> {
-        self.map.get(from).map(|v| v.as_slice())
+    /// The group index and rules of an exact pattern.
+    pub fn get(&self, from: &[char]) -> Option<(usize, &[Rule])> {
+        let &i = self.map.get(from)?;
+        Some((i, self.groups[i].as_slice()))
     }
+
+    /// The rules of a group found by `get`.
+    pub fn group(&self, index: usize) -> &[Rule] {
+        &self.groups[index]
+    }
+
+    fn from_map(table: HashMap<Vec<char>, Vec<Rule>>) -> RuleSet {
+        let mut map = HashMap::with_capacity(table.len());
+        let mut groups = Vec::with_capacity(table.len());
+        for (from, rules) in table {
+            map.insert(from, groups.len());
+            groups.push(rules);
+        }
+        let mut lengths: Vec<usize> = map.keys().map(|k| k.len()).collect();
+        lengths.sort_unstable_by(|a, b| b.cmp(a));
+        lengths.dedup();
+        RuleSet {
+            map,
+            groups,
+            lengths,
+        }
+    }
+}
+
+type SourceRule = (&'static str, &'static str, u8);
+
+/// The source rules of the built-in key that a target names, and those of its
+/// `i` companion (`w` and `wi`: ү and үй).
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Donor {
+    rules: Vec<SourceRule>,
+    companion: Vec<SourceRule>,
+}
+
+/// A pattern of the built-in table that a user may type: no Cyrillic input
+/// (those rules only re-seed the buffer after the caret moves).
+fn is_latin_pattern(from: &str) -> bool {
+    from.chars().all(|c| (c as u32) >> 8 != 4)
+}
+
+/// Lowercase the output text of a source rule or a target.
+fn lower_text(s: &str) -> String {
+    s.chars().map(to_lower).collect()
+}
+
+fn source_group(from: &str) -> Vec<SourceRule> {
+    SOURCE_RULES
+        .iter()
+        .filter(|r| r.0 == from)
+        .copied()
+        .collect()
+}
+
+/// Find the built-in key that a `[keys]` target names, and give its source
+/// rules. A target is a lower case Cyrillic output (`ү`) or outputs joined
+/// with `/` (`у/ү`). The key is the first one in table order whose rules give
+/// exactly those outputs. `None` when no key does.
+pub(crate) fn find_target(target: &str) -> Option<Donor> {
+    let mut want: Vec<String> = target.split('/').map(lower_text).collect();
+    if want.iter().any(|w| w.is_empty()) {
+        return None;
+    }
+    want.sort();
+    want.dedup();
+    let mut seen: Vec<&'static str> = Vec::new();
+    for &(from, _, _) in SOURCE_RULES {
+        if !is_latin_pattern(from) || seen.contains(&from) {
+            continue;
+        }
+        seen.push(from);
+        let rules = source_group(from);
+        let mut have: Vec<String> = rules.iter().map(|r| lower_text(r.1)).collect();
+        have.sort();
+        have.dedup();
+        if have == want {
+            let companion = source_group(&format!("{from}I"));
+            return Some(Donor { rules, companion });
+        }
+    }
+    None
+}
+
+fn same_key(from: &[char], key: &[char]) -> bool {
+    from.len() == key.len() && from.iter().zip(key).all(|(&a, &b)| to_lower(a) == b)
+}
+
+/// The built-in table, plus the changes of a key map. Each change is a key
+/// (lowercase) and the donor to copy for it (no rules: remove the key). A
+/// change also governs the key plus `i` (`wi` for `w`) when the donor or the
+/// built-in key has such a companion, unless another entry names that key.
+pub(crate) fn build_rules(changes: &[(Vec<char>, Donor)]) -> RuleSet {
+    let mut table = HashMap::new();
+    for &(from, to, flags) in SOURCE_RULES {
+        add_rule(&mut table, from, to, flags);
+    }
+    for (key, donor) in changes {
+        let mut comp_key = key.clone();
+        comp_key.push('i');
+        let builtin_companion = SOURCE_RULES
+            .iter()
+            .any(|r| same_key(&r.0.chars().collect::<Vec<_>>(), &comp_key));
+        let comp_free = !changes.iter().any(|(k, _)| *k == comp_key);
+        let comp = comp_free && (builtin_companion || !donor.companion.is_empty());
+        table.retain(|from: &Vec<char>, _| {
+            !same_key(from, key) && !(comp && same_key(from, &comp_key))
+        });
+        let upper: String = key.iter().map(|&c| to_upper(c)).collect();
+        for &(_, to, flags) in &donor.rules {
+            add_rule(&mut table, &upper, to, flags);
+        }
+        if comp {
+            let upper = format!("{upper}I");
+            for &(_, to, flags) in &donor.companion {
+                add_rule(&mut table, &upper, to, flags);
+            }
+        }
+    }
+    RuleSet::from_map(table)
 }
 
 /// The umlaut letters accepted as input for ө and ү.
@@ -196,13 +321,13 @@ fn insert_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: Vec<char>, rule: R
 /// Port of `Composer::addRule`: when `X_AC` is set, the k-th alphabetic
 /// character of `from` controls the case of the k-th character of `to`
 /// (alphabetic characters beyond the length of `to` only affect `from`).
+/// Characters of `to` that no key controls (a key shorter than its target)
+/// follow the keys as a whole: lower case when every key is lower case.
+/// Without `X_AC` the output never changes, but the key still works in every
+/// case combination.
 fn add_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: &str, to: &str, flags: u8) {
     let from: Vec<char> = from.chars().collect();
     let to: Vec<char> = to.chars().collect();
-    if flags & X_AC == 0 {
-        insert_rule(map, from, Rule { to, flags });
-        return;
-    }
     let mut to_pos = 0usize;
     let pos_map: Vec<Option<usize>> = from
         .iter()
@@ -216,6 +341,7 @@ fn add_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: &str, to: &str, flags
         })
         .collect();
     let alpha: Vec<usize> = (0..from.len()).filter(|&i| is_alpha(from[i])).collect();
+    let case = flags & X_AC != 0;
     for mask in 0u32..(1u32 << alpha.len()) {
         let mut f = from.clone();
         let mut t = to.clone();
@@ -226,12 +352,18 @@ fn add_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: &str, to: &str, flags
             } else {
                 to_lower(f[i])
             };
-            if let Some(tp) = pos_map[i] {
+            if let (true, Some(tp)) = (case, pos_map[i]) {
                 t[tp] = if upper {
                     to_upper(t[tp])
                 } else {
                     to_lower(t[tp])
                 };
+            }
+        }
+        // Every key lower case: the whole output is lower case.
+        if case && !alpha.is_empty() && mask == (1u32 << alpha.len()) - 1 {
+            for c in t.iter_mut() {
+                *c = to_lower(*c);
             }
         }
         insert_rule(map, f, Rule { to: t, flags });
@@ -240,24 +372,15 @@ fn add_rule(map: &mut HashMap<Vec<char>, Vec<Rule>>, from: &str, to: &str, flags
 
 pub(crate) fn rules() -> &'static RuleSet {
     static RULES: OnceLock<RuleSet> = OnceLock::new();
-    RULES.get_or_init(|| {
-        let mut map = HashMap::new();
-        for &(from, to, flags) in SOURCE_RULES {
-            add_rule(&mut map, from, to, flags);
-        }
-        let mut lengths: Vec<usize> = map.keys().map(|k| k.len()).collect();
-        lengths.sort_unstable_by(|a, b| b.cmp(a));
-        lengths.dedup();
-        RuleSet { map, lengths }
-    })
+    RULES.get_or_init(|| build_rules(&[]))
 }
 
 /// Human-readable dump of the expanded table (`from = to`), sorted; useful
 /// for docs and for diffing against the original IME's debug export.
 pub fn export_rules() -> Vec<(String, String, bool, bool)> {
     let mut out = Vec::new();
-    for (from, rs) in &rules().map {
-        for r in rs {
+    for (from, &i) in &rules().map {
+        for r in rules().group(i) {
             out.push((
                 from.iter().collect::<String>(),
                 r.to.iter().collect::<String>(),

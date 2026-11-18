@@ -203,10 +203,8 @@ fn non_cyrillic_key_value_is_refused() {
         err("buuz_config = 1\n[keys]\nq = \"x\"\n"),
         ConfigError::BadKeys { line: 3, .. }
     ));
-    assert!(matches!(
-        err("buuz_config = 1\n[keys]\nq = \"\"\n"),
-        ConfigError::BadKeys { line: 3, .. }
-    ));
+    // An empty value removes a key, so it is allowed.
+    assert!(!is_err("buuz_config = 1\n[keys]\nq = \"\"\n"));
 }
 
 // ---- syntax: comments, blanks, quoting ----
@@ -655,7 +653,7 @@ fn long_values_are_refused() {
     let ok = "ө".repeat(64);
     let long = "ө".repeat(65);
     assert!(!is_err(&format!(
-        "buuz_config = 1\n[abbreviations]\nq = \"{ok}\"\n[keys]\nq = \"{ok}\"\n"
+        "buuz_config = 1\n[abbreviations]\nq = \"{ok}\"\n"
     )));
     assert!(matches!(
         err(&format!(
@@ -731,8 +729,8 @@ fn setters_replace_in_place_and_remove() {
     assert!(!c.remove_abbreviation("A"));
     assert_eq!(c.abbreviation_entries(), pairs(&[("b", "y")]));
     c.set_key("o'", "ө").unwrap();
-    c.set_key("O'", "Ө").unwrap();
-    assert_eq!(c.keys(), pairs(&[("o'", "Ө")]));
+    c.set_key("O'", "о").unwrap();
+    assert_eq!(c.keys(), pairs(&[("o'", "о")]));
     assert!(c.remove_key("O'"));
     assert!(c.keys().is_empty());
 }
@@ -749,7 +747,7 @@ fn setters_refuse_what_parse_refuses() {
     assert!(c.set_key("1", "ө").is_err());
     assert!(c.set_key("abcd", "ө").is_err());
     assert!(c.set_key("q", "x").is_err());
-    assert!(c.set_key("q", "").is_err());
+    assert!(c.set_key("q", "жжж").is_err());
     assert!(c.abbreviation_entries().is_empty() && c.keys().is_empty());
 }
 
@@ -777,9 +775,10 @@ fn adr_example_parses() {
         c.abbreviation_entries(),
         pairs(&[("mgl", "Монгол"), ("bn", "байна аа"), ("tgd", "")])
     );
-    assert_eq!(c.keys(), pairs(&[("o'", "ө"), ("u'", "ү")]));
+    assert_eq!(c.keys(), pairs(&[("x", "ш"), ("kh", "ү")]));
     let o = c.options();
     assert_eq!(convert_with("mgl bn tgd ", &o), "Монгол байна аа тгд ");
+    assert_eq!(convert_with("xaan khnee ", &o), "шаан үнээ ");
     assert_eq!(parse(&c.to_text()), c);
 }
 
