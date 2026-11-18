@@ -168,6 +168,8 @@
           <label class="toggle"><input type="radio" name="mode" value="classic" /><span data-i18n="modeClassic">Сонгодог (анхны Buuz)</span></label>
         </fieldset>
         <p class="hint" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p>
+        <p id="classic-note" class="hint" data-i18n="classicFeaturesOn" hidden>Сонгодог горимд зарим ухаалаг боломж асаалттай байна.</p>
+        <p id="cfg-notice" class="hint" data-i18n="configReset" hidden>Хадгалсан тохиргоо уншигдсангүй тул үндсэн тохиргоог ашиглаж байна. Муу текстийг buuz.config.bad дээр хадгалсан.</p>
         <fieldset id="features" class="features">
           <label class="toggle">
             <input id="smart" type="checkbox" checked />
@@ -180,6 +182,23 @@
           </label>
           <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
         </fieldset>
+        <section class="cfg" aria-labelledby="cfg-title">
+          <h3 id="cfg-title" data-i18n="settingsFile">Тохиргооны файл</h3>
+          <p class="hint" data-i18n="settingsFileHint">Тохиргоогоо хуулж эсвэл файл болгон хадгалаад өөр төхөөрөмж дээрээ оруулж болно. Файл тань энэ төхөөрөмжөөс гадагш илгээгдэхгүй.</p>
+          <div class="cfg-row">
+            <button id="cfg-copy" type="button" class="ghost" data-i18n="exportCopy">Тохиргоо хуулах</button>
+            <button id="cfg-download" type="button" class="ghost" data-i18n="exportDownload">Файл болгон татах</button>
+          </div>
+          <label class="cfg-label" for="cfg-text" data-i18n="importTitle">Тохиргоо оруулах</label>
+          <textarea id="cfg-text" rows="4" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-i18n-ph="importPh" placeholder="Тохиргооны текстээ энд буулгана уу"></textarea>
+          <div class="cfg-row">
+            <button id="cfg-apply" type="button" class="ghost" data-i18n="importApply">Оруулах</button>
+            <button id="cfg-open" type="button" class="ghost" data-i18n="importFile">Файл нээх</button>
+            <input id="cfg-file" type="file" hidden />
+          </div>
+          <div id="cfg-msg" class="cfg-msg" role="status"></div>
+          <div id="cfg-err" class="cfg-msg err" role="alert"></div>
+        </section>
       </dialog>
 
       <section class="converter" aria-label="Converter">

@@ -3,9 +3,10 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { convert_classic, convert_with } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_with_config } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t, type Key } from "./i18n";
+import { setupLang, t, issueText, type Key } from "./i18n";
+import { applyImport, browserStore, loadConfigState, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
 
 setupLang();
@@ -62,81 +63,149 @@ settings.addEventListener("click", (e) => {
   if (e.target === settings && (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)) settings.close();
 });
 
+// The settings are one portable config text (see docs/decisions/0005). It is
+// kept in localStorage as "buuz.config"; the mode and option switches below
+// read and write it, and the converter reads it. With storage blocked, the
+// page keeps it in memory for this visit.
+const store = browserStore();
+let config = ""; // loaded once the wasm module is ready (see init below)
+
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
 // (the original Buuz, every smart feature off, toggles greyed out).
-type Mode = "smart" | "classic";
 const features = document.getElementById("features") as HTMLFieldSetElement;
 const modeRadios = document.querySelectorAll<HTMLInputElement>('input[name="mode"]');
-let mode: Mode = "smart";
-try {
-  if (localStorage.getItem("buuz.mode") === "classic") mode = "classic";
-} catch {
-  /* private mode: default smart */
+const smartBox = document.getElementById("smart") as HTMLInputElement;
+const abbrBox = document.getElementById("abbr") as HTMLInputElement;
+// The typewriter demo never expands abbreviations.
+let ghostConfig = "";
+
+function applyConfig(): void {
+  const s = switchesOf(config);
+  for (const r of modeRadios) r.checked = (r.value === "classic") === s.classic;
+  // Plain Classic greys the switches out (they show the effective values). If
+  // the config turns smart features on in Classic, they stay usable, with a note.
+  features.disabled = s.classic && !s.classicWithFeatures;
+  (document.getElementById("classic-note") as HTMLElement).hidden = !s.classicWithFeatures;
+  smartBox.checked = s.smartVowels;
+  abbrBox.checked = s.abbreviations;
+  ghostConfig = config_set_option(config, "abbreviations", false);
 }
-function applyMode(): void {
-  for (const r of modeRadios) r.checked = r.value === mode;
-  features.disabled = mode === "classic";
+
+/** Make `text` the config: save it, show it in the switches, convert again. */
+function setConfig(text: string, save = true): void {
+  config = text;
+  if (save) saveConfig(store, text);
+  applyConfig();
+  render();
 }
-applyMode();
+
 for (const r of modeRadios) {
   r.addEventListener("change", () => {
-    if (!r.checked) return;
-    mode = r.value === "classic" ? "classic" : "smart";
-    try {
-      localStorage.setItem("buuz.mode", mode);
-    } catch {
-      /* private mode: don't remember */
-    }
-    applyMode();
-    render();
+    if (r.checked && ready) setConfig(config_set_classic(config, r.value === "classic"));
   });
 }
-
 // "Smart vowels" (on by default): look-ahead harmony, ий/ы, the уу/үү particle.
 // Off gives the classic left-to-right behaviour of the original Buuz.
-const smartBox = document.getElementById("smart") as HTMLInputElement;
-let smart = true;
-try {
-  smart = localStorage.getItem("buuz.smart") !== "off";
-} catch {
-  /* private mode: default on */
-}
-smartBox.checked = smart;
-smartBox.addEventListener("change", () => {
-  smart = smartBox.checked;
-  try {
-    localStorage.setItem("buuz.smart", smart ? "on" : "off");
-  } catch {
-    /* private mode: don't remember */
-  }
-  render();
-});
-
+smartBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "smart_vowels", smartBox.checked)));
 // "Abbreviations" (on by default): bn + space or punctuation -> байна (never at the end of the text).
-const abbrBox = document.getElementById("abbr") as HTMLInputElement;
-let abbr = true;
-try {
-  abbr = localStorage.getItem("buuz.abbr") !== "off";
-} catch {
-  /* private mode: default on */
-}
-abbrBox.checked = abbr;
-abbrBox.addEventListener("change", () => {
-  abbr = abbrBox.checked;
-  try {
-    localStorage.setItem("buuz.abbr", abbr ? "on" : "off");
-  } catch {
-    /* private mode: don't remember */
-  }
-  render();
-});
+abbrBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "abbreviations", abbrBox.checked)));
 
 function render(): void {
-  // convert_with() is microseconds even for long pastes, so run it synchronously
-  // on every input event: no debounce, no frame delay.
+  // convert_with_config() is microseconds even for long pastes (the core reads
+  // the config once per change), so run it synchronously on every input
+  // event: no debounce, no frame delay.
   const text = latin.value.normalize("NFC");
-  cyr.value = !ready ? "" : mode === "classic" ? convert_classic(text) : convert_with(text, smart, abbr);
+  cyr.value = !ready ? "" : convert_with_config(text, config);
 }
+
+// Settings file: export the config as text or a .buuz file, import it by
+// paste or by opening a file. A bad import shows an error and changes nothing.
+const cfgText = document.getElementById("cfg-text") as HTMLTextAreaElement;
+const cfgMsg = document.getElementById("cfg-msg") as HTMLElement; // role="status": success, polite
+const cfgErr = document.getElementById("cfg-err") as HTMLElement; // role="alert": errors, assertive
+const cfgFile = document.getElementById("cfg-file") as HTMLInputElement;
+let sayFrame = 0;
+/**
+ * Show a message. The region is emptied first and filled on the next frame, so
+ * a screen reader announces the same message again. `lines[0]` comes first,
+ * then the issue list, then the other lines.
+ */
+function cfgSay(lines: string[], err = false, issues: Issue[] = []): void {
+  cfgClear();
+  const on = err ? cfgErr : cfgMsg;
+  sayFrame = requestAnimationFrame(() => {
+    const line = (text: string) => {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div;
+    };
+    on.append(line(lines[0]));
+    if (issues.length > 0) {
+      const ul = document.createElement("ul");
+      for (const i of issues) {
+        const li = document.createElement("li");
+        li.textContent = issueText(i);
+        ul.append(li);
+      }
+      on.append(ul);
+    }
+    for (const l of lines.slice(1)) on.append(line(l));
+  });
+}
+/** Empty both message regions (language change, dialog closed). */
+function cfgClear(): void {
+  cancelAnimationFrame(sayFrame);
+  cfgMsg.replaceChildren();
+  cfgErr.replaceChildren();
+}
+settings.addEventListener("close", cfgClear);
+document.addEventListener("buuz:lang", cfgClear);
+
+function importText(raw: string): void {
+  if (!ready) return;
+  if (raw.trim() === "") return cfgSay([t("importEmpty")], true);
+  const r = applyImport(store, raw);
+  if (!r.ok) return cfgSay([issueText(r.error)], true);
+  setConfig(r.text, false);
+  cfgText.value = "";
+  const notSaved = r.saved ? [] : [t("importNotSaved")];
+  if (r.warnings.length > 0) cfgSay([t("importIgnored"), ...notSaved], false, r.warnings);
+  else cfgSay([t("importOk"), ...notSaved]);
+}
+document.getElementById("cfg-copy")?.addEventListener("click", async () => {
+  if (!ready) return;
+  try {
+    await navigator.clipboard.writeText(config);
+  } catch {
+    // No clipboard access: show the text in the box and say to copy it by hand.
+    cfgText.value = config;
+    cfgText.focus();
+    cfgText.select();
+    return cfgSay([t("copyByHand")], true);
+  }
+  cfgSay([t("exportCopied")]);
+});
+document.getElementById("cfg-download")?.addEventListener("click", () => {
+  if (!ready) return;
+  const url = URL.createObjectURL(new Blob([config], { type: "text/plain;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "my-typing.buuz";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  cfgSay([t("exportDownloaded")]);
+});
+document.getElementById("cfg-apply")?.addEventListener("click", () => importText(cfgText.value));
+document.getElementById("cfg-open")?.addEventListener("click", () => cfgFile.click());
+cfgFile.addEventListener("change", () => {
+  const file = cfgFile.files?.[0];
+  cfgFile.value = ""; // so the same file can be opened again
+  if (!file) return;
+  if (file.size > 1024 * 1024) return cfgSay([issueText({ code: "too_large", number: 0, detail: "1 MiB" })], true);
+  file.text().then(importText, () => cfgSay([t("importFileError")], true));
+});
 
 const toast = document.getElementById("toast") as HTMLElement;
 const clearX = document.getElementById("clear-x") as HTMLButtonElement;
@@ -258,7 +327,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = !ready ? "" : mode === "classic" ? convert_classic(text) : convert_with(text, smart, false);
+  cyr.placeholder = !ready ? "" : convert_with_config(text, ghostConfig);
 }
 function typewriter(): void {
   let p = 0;
@@ -311,6 +380,10 @@ function typewriter(): void {
 }
 
 init({ module_or_path: wasmUrl }).then(() => {
+  const state = loadConfigState(store); // needs the wasm module (migration, parsing)
+  config = state.text;
+  (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
+  applyConfig();
   ready = true;
   render(); // text typed while the module was loading
   fit();
