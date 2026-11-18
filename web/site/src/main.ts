@@ -12,6 +12,7 @@ import calibrationSentences from "./calibration.json";
 import { accept, completionAt, ensureWordList, type Completion } from "./completion";
 import wordListUrl from "../../../data/wordlist/mn.txt?url";
 import { CalibrationFlow, saveError, type Outcome } from "./calibration";
+import { addUserWord, clearUserDict, entriesOf, importUserDict, loadUserDict, removeUserWord } from "./userdict";
 
 setupLang();
 
@@ -211,15 +212,17 @@ const cfgText = document.getElementById("cfg-text") as HTMLTextAreaElement;
 const cfgMsg = document.getElementById("cfg-msg") as HTMLElement; // role="status": success, polite
 const cfgErr = document.getElementById("cfg-err") as HTMLElement; // role="alert": errors, assertive
 const cfgFile = document.getElementById("cfg-file") as HTMLInputElement;
+const udMsg = document.getElementById("ud-msg") as HTMLElement;
+const udErr = document.getElementById("ud-err") as HTMLElement;
 let sayFrame = 0;
 /**
  * Show a message. The region is emptied first and filled on the next frame, so
  * a screen reader announces the same message again. `lines[0]` comes first,
  * then the issue list, then the other lines.
  */
-function cfgSay(lines: string[], err = false, issues: Issue[] = []): void {
+function cfgSay(lines: string[], err = false, issues: Issue[] = [], regions: [HTMLElement, HTMLElement] = [cfgMsg, cfgErr]): void {
   cfgClear();
-  const on = err ? cfgErr : cfgMsg;
+  const on = err ? regions[1] : regions[0];
   sayFrame = requestAnimationFrame(() => {
     const line = (text: string) => {
       const div = document.createElement("div");
@@ -242,8 +245,7 @@ function cfgSay(lines: string[], err = false, issues: Issue[] = []): void {
 /** Empty both message regions (language change, dialog closed). */
 function cfgClear(): void {
   cancelAnimationFrame(sayFrame);
-  cfgMsg.replaceChildren();
-  cfgErr.replaceChildren();
+  for (const el of [cfgMsg, cfgErr, udMsg, udErr]) el.replaceChildren();
 }
 settings.addEventListener("close", cfgClear);
 document.addEventListener("buuz:lang", cfgClear);
@@ -292,6 +294,104 @@ cfgFile.addEventListener("change", () => {
   if (!file) return;
   if (file.size > 1024 * 1024) return cfgSay([issueText({ code: "too_large", number: 0, detail: "1 MiB" })], true);
   file.text().then(importText, () => cfgSay([t("importFileError")], true));
+});
+
+// Personal dictionary (docs/typing-rules.md section 14): the words the user
+// added, kept as text in localStorage under "buuz.userdict". It stays on this
+// device and is not part of the config file. The page never learns by itself.
+// The list is built with textContent only.
+let userText = ""; // loaded once the wasm module is ready (see init below)
+const udList = document.getElementById("ud-list") as HTMLUListElement;
+const udEmpty = document.getElementById("ud-empty") as HTMLElement;
+const udWord = document.getElementById("ud-word") as HTMLInputElement;
+const udFile = document.getElementById("ud-file") as HTMLInputElement;
+const udSay = (lines: string[], err = false, issues: Issue[] = []) => cfgSay(lines, err, issues, [udMsg, udErr]);
+const KIND_KEY = { add: "udKindAdd", use: "udKindUse", reject: "udKindReject" } as const;
+
+function showUserDict(): void {
+  const entries = entriesOf(userText).reverse(); // the newest first
+  udEmpty.hidden = entries.length > 0;
+  udList.hidden = entries.length === 0;
+  document.getElementById("ud-clear")?.toggleAttribute("disabled", entries.length === 0);
+  document.getElementById("ud-export")?.toggleAttribute("disabled", entries.length === 0);
+  udList.replaceChildren(
+    ...entries.map((e) => {
+      const li = document.createElement("li");
+      const word = document.createElement("span");
+      word.className = "ud-word";
+      word.textContent = e.word;
+      const meta = document.createElement("span");
+      meta.className = "ud-meta";
+      meta.lang = document.documentElement.lang;
+      meta.textContent = e.kind === "add" ? t(KIND_KEY.add) : `${t(KIND_KEY[e.kind])}, ${fmt("udCount", { n: e.count })}`;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "ghost";
+      del.textContent = t("udDelete");
+      del.setAttribute("aria-label", fmt("udDeleteLabel", { word: e.word }));
+      del.addEventListener("click", () => {
+        const r = removeUserWord(store, userText, e.word);
+        changeUserDict(r.text, [t("udRemoved")], r.saved);
+      });
+      li.append(word, meta, del);
+      return li;
+    }),
+  );
+}
+/** Make `text` the dictionary (already saved), show it, convert again, and say `lines`. */
+function changeUserDict(text: string, lines: string[], saved: boolean, issues: Issue[] = []): void {
+  userText = text;
+  showUserDict();
+  render();
+  updateHint();
+  udSay(saved ? lines : [...lines, t("udNotSaved")], false, issues);
+}
+document.addEventListener("buuz:lang", showUserDict);
+function addWord(): void {
+  if (!ready) return;
+  const r = addUserWord(store, userText, udWord.value);
+  if (!r.ok) return udSay([issueText(r.error)], true);
+  udWord.value = "";
+  changeUserDict(r.text, [t("udAdded")], r.saved);
+}
+document.getElementById("ud-add")?.addEventListener("click", addWord);
+udWord.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.isComposing) {
+    e.preventDefault();
+    addWord();
+  }
+});
+document.getElementById("ud-clear")?.addEventListener("click", () => {
+  if (!ready || !window.confirm(t("udClearConfirm"))) return;
+  const r = clearUserDict(store);
+  changeUserDict(r.text, [t("udCleared")], r.saved);
+});
+document.getElementById("ud-export")?.addEventListener("click", () => {
+  if (!ready) return;
+  const url = URL.createObjectURL(new Blob([userText], { type: "text/plain;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "buuz-words.txt";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  udSay([t("udExported")]);
+});
+document.getElementById("ud-open")?.addEventListener("click", () => udFile.click());
+udFile.addEventListener("change", () => {
+  const file = udFile.files?.[0];
+  udFile.value = "";
+  if (!file || !ready) return;
+  if (file.size > 1024 * 1024) return udSay([issueText({ code: "too_large", number: 0, detail: "1 MiB" })], true);
+  file.text().then(
+    (raw) => {
+      const r = importUserDict(store, userText, raw);
+      if (!r.ok) return udSay([issueText(r.error)], true);
+      changeUserDict(r.text, [r.warnings.length > 0 ? t("udImportIgnored") : t("udImportOk")], r.saved, r.warnings);
+    },
+    () => udSay([t("importFileError")], true),
+  );
 });
 
 // Teach Buuz how you type (issue #4): a second dialog on top of the settings.
@@ -642,6 +742,8 @@ init({ module_or_path: wasmUrl }).then(() => {
   const state = loadConfigState(store); // needs the wasm module (migration, parsing)
   config = state.text;
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
+  userText = loadUserDict(store); // also gives it to the converter
+  showUserDict();
   applyConfig();
   ready = true;
   if (switchesOf(config).autocorrect) loadWords(); // applyConfig ran before ready
