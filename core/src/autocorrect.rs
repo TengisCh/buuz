@@ -119,6 +119,10 @@ const PLAIN_FACTOR: u32 = 50;
 /// choices, each `о` has 2, so 5 letters give at most 243 lookups.
 const MAX_VARIED: usize = 5;
 
+/// A word with more varied letters than this gets no extra edits (ye, long
+/// vowel, ь), so the lookups stay under about 1500.
+const MAX_VARIED_EXTRA: usize = 3;
+
 /// Word choice (issue #64): the word list picks between о/ө and у/ү/ө.
 /// It runs once per word, like [`correct`]. A variant wins when it is listed
 /// with the minimum count, is `CLEAR_FACTOR` times more frequent than the
@@ -149,9 +153,6 @@ pub(crate) fn choose(
             k += 1;
         }
     }
-    if k == 0 {
-        return None;
-    }
     s.text.clear();
     s.text.extend(s.word.iter());
     if rejected.contains(s.text.as_str())
@@ -167,7 +168,7 @@ pub(crate) fn choose(
         best,
         text,
     } = s;
-    let cand = &mut level[0];
+    let [cand, extra] = level;
     let choices = |c: char| -> &'static [char] {
         if c == 'о' {
             &['о', 'ө']
@@ -175,6 +176,11 @@ pub(crate) fn choose(
             &['у', 'ү', 'ө']
         }
     };
+    // Each ө/ү variant is a candidate. For a word with few ambiguous letters
+    // each variant also gets one more edit (ye, a long vowel, ь), so the work
+    // stays small. All candidates share one tally: `зүн` has the clear
+    // winner `зүүн`, not `зун`.
+    let extras = k <= MAX_VARIED_EXTRA;
     let mut idx = [0usize; MAX_VARIED];
     best.clear();
     let mut tally = Tally { top: 0, second: 0 };
@@ -187,6 +193,11 @@ pub(crate) fn choose(
         // Skip the combination that rebuilds the word as typed.
         if cand.as_slice() != word.as_slice() {
             visit(words, cand, text, best, &mut tally);
+        }
+        if extras {
+            extra_edits(cand, extra, &mut |c| {
+                visit(words, c, text, best, &mut tally)
+            });
         }
         // Next combination: a counter with one digit for each position.
         let mut d = 0;
@@ -217,6 +228,33 @@ pub(crate) fn choose(
         }
     }
     Some(out)
+}
+
+/// Call `f` with each single extra edit of `cur`, built in `out`: `э` to `е`
+/// (not at the end), a doubled vowel (not at the end), `и` to `ь`, and an
+/// added `ь` after the first letter at the earliest.
+fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
+    let n = cur.len();
+    for i in 0..n {
+        let c = cur[i];
+        let last = i + 1 == n;
+        if c == 'э' && !last {
+            fill(out, &cur[..i], &['е'], &cur[i + 1..]);
+            f(out);
+        }
+        if c == 'и' && i > 0 {
+            fill(out, &cur[..i], &['ь'], &cur[i + 1..]);
+            f(out);
+        }
+        if is_vowel(c) && !last && (i == 0 || cur[i - 1] != c) && cur[i + 1] != c {
+            fill(out, &cur[..=i], &[c], &cur[i + 1..]);
+            f(out);
+        }
+    }
+    for i in 1..=n {
+        fill(out, &cur[..i], &['ь'], &cur[i..]);
+        f(out);
+    }
 }
 
 /// Look `cand` up and keep the best two distinct candidates.

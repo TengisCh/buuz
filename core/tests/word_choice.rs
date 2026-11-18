@@ -101,3 +101,42 @@ fn a_user_added_word_is_not_changed() {
     }
     assert_eq!(c.process_key(Key::Space).commit.as_deref(), Some("тов"));
 }
+
+#[test]
+fn e_may_be_ye() {
+    let o = with_list(Options::smart());
+    assert_eq!(commit(o, "wed"), "үед");
+}
+
+#[test]
+fn a_single_vowel_may_be_long() {
+    let o = with_list(Options::smart());
+    assert_eq!(commit(o.clone(), "terer"), "тэрээр");
+    assert_eq!(commit(o, "zwn"), "зүүн");
+}
+
+#[test]
+fn i_or_nothing_may_be_soft_sign() {
+    let o = with_list(Options::smart());
+    assert_eq!(commit(o.clone(), "huuli"), "хууль");
+    assert_eq!(commit(o, "surguul"), "сургууль");
+}
+
+#[test]
+fn extra_edits_leave_common_words_alone() {
+    let o = with_list(Options::smart());
+    // `тэр` (9211) is common: `ter` does not become a longer word.
+    assert_eq!(commit(o.clone(), "ter"), "тэр");
+    assert_eq!(commit(o, "sain"), "сайн");
+}
+
+#[test]
+fn long_words_with_many_ambiguous_letters_stay_fast() {
+    let o = with_list(Options::smart());
+    let start = std::time::Instant::now();
+    for _ in 0..50 {
+        commit(o.clone(), "ouououobkl");
+    }
+    // 1 ms for each word in debug builds is a generous limit.
+    assert!(start.elapsed().as_millis() < 50 * 20);
+}
