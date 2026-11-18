@@ -507,7 +507,66 @@ and Tab accepts it (issue #2). It reads the word list
   Tab moves focus; the hint comes back when the word changes. With no hint,
   Tab keeps its normal focus behaviour. Touch screens do not show the hint.
 
-## 13. Cyrillic to Latin
+## 13. Autocorrect
+
+Autocorrect fixes a misspelled word when Space or punctuation ends it
+(issue #1, stage 2). It reads the word list (section 12) and never leaves the
+device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
+
+- **Switch.** `Options::autocorrect` (config `[options] autocorrect`) is off in
+  `Options::default()`, `smart()` and `classic()`. It works only when
+  `Options::words` holds the list. `Config::needs_word_list()` is true when
+  autocorrect is on. Without a list, nothing changes.
+- **When it runs.** Once per word, in the step that commits the word at Space
+  or punctuation. It never runs on a key inside the word, and never in
+  `Composer::commit()` (focus loss). Only Space and punctuation run it. Enter,
+  Tab and Esc commit the word as typed. This holds also when Auto Latin is
+  off. Only Space arms the undo: punctuation corrects with no Backspace undo,
+  like abbreviations.
+- **Skipped words.** Autocorrect leaves a word as typed when any of these hold:
+  - the Latin view (Esc) shows the word, or the word is in a run that turned
+    Latin (section 9)
+  - the word was re-seeded (a caret move or Tab completion)
+  - the word has fewer than 3 letters, or more than 16
+  - a letter after the first is upper case (this includes all upper case)
+  - the word is in the list
+  - an abbreviation expanded it (section 7)
+  - the word is in the rejected set, or Backspace just undid its correction
+- **Candidates.** The search makes at most 2 edits of the lower-cased word,
+  and keeps the results that are in the list:
+  - `о` and `ө`, `у` and `ү`, `э` and `е`, `ий` and `ы`
+  - a single vowel and a double vowel: it adds or removes one copy of a
+    vowel next to itself
+  - it adds or removes `ь`
+  - a final vowel is never edited: no `э` and `е` swap on the last letter,
+    and no single or double vowel change at the end of the word (`идэе`,
+    `хүлээе`, `захиаа` and `шинээ` stay as typed)
+- **Harmony slips.** A word like `хуухэд` needs two edits of one kind: `у` to
+  `ү`, twice. Two edits cover it. A word that needs 3 edits is not corrected.
+  With smart vowels on, most harmony slips are already fixed while typing, so
+  autocorrect mostly fixes double vowels, `ь` and slips the harmony rule
+  cannot see.
+- **Choice.** The winner has the highest count. It needs a count of at least
+  50, and a count at least 3 times the next candidate's. A single candidate
+  needs only the count of 50. Otherwise the word stays as typed.
+- **Case.** A leading capital stays (`Хуухэд` gives `Хүүхэд`).
+- **Undo.** Backspace right after the Space reopens the word with its raw
+  keys (section 8) and shows the typed conversion. The word goes into the
+  rejected set. Space then commits it as typed: a flag on the reopened word
+  makes sure of this, also when the set is full. The set holds at most 256
+  words for the session. When it is full, a new undo is not remembered, so
+  that word can be corrected again later.
+  Remembering across sessions is issue #12.
+- **Shells.** `KeyOutcome::corrected` is true when the commit holds a changed
+  word, so a shell can flash or underline it.
+- **Cost.** The search runs once per word. It reuses its buffers and checks
+  each edit with `WordList::count`, so it allocates only the result. A
+  release-only test holds the worst word under 1 millisecond. A word of 16
+  letters that fits many edits (`oeoeoeoeoeoeoeoe`) is the worst case: about
+  0.4 to 0.8 milliseconds on the development machine. A usual word takes
+  about 50 microseconds.
+
+## 14. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -515,7 +574,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 14. Planned changes
+## 15. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults

@@ -330,17 +330,18 @@ suggestions and autocorrect (issues #1 and #2).
   builds a sorted index once, about 10 ms in release. `contains`, `rank`, `count`,
   `prefix` and the allocation-free `top_two` then answer in microseconds.
 - **Loaded on demand.** Parsing is not on the typing path. A shell loads the
-  list lazily, when `Config::needs_word_list()` is true (completion on), and
+  list lazily, when `Config::needs_word_list()` is true (completion or autocorrect on), and
   sets `Options::words`. No shell bundles it yet. With completion on,
   `top_two` runs once per key, with no allocation, inside the per-key budget
-  of section 4.
+  of section 4. Autocorrect runs once per word, not per key, with a budget of
+  1 ms.
 
 ## 7. Open core boundary
 
 | Open source, this repo (MIT OR Apache-2.0; `core/` Apache-2.0) | Paid, separate private repo |
 | --- | --- |
 | `buuz-core`, `buuz-ffi`, `buuz-wasm` | Larger and domain dictionaries, spell suggestions, word prediction |
-| Windows and macOS input methods, basic typing, basic completion from the shipped word list | Enterprise installers (MSI for Intune/GPO, MDM pkg), admin policies |
+| Windows and macOS input methods, basic typing, smarter vowel rules (stage 1), basic completion and spelling autocorrect from the shipped word list (stage 2) | Enterprise installers (MSI for Intune/GPO, MDM pkg), admin policies |
 | Web converter | Priority support, SLAs |
 | Rule tests and tools | SDK and commercial licensing for embedding the engine |
 

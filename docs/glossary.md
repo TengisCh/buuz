@@ -35,7 +35,7 @@ when a new concept appears; rename here first when a name changes.
 | --- | --- | --- |
 | Classic mode | The original 2009 Buuz behaviour, left to right, every smart feature off. Its output never changes | `Options::classic()` |
 | Smart mode | The default: classic rules plus the smart features, all on by default, each with its own switch | `Options::smart()` |
-| Smart feature | One opt-out improvement inside smart mode: smart vowels, abbreviations, keep Latin, later autocorrect and completion | fields of `Options` |
+| Smart feature | One improvement inside smart mode with its own switch. Smart vowels, abbreviations, keep Latin and completion are on by default (opt-out). Autocorrect is off by default (opt-in) | fields of `Options` |
 | Smart vowels | Look-ahead vowel harmony, ий/ы and the particle rule | `Options::smart_vowels` |
 | Abbreviation | A short Latin key sequence expanded at commit (`bn` to байна). Backspace right after undoes it | `Abbreviations` |
 | Undo | Backspace right after an automatic change restores what was typed | `KeyOutcome::delete_before` |
@@ -48,6 +48,8 @@ when a new concept appears; rename here first when a name changes.
 | Preset | The base of a config: `smart` (default) or `classic`. Options in the config only override it | `Preset` |
 | Key map | The built-in rule table with the user's `[keys]` changes applied. Built once and shared. Without one, the composer uses the built-in table. See `docs/typing-rules.md` §10 | `KeyMap`, `Options::keys` |
 | Completion | Ghost text after the preedit: the rest of a clear winner from the word list. Tab, or Right at the end, accepts it. See `docs/typing-rules.md` §12 | `Composer::completion`, `Options::completion`, `Key::Tab` |
+| Autocorrect | At Space or punctuation, a word that is not in the word list becomes its one clear neighbour that is (`хуухэд` to `хүүхэд`). Off by default. Backspace right after undoes it. See `docs/typing-rules.md` §13 | `Options::autocorrect`, `KeyOutcome::corrected` |
+| Rejected set | The words whose correction the user undid in this session, at most 256. Autocorrect skips them. Not saved | `Composer` |
 | Target | The Cyrillic value of a `[keys]` entry (`ү`, or a pair such as `у/ү`). The new key copies the rules of the built-in key that gives it. Empty removes the key | `KeyMap::from_pairs`, `KeyError::UnknownTarget` |
 | Calibration | A short test where the user types Cyrillic sentences in Latin. It suggests `[keys]` entries for the keys the built-in table does not give. Offline, not on the typing path. See `docs/typing-rules.md` §11 | `calibrate`, `Calibration` |
 | Suggestion | One key proposed by calibration: a chunk typed for a letter (or a gender pair), how often, and the letter it displaces | `Suggestion` |
