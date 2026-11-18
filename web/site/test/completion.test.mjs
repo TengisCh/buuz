@@ -3,8 +3,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import init, { convert_with_config, config_set_option, default_config_text, load_word_list } from "../src/wasm/buuz.js";
+import init, { config_set_classic, convert_with_config, config_set_option, default_config_text, load_word_list } from "../src/wasm/buuz.js";
 import { accept, completionAt, ensureWordList, resetWordListState, sameOrigin } from "../src/completion.ts";
+import { switchesOf } from "../src/config.ts";
 
 await init({ module_or_path: await readFile(new URL("../src/wasm/buuz_bg.wasm", import.meta.url)) });
 
@@ -93,4 +94,18 @@ test("Ulaanb gives Улаанбаатар, and a Latin run after Cyrillic or a d
   assert.deepEqual(completionAt("Ulaanb", 6, cfg), { rest: "аатар", word: "Улаанбаатар", replaces: 6 });
   assert.equal(completionAt("1Ulaanb", 7, cfg)?.replaces, 6);
   assert.equal(completionAt("гэрUlaanb", 9, cfg)?.replaces, 6);
+});
+
+test("autocorrect: the converter corrects a finished word once the list is loaded", () => {
+  const on = config_set_option(cfg, "autocorrect", true);
+  assert.equal(switchesOf(on).autocorrect, true);
+  assert.equal(switchesOf(cfg).autocorrect, false);
+  load_word_list("# t\nдэлгүүр\t100\n");
+  // After the load, the same input converts again with the correction.
+  assert.equal(convert_with_config("delgur ", on), "дэлгүүр ");
+  assert.equal(convert_with_config("delgur\n", on), "дэлгүр\n");
+  assert.equal(convert_with_config("delgur ", cfg), "дэлгүр ");
+  // Plain Classic never corrects.
+  const classic = config_set_classic(cfg, true);
+  assert.equal(convert_with_config("delgur ", classic), "дэлгүр ");
 });

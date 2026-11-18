@@ -103,6 +103,7 @@ pub struct ConfigReport {
     smart_vowels: bool,
     abbreviations: bool,
     completion: bool,
+    autocorrect: bool,
 }
 
 #[wasm_bindgen]
@@ -138,6 +139,12 @@ impl ConfigReport {
     pub fn completion(&self) -> bool {
         self.completion
     }
+    /// Autocorrect is on after the preset and overrides. It needs the word
+    /// list (`load_word_list`) to change anything.
+    #[wasm_bindgen(getter)]
+    pub fn autocorrect(&self) -> bool {
+        self.autocorrect
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -158,7 +165,8 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         classic: parsed.config.preset() == buuz_core::Preset::Classic,
         smart_vowels: o.smart_vowels,
         abbreviations: o.abbreviations.is_some(),
-        completion: parsed.config.needs_word_list(),
+        completion: o.completion,
+        autocorrect: o.autocorrect,
     })
 }
 
@@ -175,7 +183,7 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations` or `completion` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion` or `autocorrect` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -192,6 +200,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
             config.set_abbreviations((value != base.abbreviations.is_some()).then_some(value))
         }
         "completion" => config.set_completion((value != base.completion).then_some(value)),
+        "autocorrect" => config.set_autocorrect((value != base.autocorrect).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -224,10 +233,17 @@ fn options_of(config_text: &str) -> Result<buuz_core::Options, String> {
 }
 
 /// Transliterate with the options of a config text. The error is a tagged
-/// string (see above).
+/// string (see above). With autocorrect on, the loaded word list (`load_word_list`) goes into the
+/// options, so a word that Space or punctuation ends is corrected as in the
+/// core (section 13). A newline does not correct. Without a list, nothing
+/// changes.
 #[wasm_bindgen]
 pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
-    Ok(buuz_core::convert_with(input, &options_of(config_text)?))
+    let mut opts = options_of(config_text)?;
+    if opts.autocorrect {
+        opts.words = WORDS.with(|w| w.borrow().clone());
+    }
+    Ok(buuz_core::convert_with(input, &opts))
 }
 
 // --- Completion (issue #2) ---------------------------------------------------
@@ -656,6 +672,56 @@ mod tests {
         assert_eq!(on, cfg);
         let classic = super::config_set_classic(&cfg, true).unwrap();
         assert!(!super::config_normalize(&classic).unwrap().completion());
+    }
+
+    #[test]
+    fn autocorrect_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(!super::config_normalize(&cfg).unwrap().autocorrect());
+        let on = super::config_set_option(&cfg, "autocorrect", true).unwrap();
+        assert!(on.contains("autocorrect = true"));
+        assert!(super::config_normalize(&on).unwrap().autocorrect());
+        // Completion stays reported on its own.
+        let no_c = super::config_set_option(&cfg, "completion", false).unwrap();
+        assert!(!super::config_normalize(&no_c).unwrap().completion());
+        assert!(!super::config_normalize(&no_c).unwrap().autocorrect());
+        assert!(super::config_normalize(&on).unwrap().completion());
+        // Back to the preset value: the override goes away.
+        assert_eq!(
+            super::config_set_option(&on, "autocorrect", false).unwrap(),
+            cfg
+        );
+    }
+
+    #[test]
+    fn convert_autocorrects_with_a_list_and_the_switch() {
+        let cfg = super::default_config_text();
+        let on = super::config_set_option(&cfg, "autocorrect", true).unwrap();
+        // No list loaded: unchanged.
+        assert_eq!(
+            super::convert_with_config("delgur ", &on).unwrap(),
+            "дэлгүр "
+        );
+        super::load_word_list("дэлгүүр\t100\n").unwrap();
+        assert_eq!(
+            super::convert_with_config("delgur ", &on).unwrap(),
+            "дэлгүүр "
+        );
+        assert_eq!(
+            super::convert_with_config("delgur.", &on).unwrap(),
+            "дэлгүүр."
+        );
+        // Switch off: unchanged.
+        assert_eq!(
+            super::convert_with_config("delgur ", &cfg).unwrap(),
+            "дэлгүр "
+        );
+        // A newline, or the end of the text, does not correct.
+        assert_eq!(
+            super::convert_with_config("delgur\n", &on).unwrap(),
+            "дэлгүр\n"
+        );
+        assert_eq!(super::convert_with_config("delgur", &on).unwrap(), "дэлгүр");
     }
 
     /// (rest, word, replaces) of a completion.
