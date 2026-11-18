@@ -23,12 +23,14 @@
 //! ```
 
 mod abbrev;
+mod calibrate;
 mod composer;
 mod config;
 mod keys;
 mod rules;
 
 pub use abbrev::{AbbrevError, Abbreviations};
+pub use calibrate::{calibrate, Calibration, Conflict, Suggestion, Unsupported};
 pub use composer::{
     convert, convert_with, is_input_char, Composer, Key, KeyOutcome, Options, MAX_COMP_LEN,
 };

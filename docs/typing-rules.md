@@ -390,7 +390,59 @@ q = ""        # q is removed and stays q
   the same and does not allocate. Without keys, the composer uses the shared
   built-in table.
 
-## 11. Cyrillic to Latin
+## 11. Calibration
+
+Calibration learns how a user types. The user types a few Cyrillic sentences
+in Latin with conversion off, and `calibrate` gives suggested `[keys]` entries
+(issue #4). It runs once, offline, and is not on the typing path. Nothing is
+stored. "Default" here means the built-in table, not the keys a config
+already has.
+
+- **Alignment.** Each pair is a Cyrillic sentence and what was typed. Both
+  are folded to lower case, and marks that Unicode may write apart (й as и
+  plus a breve, an emoji variation selector) are made equal. Each Cyrillic
+  letter matches a typed chunk of 0 to 3 characters, found by dynamic
+  programming. A chunk holds only input keys (and digits, see below). A match
+  costs 0 when the built-in table gives that letter from that chunk; the
+  smart rule `ii` for ы counts as built-in. Any other chunk costs about 1 per
+  character. A letter with no chunk, a typed character with no letter, and a
+  non-letter that was not typed (a missing `?`) cost 1 each. Non-letters
+  (spaces, punctuation, emoji) otherwise match themselves. Long vowels (оо,
+  үү) are pairs of letters. о and ө, and у and ү, are separate letters.
+- **Unmatched pairs.** A pair is left out of the counts, and its index goes
+  into `unmatched`, when more than half of its letters have no partner (the
+  user typed something else), when it is longer than 500 characters on
+  either side, or when it is past the 50th pair.
+- **Suggestions.** For each letter, a chunk that the table does not give is
+  proposed when it was used at least twice and more often than the built-in
+  chunks for that letter. Two such chunks for one letter are both proposed
+  (an inconsistent typist). A suggestion is marked `tie` when another
+  proposed chunk for the same letter was used as often.
+- **Displaces.** When the chunk gives another letter in the built-in table,
+  the suggestion names it: `v` for ү has `displaces` в, so the UI can warn
+  that `v` will stop giving в.
+- **Conflicts.** If the user also types that chunk for the letter the table
+  gives from it (`h` for ц, and `h` for х), the chunk is reported in
+  `conflicts`, with both letters and counts, and not proposed.
+- **One chunk, one letter.** When two letters want the same chunk, the more
+  common one is proposed and the other is a conflict that names it. When the
+  top counts are equal, neither is proposed and there is one conflict per
+  pair of letters.
+- **Pair targets.** When one chunk wins for both о and ө, or both у and ү, it
+  is one suggestion with `pair` set, for the target `о/ө` or `у/ү`, so the key
+  follows vowel harmony (`y = "у/ү"`).
+- **Unsupported.** A chunk that `[keys]` cannot take (a target that no
+  built-in key gives, such as й, or a digit as a key) is listed in
+  `unsupported` and not proposed.
+- **Swaps.** `v` for ү and `w` for в gives both suggestions. Every `[keys]`
+  entry copies from the built-in table (section 10), so
+  `Calibration::apply` can add them together and the order does not matter.
+  `apply` changes the config only when every entry is accepted.
+- **Skipped letters.** Letters of the alphabet that are not in the input (or
+  only in unmatched pairs) are listed, so the result can say what was not
+  tested.
+
+## 12. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -398,7 +450,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 12. Planned changes
+## 13. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults
