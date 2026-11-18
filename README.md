@@ -87,6 +87,6 @@ Buuz is free. Donations pay for things like the Apple developer account that let
 
 ## 📜 License
 
-New code is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. The transliteration core in [`core/`](core/) is ported from the original Buuz (Copyright 2009 Odbayar Nyamtseren) and is Apache-2.0 only. The Mongolian word list in [`data/wordlist/`](data/wordlist/) is derived from Mongolian Wikipedia and is CC BY-SA 4.0 (see [decision 0006](docs/decisions/0006-word-list-data-licence.md)). See [LICENSE](LICENSE), [NOTICE](NOTICE) and [decision 0004](docs/decisions/0004-license-mit-or-apache-for-new-code.md).
+New code is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option. The transliteration core in [`core/`](core/) is ported from the original Buuz (Copyright 2009 Odbayar Nyamtseren) and is Apache-2.0 only. The Mongolian word list in [`data/wordlist/`](data/wordlist/) is derived from Mongolian Wikipedia and is CC BY-SA 4.0, like the benchmark pairs in [`data/benchmark/`](data/benchmark/) made from it (see [decision 0006](docs/decisions/0006-word-list-data-licence.md)). See [LICENSE](LICENSE), [NOTICE](NOTICE) and [decision 0004](docs/decisions/0004-license-mit-or-apache-for-new-code.md).
 
 "Buuz 2.0" is an independent continuation and is not affiliated with or endorsed by the original author unless stated otherwise.
