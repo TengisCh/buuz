@@ -90,7 +90,8 @@ API in `buuz_core`:
 | `Config::parse(&str)` | Read a text. Gives `Result<Parsed, ConfigError>` |
 | `Parsed` | `config: Config` and `warnings: Vec<ConfigWarning>` |
 | `Config::to_text()` | Write the canonical text |
-| `Config::options()` | Build the `Options` for the composer |
+| `Config::options()` | Build the `Options` for the composer. It loads no data: `words` stays `None` |
+| `Config::needs_word_list()` | True when a feature needs the word list. The shell then loads it and sets `Options::words` |
 | `Config::default()` | Smart preset, no overrides |
 | Getters, setters | `preset()`, `keys()` and so on; `set_abbreviation(key, value)`, `set_key(key, value)` and the other setters |
 
@@ -118,6 +119,7 @@ smart_vowels = true     # look-ahead vowel harmony
 abbreviations = true    # false turns off all abbreviations, also your own
 keep_latin = true       # Esc shows the raw keys
 auto_latin = true       # true: links and emails turn Latin by themselves
+completion = true       # Tab accepts the rest of a likely word (needs the word list)
 
 # Added to the built-in list. Keys are not case sensitive.
 [abbreviations]
