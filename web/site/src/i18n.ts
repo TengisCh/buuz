@@ -23,7 +23,7 @@ const mn = {
     "Бүх зүйл таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.",
   howTo: "Яаж бичих вэ?",
   howToBody:
-    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай. Үгийн хойно орох эгшгийг ч харж сонгодог тул <kbd>unee</kbd> гэвэл үнээ болно. Эр үгэнд <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий гаргах бол <kbd>ii'</kbd>.",
+    "<kbd>o</kbd>, <kbd>u</kbd> хоёр эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно. Жишээ нь <kbd>geree</kbd> гэвэл гэрээ, <kbd>gar</kbd> гэвэл гар болно. Заавал ө, ү гаргах бол <kbd>q</kbd>, <kbd>w</kbd>-г (эсвэл <kbd>ö</kbd>, <kbd>ü</kbd>-г) ашиглаарай, үү гаргах бол <kbd>vv</kbd> гэж бичээрэй. Үгийн хойно орох эгшгийг ч харж сонгодог тул <kbd>unee</kbd> гэвэл үнээ болно. Эр үгэнд <kbd>ii</kbd> нь ы болно (<kbd>aaviin</kbd> гэвэл аавын). Заавал ий гаргах бол <kbd>ii'</kbd>.",
   abbreviations: "Товчлол (bn → байна)",
   abbreviationsHint:
     "Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.",
@@ -36,6 +36,9 @@ const mn = {
   autocorrect: "Үсгийн алдаа засах",
   autocorrectHint:
     "Алдаатай бичсэн үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz дээрх ижил үгийн жагсаалтаар алдааг нь засна (delgur + зай → дэлгүүр). Жагсаалтад байгаа үгийг хэзээ ч өөрчлөхгүй. Энэ сайт дээр засварласан бичвэр шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Засуулахыг хүсэхгүй бол унтраана уу. Анхнаасаа унтраалттай.",
+  doubleV: "vv-г үү болгох (svv → сүү)",
+  doubleVHint:
+    "Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -80,7 +83,7 @@ const mn = {
   faq1q: "Латин кирилл хөрвүүлэгч үнэгүй юу?",
   faq1a: "Тийм, үнэгүй бөгөөд нээлттэй эх. Бүртгүүлэх, нэвтрэх шаардлагагүй.",
   faq2q: "Ө, Ү үсгийг яаж бичих вэ?",
-  faq2a: "<kbd>q</kbd>, <kbd>ö</kbd> нь ө, <kbd>w</kbd>, <kbd>ü</kbd> нь ү болно. <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
+  faq2a: "<kbd>q</kbd>, <kbd>ö</kbd> нь ө, <kbd>w</kbd>, <kbd>ü</kbd> нь ү болно. <kbd>vv</kbd> нь үү болно (<kbd>svv</kbd> → сүү). <kbd>o</kbd>, <kbd>u</kbd> нь эгшиг зохицох ёсоор о/ө, у/ү-гийн алийг нь өөрөө сонгоно: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
   faq3q: "Бичсэн зүйл маань хаа нэгтээ илгээгдэх үү?",
   faq3a: "Үгүй. Хөрвүүлэлт бүхэлдээ таны төхөөрөмж дээр ажиллана, бичсэн текст хаашаа ч илгээгдэхгүй.",
   faq4q: "Утсан дээр ашиглаж болох уу?",
@@ -225,7 +228,7 @@ const en: Record<Key, string> = {
     "Everything runs on your device. What you type is never sent anywhere.",
   howTo: "How to type",
   howToBody:
-    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү. Buuz also looks ahead in the word, so <kbd>unee</kbd> gives үнээ, and <kbd>ii</kbd> becomes ы in masculine words (<kbd>aaviin</kbd> gives аавын). To force ий, type <kbd>ii'</kbd>.",
+    "<kbd>o</kbd> and <kbd>u</kbd> pick о/ө and у/ү by vowel harmony, so <kbd>geree</kbd> gives гэрээ and <kbd>gar</kbd> gives гар. To force a letter, use <kbd>q</kbd> or <kbd>w</kbd> (or <kbd>ö</kbd> or <kbd>ü</kbd>) for ө and ү, and <kbd>vv</kbd> for үү. Buuz also looks ahead in the word, so <kbd>unee</kbd> gives үнээ, and <kbd>ii</kbd> becomes ы in masculine words (<kbd>aaviin</kbd> gives аавын). To force ий, type <kbd>ii'</kbd>.",
   abbreviations: "Abbreviations (bn → байна)",
   abbreviationsHint:
     "A short form expands when you type a space or punctuation after it (bn then a space gives байна). On this website, deleting that space brings the abbreviation back; in the upcoming desktop keyboards, Backspace right after the space undoes it. Turn the checkbox off to never expand.",
@@ -238,6 +241,9 @@ const en: Record<Key, string> = {
   autocorrect: "Fix spelling mistakes",
   autocorrectHint:
     "When you type a space or punctuation after a misspelled word, Buuz fixes it with the same word list (delgur then a space gives дэлгүүр). It never changes a word that is in the list. This website shows the fixed text and has no Backspace undo. Turn the checkbox off to stop the fixes. It is off by default.",
+  doubleV: "Type vv as үү (svv → сүү)",
+  doubleVHint:
+    "Two <kbd>v</kbd> keys in a row give үү (svv gives сүү). A single v stays в (avah gives авах). Turn the checkbox off to type вв. It is on by default.",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",
@@ -281,7 +287,7 @@ const en: Record<Key, string> = {
   faq1q: "Is the Latin to Cyrillic converter free?",
   faq1a: "Yes, it is free and open source. No sign-up or login.",
   faq2q: "How do I type Ө and Ү?",
-  faq2a: "<kbd>q</kbd> or <kbd>ö</kbd> gives ө and <kbd>w</kbd> or <kbd>ü</kbd> gives ү. <kbd>o</kbd> and <kbd>u</kbd> choose о/ө and у/ү by vowel harmony: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
+  faq2a: "<kbd>q</kbd> or <kbd>ö</kbd> gives ө and <kbd>w</kbd> or <kbd>ü</kbd> gives ү. <kbd>vv</kbd> gives үү (<kbd>svv</kbd> → сүү). <kbd>o</kbd> and <kbd>u</kbd> choose о/ө and у/ү by vowel harmony: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
   faq3q: "Is what I type sent anywhere?",
   faq3a: "No. Conversion runs entirely on your device and the text never leaves it.",
   faq4q: "Can I use it on my phone?",

@@ -83,6 +83,7 @@ const smartBox = document.getElementById("smart") as HTMLInputElement;
 const abbrBox = document.getElementById("abbr") as HTMLInputElement;
 const completionBox = document.getElementById("completion") as HTMLInputElement;
 const autocorrectBox = document.getElementById("autocorrect") as HTMLInputElement;
+const doubleVBox = document.getElementById("double-v") as HTMLInputElement;
 // The typewriter demo never expands abbreviations.
 let ghostConfig = "";
 
@@ -97,6 +98,7 @@ function applyConfig(): void {
   abbrBox.checked = s.abbreviations;
   completionBox.checked = s.completion;
   autocorrectBox.checked = s.autocorrect;
+  doubleVBox.checked = s.doubleV;
   // Turned on while the box has focus: load the list now (see loadWords).
   // Autocorrect needs the list for the output, so it loads it at once.
   if (document.activeElement === latin || s.autocorrect) loadWords();
@@ -127,6 +129,9 @@ completionBox.addEventListener("change", () => ready && setConfig(config_set_opt
 
 // "Fix spelling mistakes" (off by default): see docs/typing-rules.md section 13.
 autocorrectBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "autocorrect", autocorrectBox.checked)));
+
+// "Type vv as үү" (on by default): see docs/typing-rules.md section 3.
+doubleVBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "double_v", doubleVBox.checked)));
 
 // Completion hint: under the Latin box, the whole Cyrillic word with the
 // ghost part in grey. It shows only while the box has focus, nothing is

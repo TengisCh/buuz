@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import init, { convert_with, convert_with_config, default_config_text } from "../src/wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_with, convert_with_config, default_config_text } from "../src/wasm/buuz.js";
 import { BAD_CONFIG_KEY, CONFIG_KEY, applyImport, importConfig, loadConfigState, loadConfig, migrateLegacy, saveConfig, switchesOf } from "../src/config.ts";
 import { issueText, strings } from "../src/i18n.ts";
 
@@ -41,7 +41,7 @@ test("old keys migrate into a config, which is saved; the old keys go", () => {
   const cfg = loadConfig(store);
   assert.equal(store.getItem(CONFIG_KEY), cfg);
   assert.equal(store.data.has("buuz.mode") || store.data.has("buuz.smart") || store.data.has("buuz.abbr"), false);
-  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, classicWithFeatures: false });
+  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, doubleV: false, classicWithFeatures: false });
   assert.equal(convert_with_config("unee", cfg), "унээ");
 });
 
@@ -52,6 +52,7 @@ test("each old key migrates on its own", () => {
     abbreviations: true,
     completion: true,
     autocorrect: false,
+    doubleV: true,
     classicWithFeatures: false,
   });
   const abbr = migrateLegacy((k) => (k === "buuz.abbr" ? "off" : null));
@@ -164,10 +165,24 @@ test("a corrupt saved config is kept in buuz.config.bad before the default is us
 
 test("classic with overrides that turn smart features on is reported", () => {
   const s = switchesOf('buuz_config = 1\npreset = "classic"\n[options]\nsmart_vowels = true\n');
-  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, classicWithFeatures: true });
+  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, doubleV: false, classicWithFeatures: true });
 });
 
 test("the size limit has one wording, and entry counts have their own message", () => {
   assert.deepEqual(importConfig("#".repeat(1024 * 1024 + 1)).error, { code: "too_large", number: 0, detail: "1 MiB" });
   assert.ok(issueText({ code: "too_many_entries", number: 7, detail: "10000" }).includes("7"));
+});
+
+test("double v is a switch: on in smart, off in classic, and it types vv as үү", () => {
+  const cfg = default_config_text();
+  assert.equal(switchesOf(cfg).doubleV, true);
+  assert.equal(convert_with_config("svv", cfg), "сүү");
+  const off = config_set_option(cfg, "double_v", false);
+  assert.equal(switchesOf(off).doubleV, false);
+  assert.equal(convert_with_config("svv", off), "свв");
+  const classic = config_set_classic(cfg, true);
+  assert.equal(switchesOf(classic).doubleV, false);
+  // Only double v on in Classic counts as a smart feature.
+  const classicOn = config_set_option(classic, "double_v", true);
+  assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
