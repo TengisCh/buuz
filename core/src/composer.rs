@@ -27,7 +27,7 @@ use crate::abbrev::Abbreviations;
 use crate::autocorrect::{self, Scratch};
 use crate::keys::KeyMap;
 use crate::rules::{
-    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_F, X_II, X_M, X_MF, X_MM,
+    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_DV, X_F, X_II, X_M, X_MF, X_MM,
 };
 use crate::userdict::{Learned, UserSnapshot};
 use crate::wordlist::WordList;
@@ -166,6 +166,11 @@ pub struct Options {
     /// tells them, for private windows. With `false` the composer records
     /// nothing.
     pub learning: bool,
+    /// Double V: the key pair `vv` gives үү (`svv` is сүү). A single `v`
+    /// stays в. The pair counts as feminine for vowel harmony, like `w`.
+    /// `true` in smart mode, `false` in classic mode (the original Buuz gives
+    /// вв).
+    pub double_v: bool,
 }
 
 impl Default for Options {
@@ -181,6 +186,7 @@ impl Default for Options {
             autocorrect: false,
             user: None,
             learning: true,
+            double_v: true,
         }
     }
 }
@@ -201,6 +207,7 @@ impl Options {
             autocorrect: false,
             user: None,
             learning: true,
+            double_v: true,
         }
     }
 
@@ -218,6 +225,7 @@ impl Options {
             autocorrect: false,
             user: None,
             learning: false,
+            double_v: false,
         }
     }
 }
@@ -333,6 +341,8 @@ pub(crate) struct Token {
 #[derive(Debug, Clone, Copy)]
 struct Context {
     smart: bool,
+    /// The `X_DV` rules (`vv`) are active.
+    double_v: bool,
     /// Gender of the word before a space, if the last key was a space.
     prev_gender: Option<u8>,
 }
@@ -361,8 +371,10 @@ fn evidence(rs: &RuleSet, tokens: &[Token], idx: usize) -> Option<u8> {
     }
     for rule in tok_rules(rs, tok) {
         if rule.flags & X_MF != 0 {
-            // An explicit ү right after г is the suffix -гүй (болохгүй).
-            let explicit_u = rule.to.first().map(|&c| to_lower(c)) == Some('ү');
+            // An explicit ү right after г is the suffix -гүй (болохгүй). The
+            // pair `vv` is not: its second ү is evidence, as in `gww`.
+            let explicit_u =
+                rule.flags & X_DV == 0 && rule.to.first().map(|&c| to_lower(c)) == Some('ү');
             if explicit_u && idx > 0 && gives(rs, &tokens[idx - 1], 'г') {
                 return None;
             }
@@ -420,7 +432,11 @@ fn read_to_comp(
         let mut group = None;
         for &l in &rs.lengths {
             if l <= read.len() - i {
-                if let Some((g, _)) = rs.get(&read[i..i + l]) {
+                if let Some((g, rules)) = rs.get(&read[i..i + l]) {
+                    // An `X_DV` rule (`vv`) exists only with the option on.
+                    if !ctx.double_v && rules.iter().all(|r| r.flags & X_DV != 0) {
+                        continue;
+                    }
                     len = l;
                     group = Some(g);
                     break;
@@ -798,6 +814,7 @@ impl Composer {
         }
         let ctx = Context {
             smart: self.opts.smart_vowels,
+            double_v: self.opts.double_v,
             prev_gender: self.prev_gender,
         };
         let rs = match &self.opts.keys {

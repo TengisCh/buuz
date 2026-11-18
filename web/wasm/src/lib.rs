@@ -966,7 +966,7 @@ mod tests {
     }
 
     // "v" for ү, typed in a sentence with ү in it. "v" gives в by default.
-    const V_PAIRS: &str = r#"[["гүү","gvv"],["үнэ","vne"]]"#;
+    const V_PAIRS: &str = r#"[["гүн","gvn"],["үнэ","vne"]]"#;
 
     #[test]
     fn calibrate_json_reports_suggestions() {
@@ -1027,7 +1027,7 @@ mod tests {
         // Nothing accepted: the config is unchanged.
         assert_eq!(super::calibrate_apply(&cfg, V_PAIRS, "[]").unwrap(), cfg);
         // Two suggestions, only the second accepted.
-        let pairs = r#"[["гүү","gvv"],["үнэ","vne"],["цай","hai"],["цай","hai"]]"#;
+        let pairs = r#"[["гүн","gvn"],["үнэ","vne"],["цай","hai"],["цай","hai"]]"#;
         let j = super::calibrate_json(pairs).unwrap();
         let n = j.matches("\"chunk\"").count();
         assert!(n >= 2, "{j}");
@@ -1060,9 +1060,9 @@ mod tests {
 
     #[test]
     fn json_escapes_decode_to_the_same_text() {
-        let plain = super::calibrate_json(r#"[["гүү","gvv"],["гэр 😀","ger 😀"]]"#).unwrap();
+        let plain = super::calibrate_json(r#"[["гүн","gvn"],["гэр 😀","ger 😀"]]"#).unwrap();
         // \u escapes (lower and upper case hex), a surrogate pair, \/ and \"
-        let esc = super::calibrate_json(r#"[["гүү","gvv"],["гэр 😀","ger 😀"]]"#).unwrap();
+        let esc = super::calibrate_json(r#"[["гүн","gvn"],["гэр 😀","ger 😀"]]"#).unwrap();
         assert_eq!(plain, esc);
         let slash = super::calibrate_json(r#"[["гэр","ger\/"],["гэр","ger"]]"#).unwrap();
         assert!(slash.contains("\"suggestions\":[]"), "{slash}");
