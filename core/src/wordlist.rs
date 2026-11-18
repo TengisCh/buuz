@@ -4,8 +4,10 @@
 
 //! The Mongolian word list (issue #11): common words by frequency rank, with
 //! exact lookup and prefix search. No I/O and no dependency: the caller hands
-//! over the text of `data/wordlist/mn.txt`. It is not on the typing path;
-//! nothing parses it until a feature that needs it asks.
+//! over the text of `data/wordlist/mn.txt`. Parsing is not on the typing
+//! path: shells load the list lazily, when `Config::needs_word_list()` is
+//! true. With completion on, `top_two` runs once per key, so it must stay
+//! allocation-free and fast.
 //!
 //! Format: one `word<TAB>count` per line, best rank first. Lines starting with `#` and blank lines are skipped.
 //!

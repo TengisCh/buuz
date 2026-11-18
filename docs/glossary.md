@@ -47,6 +47,7 @@ when a new concept appears; rename here first when a name changes.
 | Config | The portable settings file shared by web, Windows and macOS. A small TOML subset: a preset, option overrides, user abbreviations and custom keys. Versioned with `buuz_config = 1`. Unknown options and sections give warnings, not errors. See ADR 0005 | `Config` |
 | Preset | The base of a config: `smart` (default) or `classic`. Options in the config only override it | `Preset` |
 | Key map | The built-in rule table with the user's `[keys]` changes applied. Built once and shared. Without one, the composer uses the built-in table. See `docs/typing-rules.md` §10 | `KeyMap`, `Options::keys` |
+| Completion | Ghost text after the preedit: the rest of a clear winner from the word list. Tab, or Right at the end, accepts it. See `docs/typing-rules.md` §12 | `Composer::completion`, `Options::completion`, `Key::Tab` |
 | Target | The Cyrillic value of a `[keys]` entry (`ү`, or a pair such as `у/ү`). The new key copies the rules of the built-in key that gives it. Empty removes the key | `KeyMap::from_pairs`, `KeyError::UnknownTarget` |
 | Calibration | A short test where the user types Cyrillic sentences in Latin. It suggests `[keys]` entries for the keys the built-in table does not give. Offline, not on the typing path. See `docs/typing-rules.md` §11 | `calibrate`, `Calibration` |
 | Suggestion | One key proposed by calibration: a chunk typed for a letter (or a gender pair), how often, and the letter it displaces | `Suggestion` |

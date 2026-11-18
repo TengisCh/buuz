@@ -256,7 +256,8 @@ desktop keyboards: the website converts the whole text, not keystrokes.
   the same gesture. The same limits apply: only straight after a space,
   Shift and CapsLock keep it armed, and any other key, punctuation, Enter,
   `commit()`, `reset()`, `cancel()` or `clear_context()` drops it. A frozen
-  word (caret moved) does not reopen. For shell authors: with `keep_latin`,
+  word (caret moved, or accepted by Tab, section 12) reopens too, from its
+  Cyrillic text, and stays frozen: it never expands and Esc does nothing. For shell authors: with `keep_latin`,
   Backspace after any word and a space is consumed, so a missing
   `clear_context()` call after a caret move now matters after every word, not
   only after abbreviations.
@@ -442,7 +443,47 @@ already has.
   only in unmatched pairs) are listed, so the result can say what was not
   tested.
 
-## 12. Cyrillic to Latin
+## 12. Completion
+
+Completion shows the rest of a likely word as ghost text after the preedit,
+and Tab accepts it (issue #2). It reads the word list
+(`data/wordlist/mn.txt`, issue #11) and never leaves the device.
+
+- **Switch.** `Options::completion` (config `[options] completion`) is on in
+  smart mode and off in classic. It works only when `Options::words` holds the
+  list. `Config::options()` cannot load data, so the shell reads
+  `Config::needs_word_list()` first, loads the list and sets `words`. Without
+  a list, or in classic, Tab is exactly `Key::Other` and nothing changes.
+- **When there is a ghost.** `Composer::completion()` gives the suffix when
+  all of these hold: the preedit is Cyrillic (not the Esc Latin view, not
+  re-seeded), the caret is at the end, the preedit has at least 3 letters
+  (converted Cyrillic letters, not typed keys), and the best word that starts with the lower-cased preedit is longer than
+  the preedit and clearly ahead: it is the only candidate, or its count is at
+  least twice the second one's. With custom keys the ghost follows the
+  converted preedit.
+- **Case.** An all upper-case preedit gives an upper-case ghost. Otherwise
+  the ghost is lower case (`Баярл` gives `алаа`).
+- **Accept.** Tab, or Right with the caret at the end, turns the preedit into
+  preedit plus suffix. It is frozen as Cyrillic, like after a caret move: it
+  is re-seeded, never expands as an abbreviation, and the caret is at the end.
+  The word stays in the preedit: a suffix typed after it still composes (the
+  gender evidence of the word holds, `гэрлэх` plus `ii` gives `гэрлэхий`), and
+  Space commits it, and Backspace right after that Space reopens it (section
+  8). Auto Latin stops for the rest of the run after an accept, as after any
+  caret move (section 9): `гоогл` accepted, then `.com` stays Cyrillic. A run
+  that already turned Latin shows no ghost. The accepted word decides the
+  gender it leaves for a following particle. Tab with no ghost finishes the word and passes through,
+  like `Key::Other`. `wants_key(Key::Tab)` is true only with a ghost.
+- **Dismiss.** Typing on recomputes the ghost. Esc keeps its meaning (the
+  Latin view), and the Latin view has no ghost.
+- **Cost.** After each key the composer lower-cases the preedit into a reused
+  buffer and asks the list for the top two words, with no allocation. The
+  `completion()` returns a `&str` into the composer's buffer, so it does not
+  allocate; the FFI and wasm layers copy at their boundary. A release-only
+  test holds the worst key plus query under 10 microseconds (the budget of
+  `docs/architecture.md` section 4); CI runs debug.
+
+## 13. Cyrillic to Latin
 
 Not implemented. The core only converts Latin to Cyrillic. A reverse
 converter is on the roadmap for the web converter. If added, it should
@@ -450,7 +491,7 @@ produce keys that convert back to the same text with the default table
 (`ү` → `w`, `ө` → `q`, `х` → `h`, `ц` → `c`, `ы` → `y`, `ь` → `'`), so that
 round trips are exact.
 
-## 13. Planned changes
+## 14. Planned changes
 
 - [#8](https://github.com/TengisCh/buuz/issues/8) portable config and
   smarter defaults

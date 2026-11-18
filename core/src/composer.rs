@@ -27,6 +27,7 @@ use crate::keys::KeyMap;
 use crate::rules::{
     rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_F, X_II, X_M, X_MF, X_MM,
 };
+use crate::wordlist::WordList;
 
 /// Maximum number of raw input characters in one composition (as original).
 pub const MAX_COMP_LEN: usize = 50;
@@ -56,7 +57,11 @@ pub enum Key {
     /// word and passes through. With [`Options::auto_latin`] the composer also
     /// watches the run for a link or an email and may turn it Latin.
     Symbol(char),
-    /// Anything else (Enter, Tab and other non-printing keys).
+    /// Tab. With a completion (see [`Composer::completion`]) it is consumed
+    /// and accepts the ghost text into the preedit. Otherwise it acts like
+    /// [`Key::Other`].
+    Tab,
+    /// Anything else (Enter and other non-printing keys).
     /// Ends the composition and is passed through to the application.
     Other,
 }
@@ -120,6 +125,14 @@ pub struct Options {
     /// and [`Options::classic`]) uses the shared built-in table. Build a
     /// [`KeyMap`] once and share it; keys cost nothing extra per keystroke.
     pub keys: Option<Arc<KeyMap>>,
+    /// The loaded word list. `None` (the default, also for [`Options::smart`]
+    /// and [`Options::classic`]): features that need words stay off. The shell
+    /// loads it only when [`crate::Config::needs_word_list`] says so.
+    pub words: Option<Arc<WordList>>,
+    /// Completion: show the rest of a clear winner from `words` as ghost text,
+    /// and let Tab (or Right at the end) accept it. Active only with `words`
+    /// set. `false` is the original Buuz behaviour.
+    pub completion: bool,
 }
 
 impl Default for Options {
@@ -130,6 +143,8 @@ impl Default for Options {
             keep_latin: true,
             auto_latin: true,
             keys: None,
+            words: None,
+            completion: true,
         }
     }
 }
@@ -145,6 +160,8 @@ impl Options {
             keep_latin: true,
             auto_latin: true,
             keys: None,
+            words: None,
+            completion: true,
         }
     }
 
@@ -157,6 +174,8 @@ impl Options {
             keep_latin: false,
             auto_latin: false,
             keys: None,
+            words: None,
+            completion: false,
         }
     }
 }
@@ -165,8 +184,10 @@ impl Options {
 /// abbreviation expansion, or (with [`Options::keep_latin`]) any word.
 #[derive(Debug, Clone)]
 struct Undo {
-    /// The raw keys of the word.
+    /// The raw keys of the word; for a re-seeded word its Cyrillic text.
     raw: Vec<char>,
+    /// The word was frozen (re-seeded) when it was committed: it reopens frozen.
+    reseeded: bool,
     /// The word was shown in Latin (Esc) when it was committed.
     latin: bool,
     /// Characters to delete: the committed word plus the space.
@@ -446,6 +467,11 @@ pub struct Composer {
     spare: Vec<char>,
     /// Scratch buffer reused across keystrokes.
     tokens: Vec<Token>,
+    /// The preedit in lower case, reused by `refresh_ghost` on every key.
+    lower: String,
+    /// The ghost text after the preedit; valid when `ghost_on`.
+    ghost: String,
+    ghost_on: bool,
 }
 
 impl Default for Composer {
@@ -477,12 +503,16 @@ impl Composer {
             run_latin: false,
             spare: Vec::new(),
             tokens: Vec::new(),
+            lower: String::new(),
+            ghost: String::new(),
+            ghost_on: false,
         }
     }
 
     /// Change the options; takes effect from the next recomposition.
     pub fn set_options(&mut self, opts: Options) {
         self.opts = opts;
+        self.refresh_ghost();
     }
 
     /// Forget the previous word (the particle `uu` then stays masculine) and
@@ -509,6 +539,68 @@ impl Composer {
         self.cursor
     }
 
+    /// The ghost text to show after the preedit, when the list has a clear
+    /// winner: the word list is set, the preedit is Cyrillic (not the Latin
+    /// view, not re-seeded) with the caret at the end and at least 3 letters
+    /// (converted Cyrillic letters, not typed keys), and the best word for it is longer and at least twice as frequent as
+    /// the second best (or the only one). Upper case when the preedit is all
+    /// upper case; otherwise lower case. Tab accepts it. Borrows the composer's
+    /// buffer: no allocation (FFI and wasm layers copy at their boundary).
+    pub fn completion(&self) -> Option<&str> {
+        self.ghost_on.then_some(self.ghost.as_str())
+    }
+
+    /// Recompute the ghost. Runs after every key; reuses its buffers, so it
+    /// does not allocate once they have grown.
+    fn refresh_ghost(&mut self) {
+        self.ghost_on = false;
+        let words = match &self.opts.words {
+            Some(w) if self.opts.completion => w,
+            _ => return,
+        };
+        let n = self.comp.len();
+        if self.latin || self.reseeded || n < 3 || self.cursor != n {
+            return;
+        }
+        self.lower.clear();
+        self.lower.extend(self.comp.iter().map(|&c| to_lower(c)));
+        let (top, second) = words.top_two(&self.lower);
+        let Some((word, count)) = top else { return };
+        let clear = match second {
+            None => true,
+            Some((_, c2)) => u64::from(count) >= 2 * u64::from(c2),
+        };
+        if !clear || word.len() <= self.lower.len() {
+            return;
+        }
+        let suffix = &word[self.lower.len()..];
+        if n + suffix.chars().count() > MAX_COMP_LEN {
+            return;
+        }
+        let upper = self.comp.iter().all(|c| c.is_uppercase());
+        self.ghost.clear();
+        for ch in suffix.chars() {
+            if upper {
+                self.ghost.extend(ch.to_uppercase());
+            } else {
+                self.ghost.push(ch);
+            }
+        }
+        self.ghost_on = true;
+    }
+
+    /// Accept the ghost: the preedit becomes preedit plus suffix, frozen as
+    /// Cyrillic like after a caret move.
+    fn accept_ghost(&mut self) {
+        let suffix = std::mem::take(&mut self.ghost);
+        self.comp.extend(suffix.chars());
+        self.ghost = suffix;
+        self.comp_to_read();
+        // The accepted word decides the gender it leaves for a particle.
+        self.recompose();
+        self.cursor = self.comp.len();
+    }
+
     /// Raw input buffer (what the user typed).
     pub fn raw(&self) -> String {
         self.read.iter().collect()
@@ -521,6 +613,7 @@ impl Composer {
             Key::Char(c) if is_input_char(c) => true,
             Key::Backspace if self.undo.is_some() => true,
             Key::Escape => self.opts.keep_latin && !self.comp.is_empty(),
+            Key::Tab => self.ghost_on,
             _ if self.comp.is_empty() => false,
             Key::Backspace
             | Key::Delete
@@ -599,6 +692,7 @@ impl Composer {
         raw.extend_from_slice(&self.read);
         self.undo = Some(Undo {
             raw,
+            reseeded: self.reseeded,
             latin,
             delete,
             prev_gender: self.prev_gender,
@@ -608,6 +702,7 @@ impl Composer {
 
     /// Empty the buffer; the previous-word context and the undo stay.
     fn clear_buffer(&mut self) {
+        self.ghost_on = false;
         self.reseeded = false;
         self.no_expand = false;
         self.latin = false;
@@ -673,8 +768,8 @@ impl Composer {
                 (Some(text), gender)
             }
             None => {
-                // A word re-seeded from Cyrillic has no raw keys left to reopen.
-                if space && self.opts.keep_latin && !self.reseeded && !self.comp.is_empty() {
+                // A re-seeded word reopens from its Cyrillic text, still frozen.
+                if space && self.opts.keep_latin && !self.comp.is_empty() {
                     self.arm_undo(self.latin, self.comp.len() + 1);
                 }
                 let gender = Some(self.word_gender);
@@ -755,6 +850,7 @@ impl Composer {
             buf.clear();
             self.undo = Some(Undo {
                 raw: buf,
+                reseeded: false,
                 latin: false,
                 delete: raw.chars().count() + 1,
                 prev_gender: None,
@@ -779,6 +875,24 @@ impl Composer {
 
     /// Process one key. Ports `ImeProcessKey` + `ImeToAsciiEx`.
     pub fn process_key(&mut self, key: Key) -> KeyOutcome {
+        let accept = self.ghost_on
+            && (key == Key::Tab || (key == Key::Right && self.cursor == self.comp.len()));
+        let out = if accept {
+            self.accept_ghost();
+            KeyOutcome {
+                consumed: true,
+                ..KeyOutcome::default()
+            }
+        } else {
+            // Without a completion Tab is exactly `Other`.
+            let key = if key == Key::Tab { Key::Other } else { key };
+            self.process_key_inner(key)
+        };
+        self.refresh_ghost();
+        out
+    }
+
+    fn process_key_inner(&mut self, key: Key) -> KeyOutcome {
         let mut out = KeyOutcome::default();
         // Without Auto Latin a symbol is just `Other`.
         let key = match key {
@@ -805,6 +919,7 @@ impl Composer {
                     self.spare = u.raw;
                     self.latin = u.latin;
                     self.no_expand = true;
+                    self.reseeded = u.reseeded;
                     self.prev_gender = u.prev_gender;
                     self.recompose();
                     self.cursor = self.comp.len();

@@ -74,6 +74,7 @@ pub struct Config {
     abbreviations: Option<bool>,
     keep_latin: Option<bool>,
     auto_latin: Option<bool>,
+    completion: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -479,6 +480,18 @@ impl Config {
         self.auto_latin
     }
 
+    /// Override for [`Options::completion`].
+    pub fn completion(&self) -> Option<bool> {
+        self.completion
+    }
+
+    /// Whether the shell must load the word list and set [`Options::words`]:
+    /// true when completion is on (the override, else the preset). `options()`
+    /// cannot load data, so shells read this first.
+    pub fn needs_word_list(&self) -> bool {
+        self.completion.unwrap_or(self.preset == Preset::Smart)
+    }
+
     /// User abbreviations in file order, with lowercase keys. They go on top
     /// of the built-in list. An empty value removes a built-in entry.
     pub fn abbreviation_entries(&self) -> &[(String, String)] {
@@ -516,6 +529,11 @@ impl Config {
     /// Set or clear the auto Latin override.
     pub fn set_auto_latin(&mut self, value: Option<bool>) {
         self.auto_latin = value;
+    }
+
+    /// Set or clear the completion override.
+    pub fn set_completion(&mut self, value: Option<bool>) {
+        self.completion = value;
     }
 
     /// Add or replace a user abbreviation. The key goes to lowercase and the
@@ -636,7 +654,7 @@ impl Config {
             if section == Section::Options
                 && !matches!(
                     key.as_str(),
-                    "smart_vowels" | "abbreviations" | "keep_latin" | "auto_latin"
+                    "smart_vowels" | "abbreviations" | "keep_latin" | "auto_latin" | "completion"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -684,7 +702,8 @@ impl Config {
                         "smart_vowels" => &mut config.smart_vowels,
                         "abbreviations" => &mut config.abbreviations,
                         "keep_latin" => &mut config.keep_latin,
-                        _ => &mut config.auto_latin,
+                        "auto_latin" => &mut config.auto_latin,
+                        _ => &mut config.completion,
                     };
                     if slot.is_some() {
                         return Err(dup(line, &key));
@@ -738,6 +757,7 @@ impl Config {
             ("abbreviations", self.abbreviations),
             ("keep_latin", self.keep_latin),
             ("auto_latin", self.auto_latin),
+            ("completion", self.completion),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -797,6 +817,8 @@ impl Config {
             abbreviations,
             keep_latin: self.keep_latin.unwrap_or(base.keep_latin),
             auto_latin: self.auto_latin.unwrap_or(base.auto_latin),
+            words: None,
+            completion: self.completion.unwrap_or(base.completion),
         }
     }
 }
