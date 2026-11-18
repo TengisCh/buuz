@@ -7,7 +7,9 @@ Buuz 2.0 uses three licensing rules, depending on where the code came from.
 2. data/wordlist/ (the Mongolian word list) is derived from Mongolian
    Wikipedia and is licensed under CC BY-SA 4.0
    (https://creativecommons.org/licenses/by-sa/4.0/). See
-   data/wordlist/LICENSE and data/wordlist/README.md.
+   data/wordlist/LICENSE and data/wordlist/README.md. data/benchmark/
+   (typing-habit pairs generated from that word list) is under the same
+   licence. See data/benchmark/LICENSE and data/benchmark/README.md.
 
 3. Everything else in this repository is new code, licensed under either of
 
@@ -24,4 +26,5 @@ reasoning.
 SPDX summary:
   core/**            Apache-2.0
   data/wordlist/**   CC-BY-SA-4.0
+  data/benchmark/**  CC-BY-SA-4.0
   all other  MIT OR Apache-2.0

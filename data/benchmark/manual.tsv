@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# Hand-written typing-habit pairs. See data/benchmark/README.md.
+# profile<TAB>latin<TAB>cyrillic
+u_for_ө	uvul	өвөл
+u_for_ө	udur	өдөр
+u_for_ө	tuv	төв
+u_for_ө	uruu	өрөө
+v_for_ү	svv	сүү

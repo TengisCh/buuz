@@ -6,10 +6,10 @@ name: core
 on:
   push:
     branches: [main]
-    paths: ["core/**", "data/wordlist/**", ".github/workflows/core.yml"]
+    paths: ["core/**", "data/wordlist/**", "data/benchmark/**", ".github/workflows/core.yml"]
     tags: ["v*"]
   pull_request:
-    paths: ["core/**", "data/wordlist/**", ".github/workflows/core.yml"]
+    paths: ["core/**", "data/wordlist/**", "data/benchmark/**", ".github/workflows/core.yml"]
   workflow_dispatch:
 
 # Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).

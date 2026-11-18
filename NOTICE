@@ -20,3 +20,6 @@ contributors; dump mnwiki-20261101,
 https://dumps.wikimedia.org/mnwiki/20261101/) and is licensed under
 CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/).
 See data/wordlist/LICENSE.
+
+data/benchmark/ holds typing-habit pairs generated from that word list. It is
+licensed under CC BY-SA 4.0 as well. See data/benchmark/LICENSE.
