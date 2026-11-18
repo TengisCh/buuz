@@ -33,6 +33,9 @@ const mn = {
   completionCredit:
     'Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.',
   completionHintLabel: "Tab — гүйцээх, Esc — хаах:",
+  autocorrect: "Үсгийн алдаа засах",
+  autocorrectHint:
+    "Алдаатай бичсэн үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz дээрх ижил үгийн жагсаалтаар алдааг нь засна (delgur + зай → дэлгүүр). Жагсаалтад байгаа үгийг хэзээ ч өөрчлөхгүй. Энэ сайт дээр засварласан бичвэр шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Засуулахыг хүсэхгүй бол унтраана уу. Анхнаасаа унтраалттай.",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -201,6 +204,9 @@ const en: Record<Key, string> = {
   completionCredit:
     'Word list: Mongolian Wikipedia (its contributors), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Details</a>.',
   completionHintLabel: "Tab to finish, Esc to dismiss:",
+  autocorrect: "Fix spelling mistakes",
+  autocorrectHint:
+    "When you type a space or punctuation after a misspelled word, Buuz fixes it with the same word list (delgur then a space gives дэлгүүр). It never changes a word that is in the list. This website shows the fixed text and has no Backspace undo. Turn the checkbox off to stop the fixes. It is off by default.",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",

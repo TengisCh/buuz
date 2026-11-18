@@ -559,6 +559,13 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
   Remembering across sessions is issue #12.
 - **Shells.** `KeyOutcome::corrected` is true when the commit holds a changed
   word, so a shell can flash or underline it.
+- **Web.** The converter turns the whole Latin box into Cyrillic in one call
+  (`convert_with_config`). With the switch on and the word list loaded, it
+  corrects each word that a Space or punctuation ends, as the core does. A
+  newline or the end of the text does not correct. The switch is in the
+  settings dialog, off by default. The page loads the word list when the
+  switch is on, then converts again. The converter has no Backspace undo.
+  It shows the corrected text. To stop corrections, turn the switch off.
 - **Cost.** The search runs once per word. It reuses its buffers and checks
   each edit with `WordList::count`, so it allocates only the result. A
   release-only test holds the worst word under 1 millisecond. A word of 16
