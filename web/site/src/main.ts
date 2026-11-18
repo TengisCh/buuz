@@ -81,6 +81,7 @@ const modeRadios = document.querySelectorAll<HTMLInputElement>('input[name="mode
 const smartBox = document.getElementById("smart") as HTMLInputElement;
 const abbrBox = document.getElementById("abbr") as HTMLInputElement;
 const completionBox = document.getElementById("completion") as HTMLInputElement;
+const autocorrectBox = document.getElementById("autocorrect") as HTMLInputElement;
 // The typewriter demo never expands abbreviations.
 let ghostConfig = "";
 
@@ -94,8 +95,10 @@ function applyConfig(): void {
   smartBox.checked = s.smartVowels;
   abbrBox.checked = s.abbreviations;
   completionBox.checked = s.completion;
+  autocorrectBox.checked = s.autocorrect;
   // Turned on while the box has focus: load the list now (see loadWords).
-  if (document.activeElement === latin) loadWords();
+  // Autocorrect needs the list for the output, so it loads it at once.
+  if (document.activeElement === latin || s.autocorrect) loadWords();
   ghostConfig = config_set_option(config, "abbreviations", false);
 }
 
@@ -121,6 +124,9 @@ abbrBox.addEventListener("change", () => ready && setConfig(config_set_option(co
 // "Finish words with Tab" (on by default): see docs/typing-rules.md section 12.
 completionBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "completion", completionBox.checked)));
 
+// "Fix spelling mistakes" (off by default): see docs/typing-rules.md section 13.
+autocorrectBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "autocorrect", autocorrectBox.checked)));
+
 // Completion hint: under the Latin box, the whole Cyrillic word with the
 // ghost part in grey. It shows only while the box has focus, nothing is
 // selected, and the caret is at the end of a word. Tab accepts the word only
@@ -133,8 +139,14 @@ let dismissed: string | null = null; // "start:latin word" that Esc hid
 
 /** Load the word list (a separate asset) the first time it is needed. */
 function loadWords(): void {
-  if (!ready || !switchesOf(config).completion) return;
-  void ensureWordList(wordListUrl, location.href, fetch).then(updateHint);
+  if (!ready) return;
+  const s = switchesOf(config);
+  if (!s.completion && !s.autocorrect) return;
+  // After the list loads, convert again so autocorrect shows in the output.
+  void ensureWordList(wordListUrl, location.href, fetch).then((ok) => {
+    updateHint();
+    if (ok && switchesOf(config).autocorrect) render();
+  });
 }
 function wordKey(c: Completion): string {
   const end = latin.selectionStart;
@@ -632,6 +644,7 @@ init({ module_or_path: wasmUrl }).then(() => {
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
   applyConfig();
   ready = true;
+  if (switchesOf(config).autocorrect) loadWords(); // applyConfig ran before ready
   render(); // text typed while the module was loading
   fit();
   if (reducedMotion) showGhost(pool[0], false);
