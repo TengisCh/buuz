@@ -630,6 +630,21 @@ learning events. It does no I/O: each shell keeps the text itself.
   focus or after an idle pause, not after every word. The new snapshot shows the
   change from then on. Autocorrect also skips the words rejected in the
   session (section 13), so an undo works at once.
+- **Web.** The converter has no composer and no Backspace undo, and it
+  converts the whole Latin box again on each input. So it never learns: it
+  records no `use` and no `reject` entry, because the same word would count
+  many times. It only reads the dictionary. The page keeps the text in
+  `localStorage` under `buuz.userdict` and gives it to wasm with
+  `set_user_dict`, which builds the snapshot again only when the text
+  changes. Autocorrect (`convert_with_config`) and completion (`complete_at`)
+  use that snapshot, so an added word is not corrected and Tab can finish it.
+  The settings dialog lists the entries, adds a Cyrillic word (the core
+  checks it), deletes one, clears all with a confirm, and exports or imports
+  a separate `.txt` file. An import merges, keeps the entries already there
+  and shows a warning for each skipped line. The file is not part of the
+  config export. A learning switch would change nothing on the web, so there
+  is none. Learning a use once per word, for example when Tab accepts a
+  completion, is possible later.
 - **Completion.** Completion (section 12) first asks the snapshot. A user
   word is an added word, or a word with 3 uses or more, and not a rejected
   word. The word as typed counts: if it has the most uses, no ghost shows.
