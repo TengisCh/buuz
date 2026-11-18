@@ -247,6 +247,38 @@ pub(crate) fn find_target(target: &str) -> Option<Donor> {
     None
 }
 
+/// What the built-in table gives per letter: `(letter, key)` pairs, with the
+/// key in lower case. A rule with one output letter gives that letter from the
+/// whole key. A rule that is a vowel plus `й` from a key ending in `i` gives
+/// `й` from `i` (`ai` is ай). Used by calibration, once per call.
+pub(crate) fn default_letter_chunks() -> Vec<(char, String)> {
+    let mut out: Vec<(char, String)> = Vec::new();
+    let mut push = |c: char, k: String| {
+        if !out.iter().any(|(oc, ok)| *oc == c && *ok == k) {
+            out.push((c, k));
+        }
+    };
+    for &(from, to, _) in SOURCE_RULES {
+        if !is_latin_pattern(from) {
+            continue;
+        }
+        let key = lower_text(from);
+        let letters: Vec<char> = lower_text(to).chars().collect();
+        match letters.len() {
+            1 => push(letters[0], key),
+            2 if letters[1] == 'й' && key.ends_with('i') => push('й', "i".to_string()),
+            _ => {}
+        }
+    }
+    // Smart mode (`composer.rs`, the ий to ы rule) turns `ii` into ы after a
+    // masculine stem (`aaviin` is аавын), and `ii'` forces ий. Typing these
+    // is typing the built-in table, so they are not a custom habit.
+    push('ы', "ii".to_string());
+    push('й', "ii'".to_string());
+    push('й', "i'".to_string());
+    out
+}
+
 fn same_key(from: &[char], key: &[char]) -> bool {
     from.len() == key.len() && from.iter().zip(key).all(|(&a, &b)| to_lower(a) == b)
 }

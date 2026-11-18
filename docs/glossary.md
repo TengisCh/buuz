@@ -47,6 +47,9 @@ when a new concept appears; rename here first when a name changes.
 | Preset | The base of a config: `smart` (default) or `classic`. Options in the config only override it | `Preset` |
 | Key map | The built-in rule table with the user's `[keys]` changes applied. Built once and shared. Without one, the composer uses the built-in table. See `docs/typing-rules.md` §10 | `KeyMap`, `Options::keys` |
 | Target | The Cyrillic value of a `[keys]` entry (`ү`, or a pair such as `у/ү`). The new key copies the rules of the built-in key that gives it. Empty removes the key | `KeyMap::from_pairs`, `KeyError::UnknownTarget` |
+| Calibration | A short test where the user types Cyrillic sentences in Latin. It suggests `[keys]` entries for the keys the built-in table does not give. Offline, not on the typing path. See `docs/typing-rules.md` §11 | `calibrate`, `Calibration` |
+| Suggestion | One key proposed by calibration: a chunk typed for a letter (or a gender pair), how often, and the letter it displaces | `Suggestion` |
+| Displaces | The letter a built-in key gives that a suggestion would take away (`v` for ү displaces в) | `Suggestion::displaces` |
 
 ## Project
 
