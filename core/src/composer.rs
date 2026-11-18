@@ -339,8 +339,10 @@ pub(crate) struct Token {
 
 /// What `read_to_comp` needs to know besides the raw keys.
 #[derive(Debug, Clone, Copy)]
-struct Context {
+struct Context<'a> {
     smart: bool,
+    /// The word list, to choose ий or ы by prefix (typing-rules 4.2).
+    words: Option<&'a WordList>,
     /// The `X_DV` rules (`vv`) are active.
     double_v: bool,
     /// Gender of the word before a space, if the last key was a space.
@@ -416,6 +418,19 @@ fn ii_is_y(out: &[char], word: u8) -> bool {
     })
 }
 
+/// Word list check for `ii` after the text so far (`out`): true when some
+/// listed word starts with `out` + ий and none starts with `out` + ы.
+/// `buf` is a reused scratch string; it does not allocate once it has grown.
+fn list_prefers_ii(words: &WordList, out: &[char], buf: &mut String) -> bool {
+    let mut probe = |tail: &str| {
+        buf.clear();
+        buf.extend(out.iter().map(|&c| to_lower(c)));
+        buf.push_str(tail);
+        words.top_two(buf).0.is_some()
+    };
+    !probe("ы") && probe("ий")
+}
+
 /// Transliterate a raw (possibly mixed Latin/Cyrillic) string as one word.
 /// Returns the text and the gender the word leaves for a following particle.
 fn read_to_comp(
@@ -423,6 +438,7 @@ fn read_to_comp(
     read: &[char],
     ctx: Context,
     tokens: &mut Vec<Token>,
+    buf: &mut String,
 ) -> (Vec<char>, u8) {
     // Pass 0: split the keys into longest-match tokens.
     tokens.clear();
@@ -479,7 +495,11 @@ fn read_to_comp(
                 } else if rule.flags & X_MM != 0 {
                     word = X_M;
                 }
-                if ctx.smart && rule.flags & X_II != 0 && ii_is_y(&out, word) {
+                if ctx.smart
+                    && rule.flags & X_II != 0
+                    && ii_is_y(&out, word)
+                    && !ctx.words.is_some_and(|w| list_prefers_ii(w, &out, buf))
+                {
                     let upper = rule.to[0] != to_lower(rule.to[0]);
                     out.push(if upper { 'Ы' } else { 'ы' });
                 } else {
@@ -534,6 +554,8 @@ pub struct Composer {
     spare: Vec<char>,
     /// Scratch buffer reused across keystrokes.
     tokens: Vec<Token>,
+    /// Scratch for the word list check of `ii`.
+    ii_buf: String,
     /// The preedit in lower case, reused by `refresh_ghost` on every key.
     lower: String,
     /// The ghost text after the preedit; valid when `ghost_on`.
@@ -578,6 +600,7 @@ impl Composer {
             run_latin: false,
             spare: Vec::new(),
             tokens: Vec::new(),
+            ii_buf: String::new(),
             lower: String::new(),
             ghost: String::new(),
             ghost_on: false,
@@ -814,6 +837,7 @@ impl Composer {
         }
         let ctx = Context {
             smart: self.opts.smart_vowels,
+            words: self.opts.words.as_deref(),
             double_v: self.opts.double_v,
             prev_gender: self.prev_gender,
         };
@@ -821,7 +845,7 @@ impl Composer {
             Some(k) => k.rules(),
             None => rules(),
         };
-        let (comp, gender) = read_to_comp(rs, &self.read, ctx, &mut self.tokens);
+        let (comp, gender) = read_to_comp(rs, &self.read, ctx, &mut self.tokens, &mut self.ii_buf);
         self.comp = comp;
         self.word_gender = gender;
     }

@@ -155,6 +155,12 @@ gender for the letters after them):
 4. the word so far is not one of the и-final stems салх, такс, компан
    (`salhiig` → салхийг).
 
+A word list (`Options.words`) refines the result when rule 3 gives ы. If no
+listed word starts with the text so far plus ы, and a listed word starts with
+the text so far plus ий, the key pair gives ий. This covers stems that end in
+ь: `surguuliin` → сургуулийн, `huuliin` → хуулийн, `huviin` → хувийн. Without
+a list, `surguuliin` → сургуулын.
+
 So `aaviin` → аавын, `nomiig` → номыг, `ohiniig` → охиныг, `uuliin` → уулын,
 `hotiig` → хотыг. Capitals are kept: `AAVIIN` → ААВЫН, `Nomiig` → Номыг.
 

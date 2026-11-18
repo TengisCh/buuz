@@ -425,6 +425,16 @@ fn autocorrect(words: &Arc<WordList>) -> Options {
     }
 }
 
+/// Smart mode with the word list but no autocorrect: the list only helps to
+/// choose ий or ы (issue #62).
+fn smart_list(words: &Arc<WordList>) -> Options {
+    Options {
+        words: Some(words.clone()),
+        autocorrect: false,
+        ..Options::smart()
+    }
+}
+
 fn smart_with_keys(pairs: &[(&str, &str)]) -> Options {
     let pairs: Vec<(String, String)> = pairs
         .iter()
@@ -733,20 +743,23 @@ fn report() {
     let pairs = all_pairs();
     let words = full_list();
     let (sm, cl, ac) = (smart(), classic(), autocorrect(&words));
+    let sl = smart_list(&words);
     println!();
-    println!("profile                words   smart  classic  autocorrect");
+    println!("profile                words   smart  classic  autocorrect  smart+list");
     let mut totals = (0, 0, 0, 0);
     let groups = by_profile(&pairs);
     for (name, ps) in &groups {
         let s = score(ps, &|l| conv(&sm, l));
         let c = score(ps, &|l| conv(&cl, l));
         let a = score(ps, &|l| conv(&ac, l));
+        let l = score(ps, &|x| conv(&sl, x));
         println!(
-            "{name:<22} {:>5}  {:>5.1}%  {:>6.1}%  {:>10.1}%",
+            "{name:<22} {:>5}  {:>5.1}%  {:>6.1}%  {:>10.1}%  {:>9.1}%",
             ps.len(),
             percent(s, ps.len()),
             percent(c, ps.len()),
-            percent(a, ps.len())
+            percent(a, ps.len()),
+            percent(l, ps.len())
         );
         totals = (
             totals.0 + ps.len(),
