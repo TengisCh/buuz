@@ -20,9 +20,11 @@
 //! [`Composer`] and renders [`Composer::preedit`] / [`Composer::cursor`],
 //! inserting any text returned as `commit`.
 
+use std::collections::HashSet;
 use std::sync::Arc;
 
 use crate::abbrev::Abbreviations;
+use crate::autocorrect::{self, Scratch};
 use crate::keys::KeyMap;
 use crate::rules::{
     rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_F, X_II, X_M, X_MF, X_MM,
@@ -85,6 +87,10 @@ pub struct KeyOutcome {
     /// Order for shells: delete `delete_before` characters, insert `commit`,
     /// then show the preedit.
     pub delete_before: usize,
+    /// The commit holds a word that autocorrect changed (see
+    /// [`Options::autocorrect`]). Shells can flash or underline it. Backspace
+    /// right after the Space undoes the change.
+    pub corrected: bool,
 }
 
 /// True for characters that start/extend a composition: ASCII letters,
@@ -133,6 +139,12 @@ pub struct Options {
     /// and let Tab (or Right at the end) accept it. Active only with `words`
     /// set. `false` is the original Buuz behaviour.
     pub completion: bool,
+    /// Autocorrect: when Space or punctuation ends a word that is not in
+    /// `words` but has one clear neighbour that is (`хуухэд` -> `хүүхэд`),
+    /// commit the neighbour. Active only with `words` set. Backspace right after the
+    /// Space undoes it. `false` is the original Buuz behaviour, and the
+    /// default in every preset.
+    pub autocorrect: bool,
 }
 
 impl Default for Options {
@@ -145,6 +157,7 @@ impl Default for Options {
             keys: None,
             words: None,
             completion: true,
+            autocorrect: false,
         }
     }
 }
@@ -162,6 +175,7 @@ impl Options {
             keys: None,
             words: None,
             completion: true,
+            autocorrect: false,
         }
     }
 
@@ -176,6 +190,7 @@ impl Options {
             keys: None,
             words: None,
             completion: false,
+            autocorrect: false,
         }
     }
 }
@@ -197,6 +212,9 @@ struct Undo {
     /// For an automatic change: the Cyrillic run to commit instead of reopening
     /// a word.
     restore: Option<String>,
+    /// Autocorrect changed the word: reopening it adds the typed word to the
+    /// rejected set.
+    corrected: bool,
 }
 
 /// Longest run (in characters) the composer tracks for Auto Latin.
@@ -450,6 +468,9 @@ pub struct Composer {
     no_expand: bool,
     /// Esc switched the preedit to the raw Latin keys.
     latin: bool,
+    /// Backspace undid a correction: this word is not corrected again (also
+    /// when the rejected set is full).
+    no_correct: bool,
     /// Set right after a word committed by Space that Backspace can reopen.
     undo: Option<Undo>,
     /// Raw keys of the finished words and symbols of the current run (Auto
@@ -472,6 +493,12 @@ pub struct Composer {
     /// The ghost text after the preedit; valid when `ghost_on`.
     ghost: String,
     ghost_on: bool,
+    /// Words (lower case, as typed) whose correction the user undid in this
+    /// session. An empty set does not allocate: memory is taken at the first
+    /// undo. At most `MAX_REJECTED` words.
+    rejected: HashSet<String>,
+    /// Buffers of the autocorrect search.
+    fix: Scratch,
 }
 
 impl Default for Composer {
@@ -496,6 +523,7 @@ impl Composer {
             reseeded: false,
             no_expand: false,
             latin: false,
+            no_correct: false,
             undo: None,
             run: Vec::new(),
             run_text: String::new(),
@@ -506,6 +534,8 @@ impl Composer {
             lower: String::new(),
             ghost: String::new(),
             ghost_on: false,
+            rejected: HashSet::new(),
+            fix: Scratch::default(),
         }
     }
 
@@ -697,6 +727,7 @@ impl Composer {
             delete,
             prev_gender: self.prev_gender,
             restore: None,
+            corrected: false,
         });
     }
 
@@ -705,6 +736,7 @@ impl Composer {
         self.ghost_on = false;
         self.reseeded = false;
         self.no_expand = false;
+        self.no_correct = false;
         self.latin = false;
         self.read.clear();
         self.comp.clear();
@@ -749,7 +781,11 @@ impl Composer {
     /// word. After a Space expansion, or any word with `keep_latin`, the undo
     /// is armed (it needs the previous-word gender, so this runs before the
     /// caller updates it).
-    fn finish_word(&mut self, space: bool) -> (Option<String>, Option<u8>) {
+    fn finish_word(
+        &mut self,
+        space: bool,
+        may_correct: bool,
+    ) -> (Option<String>, Option<u8>, bool) {
         let expansion = match &self.opts.abbreviations {
             Some(abbr)
                 if !self.reseeded && !self.no_expand && !self.latin && !self.comp.is_empty() =>
@@ -765,16 +801,50 @@ impl Composer {
                     self.arm_undo(false, text.chars().count() + 1);
                 }
                 self.clear_buffer();
-                (Some(text), gender)
+                (Some(text), gender, false)
             }
             None => {
+                if let Some(text) = self.autocorrected(may_correct) {
+                    let gender = text_gender(&text);
+                    if space {
+                        self.arm_undo(false, text.chars().count() + 1);
+                        if let Some(u) = self.undo.as_mut() {
+                            u.corrected = true;
+                        }
+                    }
+                    self.clear_buffer();
+                    return (Some(text), gender, true);
+                }
                 // A re-seeded word reopens from its Cyrillic text, still frozen.
                 if space && self.opts.keep_latin && !self.comp.is_empty() {
                     self.arm_undo(self.latin, self.comp.len() + 1);
                 }
                 let gender = Some(self.word_gender);
-                (self.take_composition(), gender)
+                (self.take_composition(), gender, false)
             }
+        }
+    }
+
+    /// The corrected spelling of the word in `comp`, if autocorrect is on and
+    /// finds one. `may_correct` is true only for Space and punctuation, and
+    /// false for a word that will not stay Cyrillic (the end of a domain).
+    /// Runs once per word.
+    fn autocorrected(&mut self, may_correct: bool) -> Option<String> {
+        let words = match &self.opts.words {
+            Some(w) if self.opts.autocorrect => w,
+            _ => return None,
+        };
+        if !may_correct || self.no_correct || self.latin || self.run_latin || self.reseeded {
+            return None;
+        }
+        autocorrect::correct(words, &self.comp, &self.rejected, &mut self.fix)
+    }
+
+    /// Remember the word in `comp` as one the user does not want corrected.
+    fn reject_current(&mut self) {
+        let word: String = self.comp.iter().map(|&c| to_lower(c)).collect();
+        if self.rejected.len() < autocorrect::MAX_REJECTED {
+            self.rejected.insert(word);
         }
     }
 
@@ -855,6 +925,7 @@ impl Composer {
                 delete: raw.chars().count() + 1,
                 prev_gender: None,
                 restore: Some(cyrillic),
+                corrected: false,
             });
         }
         out.delete_before = delete;
@@ -895,6 +966,8 @@ impl Composer {
     fn process_key_inner(&mut self, key: Key) -> KeyOutcome {
         let mut out = KeyOutcome::default();
         // Without Auto Latin a symbol is just `Other`.
+        // Only Space and punctuation correct a word; Symbol may become Other.
+        let punctuation = matches!(key, Key::Symbol(_));
         let key = match key {
             Key::Symbol(_) if !self.opts.auto_latin => Key::Other,
             k => k,
@@ -923,6 +996,10 @@ impl Composer {
                     self.prev_gender = u.prev_gender;
                     self.recompose();
                     self.cursor = self.comp.len();
+                    if u.corrected {
+                        self.no_correct = true;
+                        self.reject_current();
+                    }
                     out.consumed = true;
                     out.delete_before = u.delete;
                     return out;
@@ -949,8 +1026,12 @@ impl Composer {
                 }
             }
             // Not ours: finish any composition, let the key through.
-            let (commit, gender) = self.finish_word(key == Key::Space);
+            let (commit, gender, corrected) = self.finish_word(
+                key == Key::Space,
+                (key == Key::Space || punctuation) && domain.is_none(),
+            );
             out.commit = commit;
+            out.corrected = corrected;
             if auto {
                 match key {
                     Key::Symbol(c) if self.run_ok => {

@@ -23,6 +23,7 @@
 //! ```
 
 mod abbrev;
+mod autocorrect;
 mod calibrate;
 mod composer;
 mod config;

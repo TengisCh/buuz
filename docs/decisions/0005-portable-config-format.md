@@ -120,6 +120,7 @@ abbreviations = true    # false turns off all abbreviations, also your own
 keep_latin = true       # Esc shows the raw keys
 auto_latin = true       # true: links and emails turn Latin by themselves
 completion = true       # Tab accepts the rest of a likely word (needs the word list)
+autocorrect = false     # fixes a misspelled word at Space (needs the word list)
 
 # Added to the built-in list. Keys are not case sensitive.
 [abbreviations]
