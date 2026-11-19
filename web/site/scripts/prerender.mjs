@@ -113,9 +113,11 @@ export function render(html, lang) {
   out = out.replace(/<[a-z0-9]+\b[^>]*\sdata-i18n-ph="(\w+)"[^>]*>/g, (tag, key) => (key in s ? setAttr(tag, "placeholder", s[key]) : tag));
   out = out.replace(/<[a-z0-9]+\b[^>]*\sdata-i18n-aria="(\w+)"[^>]*>/g, (tag, key) => (key in s ? setAttr(setAttr(tag, "aria-label", s[key]), "title", s[key]) : tag));
 
-  // The language list shows this language.
-  out = out.replace(/(<select id="lang"[\s\S]*?<\/select>)/, (sel) =>
-    sel.replace(/ selected(="")?/g, "").replace(new RegExp(`<option value="${lang}"`), `<option value="${lang}" selected`));
+  // The language menu shows this language: the button and the list agree.
+  out = out.replace(/(<ul id="langlist"[\s\S]*?<\/ul>)/, (ul) =>
+    ul.replace(/ aria-selected="true"/g, "").replace(new RegExp(`(<li [^>]*data-lang="${lang}"[^>]*)>`), '$1 aria-selected="true">'));
+  const chosen = out.match(new RegExp(`<li [^>]*data-lang="${lang}"[^>]*>([\\s\\S]*?)</li>`));
+  if (chosen) out = out.replace(/(<span class="langcur">)[\s\S]*?(<\/span><svg class="chev")/, (m, a, b) => a + chosen[1] + b);
   // The link-preview image is the one of this language.
   out = out.split("/og/mn.png").join(`/og/${lang}.png`);
   // The footer list of languages marks this one.

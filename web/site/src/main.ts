@@ -10,6 +10,7 @@ import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
 import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
 import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
+import { ghostPhrases, shuffled } from "./ghost";
 import calibrationSentences from "./calibration.json";
 import { accept, completionAt, ensureWordList, type Completion } from "./completion";
 import wordListUrl from "../../../data/wordlist/mn.txt?url";
@@ -174,6 +175,7 @@ function setScheme(id: string): void {
   saveScheme(store, id);
   applyScheme();
   render();
+  ghostForScheme();
   updateHint();
 }
 
@@ -776,10 +778,12 @@ document.addEventListener("keydown", (e) => {
 // live conversion as its placeholder. It only ever touches placeholders, so it
 // sits still the moment there is real text, and resumes when the box is empty.
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const pool = (phrases as [string, string][]).map(([l]) => l);
-for (let i = pool.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [pool[i], pool[j]] = [pool[j], pool[i]];
+const mongolianPool = (phrases as [string, string][]).map(([l]) => l);
+let pool = shuffled(mongolianPool);
+/** The typewriter shows examples of the typing language that is on. */
+function ghostForScheme(): void {
+  pool = shuffled(ghostPhrases(scheme) ?? mongolianPool);
+  if (latin.value === "" && !isFocused()) showGhost("", false);
 }
 // While the demo types, hide the real caret so there's only one cursor.
 // The moment there is real text, the native caret comes back.
@@ -813,7 +817,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = !ready ? "" : convert_with_config(text, ghostConfig);
+  cyr.placeholder = !ready ? "" : typesMongolian() ? convert_with_config(text, ghostConfig) : convert_scheme(scheme, text);
 }
 function typewriter(): void {
   let p = 0;
@@ -823,7 +827,16 @@ function typewriter(): void {
   let blinks = 0;
   let paused = false;
   const next = (ms: number) => window.setTimeout(step, ms);
+  let usedPool = pool;
   function step(): void {
+    if (pool !== usedPool) {
+      // The typing language changed: start a fresh phrase of the new language.
+      usedPool = pool;
+      chars = [];
+      n = 0;
+      p = 0;
+      phase = "type";
+    }
     if (latin.value !== "" || document.hidden || isFocused()) {
       // Paused (focus, text, hidden tab): the next run restarts from the first
       // letter of a fresh phrase, with the boxes empty, like real typing.
@@ -872,6 +885,7 @@ init({ module_or_path: wasmUrl }).then(() => {
   // The page language decides first (a visitor on /uk/ types Ukrainian); then the saved choice.
   scheme = scheme_for_language(lang()) || (loadScheme(store, scheme_ids().split(",")) ?? MONGOLIAN);
   applyScheme();
+  ghostForScheme();
   userText = loadUserDict(store); // also gives it to the converter
   showUserDict();
   applyConfig();

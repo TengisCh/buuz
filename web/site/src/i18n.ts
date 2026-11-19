@@ -800,9 +800,79 @@ export function apply(lang: Lang): void {
     if (a.hreflang === lang) a.setAttribute("aria-current", "true");
     else a.removeAttribute("aria-current");
   }
-  const sel = document.getElementById("lang");
-  if (sel instanceof HTMLSelectElement) sel.value = lang;
+  syncLangMenu(lang);
   document.dispatchEvent(new Event("buuz:lang"));
+}
+
+/** Show the chosen language on the menu button and mark it in the list. */
+function syncLangMenu(lang: Lang): void {
+  let chosen: HTMLElement | null = null;
+  for (const li of document.querySelectorAll<HTMLElement>("#langlist [data-lang]")) {
+    const on = li.dataset.lang === lang;
+    if (on) {
+      li.setAttribute("aria-selected", "true");
+      chosen = li;
+    } else li.removeAttribute("aria-selected");
+  }
+  const cur = document.querySelector<HTMLElement>("#lang .langcur");
+  if (cur && chosen) cur.innerHTML = chosen.innerHTML;
+}
+
+/** The language menu: the whole button opens a list with a flag for each language. */
+function setupLangMenu(choose: (l: Lang) => void): void {
+  const btn = document.getElementById("lang");
+  const list = document.getElementById("langlist");
+  if (!(btn instanceof HTMLButtonElement) || !list) return;
+  const items = (): HTMLElement[] => Array.from(list.querySelectorAll<HTMLElement>("[data-lang]"));
+  const isOpen = (): boolean => !list.hidden;
+  const close = (focusButton: boolean): void => {
+    list.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    if (focusButton) btn.focus();
+  };
+  const open = (): void => {
+    list.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    (list.querySelector<HTMLElement>('[aria-selected="true"]') ?? items()[0]).focus();
+  };
+  const pick = (li: HTMLElement): void => {
+    const next = li.dataset.lang;
+    close(true);
+    if (isLang(next) && next !== current) choose(next);
+  };
+  btn.addEventListener("click", () => (isOpen() ? close(false) : open()));
+  btn.addEventListener("keydown", (e) => {
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isOpen()) {
+      e.preventDefault();
+      open();
+    }
+  });
+  list.addEventListener("click", (e) => {
+    const li = (e.target as Element).closest<HTMLElement>("[data-lang]");
+    if (li) pick(li);
+  });
+  list.addEventListener("keydown", (e) => {
+    const all = items();
+    const i = all.indexOf(document.activeElement as HTMLElement);
+    const go = (n: number): void => {
+      e.preventDefault();
+      all[(n + all.length) % all.length].focus();
+    };
+    if (e.key === "ArrowDown") go(i + 1);
+    else if (e.key === "ArrowUp") go(i - 1);
+    else if (e.key === "Home") go(0);
+    else if (e.key === "End") go(all.length - 1);
+    else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (i >= 0) pick(all[i]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      close(true);
+    } else if (e.key === "Tab") close(false);
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (isOpen() && !(e.target as Element).closest(".langmenu")) close(false);
+  });
 }
 
 export function setupLang(): void {
@@ -811,14 +881,13 @@ export function setupLang(): void {
   else current = "mn";
   // A saved choice or ?lang= on the root page moves to that language's own URL.
   if (langOfPath(location.pathname) === "mn" && lang !== "mn") history.replaceState(null, "", PATHS[lang]);
-  document.getElementById("lang")?.addEventListener("change", (e) => {
-    const next = (e.target as HTMLSelectElement).value;
-    if (!isLang(next) || next === current) return;
+  const choose = (next: Lang): void => {
     save(next);
     apply(next);
     history.pushState(null, "", PATHS[next]);
     document.dispatchEvent(new CustomEvent("buuz:lang-changed", { detail: next }));
-  });
+  };
+  setupLangMenu(choose);
   // Back and forward move between the language URLs.
   window.addEventListener("popstate", () => {
     const l = langOfPath(location.pathname);
