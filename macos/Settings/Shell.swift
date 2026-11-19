@@ -157,7 +157,7 @@ struct CheckCircle: View {
             switch state {
             case .done:
                 Circle().fill(Tok.success)
-                Image(systemName: "checkmark").font(.system(size: size * 0.55, weight: .heavy)).foregroundColor(.white)
+                Image(systemName: "checkmark").font(.system(size: size * 0.55, weight: .heavy)).foregroundColor(Tok.onSuccess)
             case .current:
                 Circle().stroke(Tok.accent, lineWidth: 1.6)
                 Circle().fill(Tok.accent).frame(width: size * 0.42, height: size * 0.42)
@@ -202,6 +202,7 @@ struct SetupCard: View {
                     } label: {
                         HStack(spacing: 8) {
                             CheckCircle(state: rows[i].done ? .done : (current == i ? .current : .todo))
+                                .accessibilityHidden(true)
                             Text(m.t(ids[i])).font(.system(size: 12.5)).foregroundColor(Tok.text)
                                 .lineLimit(1).truncationMode(.tail)
                             Spacer(minLength: 0)
@@ -211,7 +212,10 @@ struct SetupCard: View {
                             }
                         }
                         .frame(height: 26).contentShape(Rectangle())
-                    }.buttonStyle(.plain)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityValue(rows[i].done ? m.t("common.done") : "")
+                    .accessibilityAddTraits(current == i ? .isSelected : [])
                 }
             }
         }
@@ -298,7 +302,7 @@ struct UpdateResult: View {
         case .newer(let tag):
             LinkButton(title: tag + " →") { m.open(AppModel.repo + "/releases/latest") }
         case .failed:
-            Text("—").font(.hint).foregroundColor(Tok.text3)
+            Text(m.t("settings.general.updateError")).font(.hint).foregroundColor(Tok.text3)
         }
     }
 }

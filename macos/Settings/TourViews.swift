@@ -60,6 +60,8 @@ struct TourRail: View {
         }
         .buttonStyle(.plain)
         .disabled(!(isDone || current))
+        .accessibilityValue(isDone ? m.t("common.done") : "")
+        .accessibilityAddTraits(current ? .isSelected : [])
     }
 
     var body: some View {
@@ -193,6 +195,8 @@ struct WelcomeStep: View {
 
     var body: some View {
         Buddy(size: metrics.buddy).offset(y: hop ? -14 : 0)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(m.t("welcome.mascotLabel"))
             .onAppear {
                 guard !reduceMotion else { return }
                 withAnimation(.easeOut(duration: 0.25)) { hop = true }
@@ -591,11 +595,12 @@ struct DoneStep: View {
                 m.t("tour.done.lessons", ["done": "\(m.passed.count)", "total": "8"]),
                 hint: m.t("tour.done.replay"), minHeight: 52)
         }
-        HStack(spacing: 10) {
-            BuuzSwitch(isOn: Binding(get: { m.loginAtFinish }, set: { m.loginAtFinish = $0 }))
-            Text(m.t("done.login")).font(.system(size: 13.5)).foregroundColor(Tok.text)
+        if AppModel.loginAvailable {
+            HStack(spacing: 10) {
+                BuuzSwitch(isOn: Binding(get: { m.loginAtFinish }, set: { m.loginAtFinish = $0 }))
+                Text(m.t("done.login")).font(.system(size: 13.5)).foregroundColor(Tok.text)
+            }
         }
-        .opacity(AppModel.loginAvailable ? 1 : 0)
     }
 }
 

@@ -95,9 +95,6 @@ enum InputSource {
         return (id, name)
     }
 
-    /// True when the current keyboard is Buuz.
-    static var isBuuzCurrent: Bool { BuuzSource.isBuuz(id: current?.id) }
-
     /// Call `changed` when the user picks another keyboard. This needs no
     /// permission and reads no key.
     static func observeSelected(_ changed: @escaping () -> Void) -> NSObjectProtocol {

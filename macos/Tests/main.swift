@@ -583,6 +583,9 @@ do {
     r = SwitchKeyState.initial(saved: .custom, custom: k, storeHasChoice: true, resolved: k)
     expect(r.key, .custom, "a saved custom key stays")
     expect(r.hotkey, k, "with its key")
+    let cleared = SwitchKeyState.afterClear()
+    expect(cleared.key, nil, "clear: no key is selected")
+    expect(cleared.hotkey, nil, "clear: no custom key stays")
 }
 
 // MARK: Globe key
