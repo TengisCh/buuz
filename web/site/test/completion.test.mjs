@@ -104,8 +104,27 @@ test("autocorrect: the converter corrects a finished word once the list is loade
   // After the load, the same input converts again with the correction.
   assert.equal(convert_with_config("delgur ", on), "дэлгүүр ");
   assert.equal(convert_with_config("delgur\n", on), "дэлгүр\n");
-  assert.equal(convert_with_config("delgur ", cfg), "дэлгүр ");
+  // Word choice (on by default) also finds it: у may be ү, and a vowel may be long.
+  assert.equal(convert_with_config("delgur ", cfg), "дэлгүүр ");
+  const neither = config_set_option(cfg, "word_choice", false);
+  assert.equal(convert_with_config("delgur ", neither), "дэлгүр ");
   // Plain Classic never corrects.
   const classic = config_set_classic(cfg, true);
   assert.equal(convert_with_config("delgur ", classic), "дэлгүр ");
+});
+
+test("word choice: the converter picks ө or ү with the list, and the switch turns it off", () => {
+  assert.equal(switchesOf(cfg).wordChoice, true);
+  load_word_list("# t\nтөв\t100\n");
+  assert.equal(convert_with_config("tov ", cfg), "төв ");
+  // A newline does not end the word for word choice, as for autocorrect.
+  assert.equal(convert_with_config("tov\n", cfg), "тов\n");
+  const off = config_set_option(cfg, "word_choice", false);
+  assert.equal(switchesOf(off).wordChoice, false);
+  assert.equal(convert_with_config("tov ", off), "тов ");
+  const classic = config_set_classic(cfg, true);
+  assert.equal(switchesOf(classic).wordChoice, false);
+  assert.equal(convert_with_config("tov ", classic), "тов ");
+  const classicOn = config_set_option(classic, "word_choice", true);
+  assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
