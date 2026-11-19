@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 OUT=build
 mkdir -p "$OUT"
 
-swiftc -O e2e/main.swift Settings/InputSource.swift -o "$OUT/e2e"
+swiftc -O e2e/main.swift Settings/InputSource.swift Sources/Core/Tutorial.swift -o "$OUT/e2e"
 
 # Tell LaunchServices about the input method, and start it once so that it
 # shows up in the process list. macOS starts it by itself when it is selected.
