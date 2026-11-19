@@ -25,6 +25,7 @@
 mod abbrev;
 mod autocorrect;
 mod calibrate;
+mod chat_words;
 mod composer;
 mod config;
 mod keys;

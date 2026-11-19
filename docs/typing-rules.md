@@ -733,6 +733,17 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
   `өөрийн` (7898), and still changes `мон` (114) to `мөн` (20067).
 - **Limit.** `уруу` (399) and `өрөө` (333) are both common. The list cannot
   choose, so `uruu` stays `уруу`.
+- **Chat words.** The word list comes from Wikipedia, so everyday chat
+  words are rare in it. `WordList::with_chat_words` gives about 60 of them
+  (`core/src/chat_words.rs`) a count of at least 10,000. The web converter
+  and the C library call it when they load the list. So `uchigdur` gives
+  өчигдөр and `shuu` gives шүү.
+- **`y` edits.** Chat types `y` for ё, е, я and ы. Each candidate also gets
+  these edits: a first `ы` to ё or е (`ystoi` gives ёстой), a first `ю`
+  to е (`yusun` gives есөн), a last `ы` to я or ё (`goy` gives гоё), a
+  last `иы` to ъя or ья (`uulziy` gives уулзъя), and `ы` to `ий` when an
+  о/у/ү was changed too (`ugluunii` gives өглөөний, `uvliin` gives
+  өвлийн). A typed `surguulyn` stays сургуулын.
 - **Merged particles.** Before the choice, a word that the list does not
   know is split when it ends in a particle typed without a space (issue
   #101):

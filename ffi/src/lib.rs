@@ -136,7 +136,7 @@ pub unsafe extern "C" fn buuz_word_list_parse(text: *const u8, len: usize) -> *m
             return ptr::null_mut();
         }
         match utf8(text, len).map(WordList::parse) {
-            Some(Ok(w)) => Box::into_raw(Box::new(BuuzWordList(Arc::new(w)))),
+            Some(Ok(w)) => Box::into_raw(Box::new(BuuzWordList(Arc::new(w.with_chat_words())))),
             _ => ptr::null_mut(),
         }
     })

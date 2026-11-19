@@ -146,6 +146,35 @@ impl WordList {
         })
     }
 
+    /// Add the built-in everyday chat words (issue #101), each with a count
+    /// of at least 10,000. A word that the list has keeps its rank. A new
+    /// word goes after the last rank. The Wikipedia list knows few chat
+    /// words, so the shells call this after `parse`.
+    pub fn with_chat_words(mut self) -> WordList {
+        use crate::chat_words::{CHAT_COUNT, CHAT_WORDS};
+        let mut added = false;
+        for &w in CHAT_WORDS {
+            match self.rank(w) {
+                Some(r) => {
+                    let c = &mut self.counts[r as usize];
+                    *c = (*c).max(CHAT_COUNT);
+                }
+                None => {
+                    self.blob.push_str(w);
+                    self.ends.push(self.blob.len() as u32);
+                    self.counts.push(CHAT_COUNT);
+                    added = true;
+                }
+            }
+        }
+        if added {
+            let mut sorted: Vec<u32> = (0..self.ends.len() as u32).collect();
+            sorted.sort_unstable_by(|&a, &b| self.word(a).cmp(self.word(b)));
+            self.sorted = sorted;
+        }
+        self
+    }
+
     fn word(&self, rank: u32) -> &str {
         let r = rank as usize;
         let start = if r == 0 { 0 } else { self.ends[r - 1] as usize };

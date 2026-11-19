@@ -14,7 +14,7 @@ const REAL: &str = include_str!("../../data/wordlist/mn.txt");
 /// The web defaults: smart mode with the word list.
 fn web() -> Options {
     Options {
-        words: Some(Arc::new(WordList::parse(REAL).unwrap())),
+        words: Some(Arc::new(WordList::parse(REAL).unwrap().with_chat_words())),
         ..Options::smart()
     }
 }
@@ -102,4 +102,29 @@ fn a_merged_dee_splits_after_a_chat_word() {
 fn a_case_ending_is_not_split() {
     // -даа/-дээ is also the dative with a reflexive ending.
     eq("ajildaa ", "ажилдаа ");
+}
+
+#[test]
+fn everyday_words_win_with_the_chat_list() {
+    eq("uchigdur ", "өчигдөр ");
+    eq("bi odo gerte harij bn ", "би одоо гэртээ харьж байна ");
+    eq("eej mini ", "ээж минь ");
+    eq("kino baisan shuu ", "кино байсан шүү ");
+    eq("medehgui ee bodod ", "мэдэхгүй ээ бодоод ");
+}
+
+#[test]
+fn y_and_final_ya_forms_are_chosen() {
+    eq("yusun tsagt uulziy, ", "есөн цагт уулзъя, ");
+    eq("ystoi goy kino ", "ёстой гоё кино ");
+    eq("ugluunii tsai ", "өглөөний цай ");
+}
+
+#[test]
+fn the_chat_words_need_the_call() {
+    let plain = Options {
+        words: Some(Arc::new(WordList::parse(REAL).unwrap())),
+        ..Options::smart()
+    };
+    assert_eq!(convert_with("uchigdur ", &plain), "учигдур ");
 }

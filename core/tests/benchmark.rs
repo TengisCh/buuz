@@ -399,7 +399,11 @@ fn all_pairs() -> Vec<Pair> {
 // ---------------------------------------------------------------------------
 
 fn full_list() -> Arc<WordList> {
-    Arc::new(WordList::parse(WORDLIST).expect("word list parses"))
+    Arc::new(
+        WordList::parse(WORDLIST)
+            .expect("word list parses")
+            .with_chat_words(),
+    )
 }
 
 /// Convert one typed word. A Space ends it, as in real typing, so that

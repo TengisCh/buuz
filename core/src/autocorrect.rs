@@ -199,7 +199,8 @@ pub(crate) fn choose(
             visit(words, cand, text, best, &mut tally);
         }
         if extras {
-            extra_edits(cand, extra, &mut |c| {
+            let vowels_changed = cand.as_slice() != word.as_slice();
+            extra_edits(cand, extra, vowels_changed, &mut |c| {
                 visit(words, c, text, best, &mut tally)
             });
         }
@@ -236,9 +237,14 @@ pub(crate) fn choose(
 
 /// Call `f` with each single extra edit of `cur`, built in `out`: `э` to `е`
 /// (not at the end), a doubled vowel (also at the end: `боро` gives
-/// `бороо`), `и` to `ь`, and an added `ь` after the first letter at the
-/// earliest.
-fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
+/// `бороо`), `и` to `ь`, an added `ь` after the first letter at the
+/// earliest, and the edits for `y` ([`y_edits`]).
+fn extra_edits(
+    cur: &[char],
+    out: &mut Vec<char>,
+    vowels_changed: bool,
+    f: &mut dyn FnMut(&[char]),
+) {
     let n = cur.len();
     for i in 0..n {
         let c = cur[i];
@@ -259,6 +265,47 @@ fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
     for i in 1..=n {
         fill(out, &cur[..i], &['ь'], &cur[i..]);
         f(out);
+    }
+    y_edits(cur, out, vowels_changed, f);
+}
+
+/// Edits for the Latin `y`, which chat uses for ё, е, я and ы (issue #101):
+/// `ы` to `ий` when an о/у/ү was changed too, because the ы came from the
+/// wrong vowel (`ugluunii` gives өглөөний; a typed `surguulyn` stays), a first `ы` to `ё` or `е`
+/// (`ystoi` gives ёстой), a first `ю` to `е` (`yusun` gives есөн), a last
+/// `ы` to `я` or `ё` (`goy` gives гоё), and a last `иы` to `ъя` or `ья`
+/// (`uulziy` gives уулзъя).
+fn y_edits(cur: &[char], out: &mut Vec<char>, vowels_changed: bool, f: &mut dyn FnMut(&[char])) {
+    let n = cur.len();
+    for i in 0..n {
+        if vowels_changed && cur[i] == 'ы' {
+            fill(out, &cur[..i], &['и', 'й'], &cur[i + 1..]);
+            f(out);
+        }
+    }
+    match cur.first() {
+        Some('ы') => {
+            for c in ['ё', 'е'] {
+                fill(out, &[], &[c], &cur[1..]);
+                f(out);
+            }
+        }
+        Some('ю') => {
+            fill(out, &[], &['е'], &cur[1..]);
+            f(out);
+        }
+        _ => {}
+    }
+    if n >= 3 && cur[n - 2] == 'и' && cur[n - 1] == 'ы' {
+        for sign in ['ъ', 'ь'] {
+            fill(out, &cur[..n - 2], &[sign, 'я'], &[]);
+            f(out);
+        }
+    } else if n >= 2 && cur[n - 1] == 'ы' {
+        for c in ['я', 'ё'] {
+            fill(out, &cur[..n - 1], &[c], &[]);
+            f(out);
+        }
     }
 }
 
