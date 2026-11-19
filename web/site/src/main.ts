@@ -3,11 +3,13 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_with_config } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
 import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
+import { ghostPhrases, shuffled } from "./ghost";
 import calibrationSentences from "./calibration.json";
 import { accept, completionAt, ensureWordList, type Completion } from "./completion";
 import wordListUrl from "../../../data/wordlist/mn.txt?url";
@@ -74,6 +76,38 @@ settings.addEventListener("click", (e) => {
 // page keeps it in memory for this visit.
 const store = browserStore();
 let config = ""; // loaded once the wasm module is ready (see init below)
+
+// The language to type. "mn" uses the config and the Buuz rules; any other id
+// is a core scheme (see src/scheme.ts). It is saved by itself, not in the config.
+const schemeSelect = document.getElementById("scheme") as HTMLSelectElement;
+let scheme = MONGOLIAN;
+const typesMongolian = (): boolean => scheme === MONGOLIAN;
+
+/** Show the scheme in the dialog and tell the style sheet which settings apply. */
+function applyScheme(): void {
+  schemeSelect.value = scheme;
+  document.body.dataset.scheme = scheme;
+  (document.getElementById("scheme-draft") as HTMLElement).hidden = typesMongolian() || !scheme_is_draft(scheme);
+}
+
+function setScheme(id: string): void {
+  scheme = id;
+  saveScheme(store, id);
+  applyScheme();
+  render();
+  ghostForScheme();
+  updateHint();
+}
+
+schemeSelect.addEventListener("change", () => ready && setScheme(schemeSelect.value));
+// A page in Russian types Russian, and so on (see schemeAfterLang).
+let pageLang: string = lang();
+document.addEventListener("buuz:lang-changed", (e) => {
+  const next = (e as CustomEvent<string>).detail;
+  const previous = pageLang;
+  pageLang = next;
+  if (ready) setScheme(schemeAfterLang(scheme, next, previous, scheme_for_language));
+});
 
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
 // (the original Buuz, every smart feature off, toggles greyed out).
@@ -153,7 +187,7 @@ let dismissed: string | null = null; // "start:latin word" that Esc hid
 
 /** Load the word list (a separate asset) the first time it is needed. */
 function loadWords(): void {
-  if (!ready) return;
+  if (!ready || !typesMongolian()) return;
   const s = switchesOf(config);
   if (!s.completion && !s.autocorrect && !s.wordChoice) return;
   // After the list loads, convert again so autocorrect and word choice show in the output.
@@ -168,7 +202,7 @@ function wordKey(c: Completion): string {
   return `${end - c.replaces}:${latin.value.slice(end - c.replaces, end)}`;
 }
 function currentCompletion(): Completion | null {
-  if (!ready || latin.selectionStart !== latin.selectionEnd) return null;
+  if (!ready || !typesMongolian() || latin.selectionStart !== latin.selectionEnd) return null;
   const c = completionAt(latin.value, latin.selectionStart, config);
   return c && wordKey(c) !== dismissed ? c : null;
 }
@@ -217,7 +251,7 @@ function render(): void {
   // the config once per change), so run it synchronously on every input
   // event: no debounce, no frame delay.
   const text = latin.value.normalize("NFC");
-  cyr.value = !ready ? "" : convert_with_config(text, config);
+  cyr.value = !ready ? "" : typesMongolian() ? convert_with_config(text, config) : convert_scheme(scheme, text);
 }
 
 // Settings file: export the config as text or a .buuz file, import it by
@@ -663,10 +697,12 @@ document.addEventListener("keydown", (e) => {
 // live conversion as its placeholder. It only ever touches placeholders, so it
 // sits still the moment there is real text, and resumes when the box is empty.
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const pool = (phrases as [string, string][]).map(([l]) => l);
-for (let i = pool.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [pool[i], pool[j]] = [pool[j], pool[i]];
+const mongolianPool = (phrases as [string, string][]).map(([l]) => l);
+let pool = shuffled(mongolianPool);
+/** The typewriter shows examples of the typing language that is on. */
+function ghostForScheme(): void {
+  pool = shuffled(ghostPhrases(scheme) ?? mongolianPool);
+  if (latin.value === "" && !isFocused()) showGhost("", false);
 }
 // While the demo types, hide the real caret so there's only one cursor.
 // The moment there is real text, the native caret comes back.
@@ -700,7 +736,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = !ready ? "" : convert_with_config(text, ghostConfig);
+  cyr.placeholder = !ready ? "" : typesMongolian() ? convert_with_config(text, ghostConfig) : convert_scheme(scheme, text);
 }
 function typewriter(): void {
   let p = 0;
@@ -710,7 +746,16 @@ function typewriter(): void {
   let blinks = 0;
   let paused = false;
   const next = (ms: number) => window.setTimeout(step, ms);
+  let usedPool = pool;
   function step(): void {
+    if (pool !== usedPool) {
+      // The typing language changed: start a fresh phrase of the new language.
+      usedPool = pool;
+      chars = [];
+      n = 0;
+      p = 0;
+      phase = "type";
+    }
     if (latin.value !== "" || document.hidden || isFocused()) {
       // Paused (focus, text, hidden tab): the next run restarts from the first
       // letter of a fresh phrase, with the boxes empty, like real typing.
@@ -756,6 +801,10 @@ init({ module_or_path: wasmUrl }).then(() => {
   const state = loadConfigState(store); // needs the wasm module (migration, parsing)
   config = state.text;
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
+  // The page language decides first (a visitor on /uk/ types Ukrainian); then the saved choice.
+  scheme = scheme_for_language(lang()) || (loadScheme(store, scheme_ids().split(",")) ?? MONGOLIAN);
+  applyScheme();
+  ghostForScheme();
   userText = loadUserDict(store); // also gives it to the converter
   showUserDict();
   applyConfig();

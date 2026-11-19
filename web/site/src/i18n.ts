@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Copyright 2026 the Buuz contributors
 
-// Tiny two-language switch. Mongolian is the default and is also what
+// Tiny three-language switch (Mongolian, English, Russian). Mongolian is the default and is also what
 // index.html ships, so first paint and search engines see Mongolian.
-// English is opt-in: the toggle button or ?lang=en. The choice is saved.
+// English and Russian are opt-in: the toggle button (it cycles mn, en, ru) or ?lang=en or ?lang=ru. The choice is saved.
 // We deliberately do NOT follow navigator.language: many Mongolians run
 // English-language phones and browsers, and they are this site's audience.
 
-export type Lang = "mn" | "en";
+import { MORE, more, type MoreLang } from "./i18n-more.ts";
+
+export type Lang = "mn" | "en" | "ru" | MoreLang;
 
 const mn = {
   title: "Buuz: Латин үсгээр монголоор бич",
@@ -45,6 +47,12 @@ const mn = {
   wordChoice: "ө, ү-г үгийн жагсаалтаар сонгох (tov → төв)",
   wordChoiceHint:
     "Үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz о, ө, у, ү үсгийн алийг нь бичихийг үгийн жагсаалтаас харж сонгоно (tov → төв, uvul → өвөл). Мөн урт эгшиг, ь, е-г шаардлагатай үед нөхнө (terer → тэрээр, huuli → хууль, wed → үед). Жагсаалтад байгаа түгээмэл үгийг өөрчлөхгүй (uuriin → уурын). Энэ сайт дээр сонгосон үг шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Унтраавал үг бичсэнээрээ үлдэнэ. Анхнаасаа асаалттай.",
+  schemeLabel: "Бичих хэл",
+  schemeMn: "Монгол (үндсэн)",
+  schemeHint: "Өөр кирилл хэлээр латин үсгээр бичих бол тэр хэлээ сонгоорой. Тэгвэл хуудас тухайн хэлний бичих зуршлаар хөрвүүлнэ (zh → ж). Монгол хэл үндсэн бөгөөд Buuz-ийн дүрмээр бичнэ.",
+  schemeOnlyMn: "Доорх тохиргоо зөвхөн монгол хэлэнд ажиллана.",
+  schemeDraft: "Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.",
+  schemeTip: "Латин үсгээр бичихэд кирилл болно. Жишээ нь privet гэвэл привет болно. Нэг апостроф (') бичвэл ь, хоёр апостроф бичвэл ъ болно.",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -61,6 +69,7 @@ const mn = {
   credit:
     'Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.',
   skip: "Хөрвүүлэгч рүү очих",
+  langLabel: "Хэл",
   close: "Хаах",
   settings: "Тохиргоо",
   footProduct: "Бүтээгдэхүүн",
@@ -77,8 +86,6 @@ const mn = {
   fbCollab: "Хамтран ажиллах",
   contactBody: "Хувийн асуулт, хамтын ажиллагаа, хэвлэлийн хүсэлт байвал шууд имэйлээр бичээрэй. Энэ нь нийтэд харагдахгүй.",
   fbIssue: "Явцыг нь эндээс хараарай →",
-  switchTo: "EN",
-  switchLabel: "EN: Switch to English",
   vowels: "Эгшиг",
   yVowels: "Й-тэй эгшиг",
   consonants: "Гийгүүлэгч",
@@ -256,6 +263,13 @@ const en: Record<Key, string> = {
   wordChoice: "Choose ө and ү with the word list (tov → төв)",
   wordChoiceHint:
     "When you type a space or punctuation after a word, Buuz uses the word list to choose between о, ө, у and ү (tov gives төв, uvul gives өвөл). It also adds a long vowel, ь or е where the list needs them (terer gives тэрээр, huuli gives хууль, wed gives үед). It does not change a common word that is in the list (uuriin gives уурын). This website shows the chosen word and has no Backspace undo. Turn the checkbox off to keep words as typed. It is on by default.",
+  schemeLabel: "Language to type",
+  schemeMn: "Mongolian (default)",
+  schemeHint:
+    "Choose another Cyrillic language to type it with Latin letters. The page then uses the typing habits of that language (zh gives ж). Mongolian is the default and uses the Buuz rules.",
+  schemeOnlyMn: "The settings below work for Mongolian only.",
+  schemeDraft: "Draft: no native speaker has checked this language yet.",
+  schemeTip: "Type Latin letters and get Cyrillic. For example privet gives привет. An apostrophe gives ь and two apostrophes give ъ.",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",
@@ -271,6 +285,7 @@ const en: Record<Key, string> = {
   github: "Open source on GitHub",
   credit: 'Buuz 2.0 continues <a href="https://github.com/odbayar/buuz">Buuz</a> by Odbayar Nyamtseren.',
   skip: "Skip to the converter",
+  langLabel: "Language",
   close: "Close",
   settings: "Settings",
   footProduct: "Product",
@@ -287,8 +302,6 @@ const en: Record<Key, string> = {
   fbCollab: "Collaborate",
   contactBody: "Private questions, collaboration or press? Email us directly. This isn't public.",
   fbIssue: "Follow it here →",
-  switchTo: "МН",
-  switchLabel: "МН: Монгол хэл рүү шилжих",
   vowels: "Vowels",
   yVowels: "Y-vowels",
   consonants: "Consonants",
@@ -427,25 +440,261 @@ const en: Record<Key, string> = {
   cfg_ud_not_cyrillic: "Use only Cyrillic letters, \"-\" and \"'\".",
 };
 
-export const strings: Record<Lang, Record<Key, string>> = { mn, en };
+// Russian. Same keys as mn, enforced by the type.
+const ru: Record<Key, string> = {
+  title: "Buuz: пишите по-монгольски латиницей",
+  description:
+    "Печатайте латиницей и сразу получайте монгольскую кириллицу. Бесплатно, всё остаётся на вашем устройстве.",
+  tag: "Печатайте латиницей, получайте кириллицу.",
+  latin: "Латиница",
+  cyr: "Кириллица",
+  clear: "Очистить",
+  copy: "Копировать",
+  copied: "Скопировано",
+  privacy: "Всё работает на вашем устройстве. То, что вы печатаете, никуда не отправляется.",
+  howTo: "Как печатать",
+  howToBody:
+    "<kbd>o</kbd> и <kbd>u</kbd> выбирают о/ө и у/ү по гармонии гласных, поэтому <kbd>geree</kbd> даёт гэрээ, а <kbd>gar</kbd> даёт гар. Чтобы задать букву, используйте <kbd>q</kbd> или <kbd>w</kbd> (или <kbd>ö</kbd>, <kbd>ü</kbd>) для ө и ү и <kbd>vv</kbd> для үү. Buuz смотрит и вперёд по слову: <kbd>unee</kbd> даёт үнээ, а <kbd>ii</kbd> в мужских словах становится ы (<kbd>aaviin</kbd> даёт аавын). Чтобы получить ий, введите <kbd>ii'</kbd>.",
+  abbreviations: "Сокращения (bn → байна)",
+  abbreviationsHint:
+    "Сокращение раскрывается, когда после него вы ставите пробел или знак препинания (bn и пробел дают байна). На этом сайте удаление пробела возвращает сокращение; в будущих клавиатурах для компьютера это сделает Backspace сразу после пробела. Снимите флажок, чтобы сокращения не раскрывались.",
+  completion: "Дополнять слова клавишей Tab",
+  completionHint:
+    "Когда вы вводите начало слова (больше 2 букв), Buuz показывает серым самое вероятное слово. Пока подсказка видна, Tab вставляет слово целиком. Esc скрывает подсказку для этого слова, и следующий Tab переводит фокус как обычно. Без подсказки Tab работает как обычно. Список слов загружается один раз с этого сайта и работает на вашем устройстве. То, что вы печатаете, никуда не отправляется.",
+  completionCredit:
+    'Список слов: монгольская Википедия (её участники), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Подробнее</a>.',
+  completionHintLabel: "Tab: дополнить, Esc: скрыть:",
+  autocorrect: "Исправлять опечатки",
+  autocorrectHint:
+    "Когда после слова с ошибкой вы ставите пробел или знак препинания, Buuz исправляет его по тому же списку слов (delgur и пробел дают дэлгүүр). Слова из списка он не меняет. На этом сайте виден уже исправленный текст, отмены через Backspace нет. Снимите флажок, чтобы отключить исправления. По умолчанию выключено.",
+  doubleV: "vv как үү (svv → сүү)",
+  doubleVHint:
+    "Две клавиши <kbd>v</kbd> подряд дают үү (svv даёт сүү). Одна v остаётся в (avah даёт авах). Снимите флажок, чтобы vv давало вв. По умолчанию включено.",
+  habitKeys: "ts как ц и zh как ж (tsagaan → цагаан)",
+  habitKeysHint:
+    "Две клавиши <kbd>ts</kbd> дают ц, а <kbd>zh</kbd> даёт ж (tsagaan даёт цагаан, gezh даёт гэж). Когда список слов загружен, слово с тс или зх сохраняет их (hwrtsen даёт хүртсэн). Без списка клавиши всегда дают ц и ж. Снимите флажок, чтобы вводить тс и зх. По умолчанию включено.",
+  mode: "Режим",
+  modeSmart: "Умный (по умолчанию)",
+  modeClassic: "Классический (оригинальный Buuz)",
+  modeHint:
+    "Умный режим добавляет функции ниже. Классический печатает в точности как оригинальный Buuz, со всеми умными функциями выключенными.",
+  smartVowels: "Умные гласные",
+  smartVowelsHint:
+    "Выбирает гласные, глядя вперёд по слову (unee даёт үнээ, aaviin даёт аавын). Выключите для правил оригинального Buuz.",
+  appTitle: "Пишите по-монгольски в любом приложении",
+  appBody:
+    "Buuz скоро появится и как клавиатура для Windows и macOS с теми же правилами, что и на этой странице, чтобы печатать прямо в любом приложении.",
+  soon: "скоро",
+  github: "Открытый код на GitHub",
+  credit: 'Buuz 2.0 продолжает <a href="https://github.com/odbayar/buuz">Buuz</a> Odbayar Nyamtseren.',
+  skip: "Перейти к конвертеру",
+  langLabel: "Язык",
+  close: "Закрыть",
+  settings: "Настройки",
+  footProduct: "Продукт",
+  footWeb: "Веб-конвертер",
+  footCommunity: "Открытый код",
+  footSponsor: "Поддержать",
+  footLegal: "Правовая информация",
+  footPrivacy: "Уведомление о конфиденциальности",
+  footCookies: "Политика cookie",
+  footLicense: "Лицензия",
+  tabFeedback: "Отзыв",
+  tabContact: "Контакты",
+  fbThanksCat: "Спасибо",
+  fbCollab: "Сотрудничество",
+  contactBody: "Личный вопрос, сотрудничество или пресса? Напишите нам напрямую. Это не публикуется.",
+  fbIssue: "Следить здесь →",
+  vowels: "Гласные",
+  yVowels: "Йотированные",
+  consonants: "Согласные",
+  signs: "Знаки",
+  faqTitle: "Частые вопросы",
+  faq0q: "Как печатать монгольской кириллицей латинской клавиатурой?",
+  faq0a: "Печатайте латиницей в верхнем поле, и кириллица появится сразу. Например, <kbd>sain baina uu</kbd> превращается в «сайн байна уу». Нажмите «Копировать» и вставьте результат куда нужно.",
+  faq1q: "Конвертер латиницы в кириллицу бесплатный?",
+  faq1a: "Да, он бесплатный и с открытым кодом. Без регистрации и входа.",
+  faq2q: "Как напечатать Ө и Ү?",
+  faq2a: "<kbd>q</kbd> или <kbd>ö</kbd> даёт ө, а <kbd>w</kbd> или <kbd>ü</kbd> даёт ү. <kbd>vv</kbd> даёт үү (<kbd>svv</kbd> → сүү). <kbd>o</kbd> и <kbd>u</kbd> выбирают о/ө и у/ү по гармонии гласных: <kbd>gar</kbd> → гар, <kbd>geree</kbd> → гэрээ.",
+  faq3q: "Отправляется ли то, что я печатаю, куда-нибудь?",
+  faq3a: "Нет. Конвертация целиком идёт на вашем устройстве, текст его не покидает.",
+  faq4q: "Можно ли пользоваться на телефоне?",
+  faq4a: "Да, работает в браузере телефона. Клавиатуры для Windows и macOS скоро появятся.",
+  faq5q: "Умеет ли он писать традиционной вертикальной монгольской письменностью?",
+  faq5a: "Пока нет. Сейчас только кириллица.",
+  faq6q: "Что такое Buuz?",
+  faq6a: "Продолжение Buuz Odbayar Nyamtseren с теми же правилами набора, теперь обновляемое как проект с открытым кодом.",
+  feedbackTitle: "Отзыв",
+  feedbackBody: "Нашли ошибку или есть идея? Напишите ниже и отправьте.",
+  feedbackBtn: "Отправить",
+  fbMessage: "Ваш отзыв",
+  fbMessagePh: "Что у вас на уме?",
+  fbCategory: "Тип",
+  fbBug: "Ошибка",
+  fbIdea: "Идея",
+  fbOther: "Другое",
+  fbContact: "Контакт (необязательно)",
+  fbContactPh: "Email или GitHub (необязательно)",
+  fbPublic: "Ваш отзыв публикуется на GitHub.",
+  fbSending: "Отправка...",
+  fbThanks: "Спасибо! Ваш отзыв отправлен 🎉",
+  fbTooShort: "Напишите, пожалуйста, чуть подробнее.",
+  fbTooLong: "Слишком длинно, уложитесь в 2000 символов.",
+  fbRate: "Слишком много сообщений. Подождите немного и попробуйте снова.",
+  fbNotReady: "Форма отзывов ещё не включена. Воспользуйтесь ссылкой на GitHub.",
+  fbError: "Не удалось отправить. Попробуйте ещё раз.",
+  fbGithub: "Написать на GitHub",
+  themeDark: "Тёмная тема",
+  themeLight: "Светлая тема",
+  settingsFile: "Файл настроек",
+  settingsFileHint:
+    "Скопируйте настройки или сохраните их в файл и загрузите на другом устройстве. Ваш файл никогда не уходит с этого устройства.",
+  exportCopy: "Скопировать настройки",
+  exportDownload: "Скачать файлом",
+  exportCopied: "Настройки скопированы",
+  exportDownloaded: "Файл скачан",
+  importTitle: "Импорт настроек",
+  importPh: "Вставьте сюда текст настроек",
+  importApply: "Импортировать",
+  importFile: "Открыть файл",
+  importEmpty: "Сначала вставьте текст настроек.",
+  importOk: "Настройки импортированы.",
+  importIgnored: "Настройки импортированы. Не распознано и пропущено:",
+  copyByHand: "Браузер не разрешил копирование. Настройки в поле выше: выделите всё и скопируйте вручную.",
+  classicFeaturesOn: "В классическом режиме включены некоторые умные функции.",
+  configReset: "Сохранённые настройки не удалось прочитать, поэтому используются настройки по умолчанию. Неверный текст сохранён в buuz.config.bad.",
+  cfg_too_many_entries: "Строка {line}: слишком много записей в одном разделе (предел: {name}).",
+  importNotSaved: "Настройки импортированы, но браузер не позволяет странице их сохранить. Они действуют, пока вы не закроете страницу.",
+  importFileError: "Не удалось прочитать файл.",
+  cfg_missing_version: "Строка {line}: первая строка файла должна быть buuz_config = 1.",
+  cfg_too_new: "Эти настройки из более новой версии Buuz (версия {line}). Страница читает до версии {name}.",
+  cfg_syntax: 'Строка {line}: не распознано. Пишите "имя = значение" или [раздел].',
+  cfg_unknown_key: 'Строка {line}: нет настройки с именем "{name}".',
+  cfg_bad_value: 'Строка {line}: неверное значение "{name}".',
+  cfg_bad_escape: `Строка {line}: в тексте допустимы только \\", \\\\ и \\n.`,
+  cfg_single_quotes: "Строка {line}: используйте двойные кавычки, а не одинарные.",
+  cfg_duplicate_key: 'Строка {line}: "{name}" записано дважды.',
+  cfg_duplicate_section: "Строка {line}: раздел [{name}] записан дважды.",
+  cfg_bad_abbreviation: 'Строка {line}: сокращение "{name}" неверно. Оно не может быть пустым или слишком длинным, а его текст должен быть в одну строку.',
+  cfg_bad_keys: 'Строка {line}: настройка клавиш "{name}" неверна. Нужны от 1 до 3 клавиш и текст кириллицей.',
+  cfg_too_large: "Настройки слишком велики (предел: {name}).",
+  cfg_other: "Не удалось прочитать настройки.",
+  cfg_unknown_option: 'Строка {line}: нет параметра с именем "{name}".',
+  cfg_unknown_section: "Строка {line}: нет раздела с именем [{name}].",
+  calButton: "Научить Buuz вашей манере набора",
+  calHint: "Напечатайте несколько предложений так, как вы обычно это делаете, и Buuz выучит ваши клавиши. Напечатанное не сохраняется и стирается при закрытии окна.",
+  calIntro: "Напечатайте предложение ниже латиницей, как вы обычно это делаете. Здесь оно не конвертируется: вы видите то, что печатаете.",
+  calProgress: "{n} / {total}",
+  calSentenceLabel: "Напечатайте это предложение латиницей",
+  calBack: "Назад",
+  calNext: "Далее",
+  calFinish: "Показать результат",
+  calCancel: "Отмена",
+  calResultTitle: "Результат",
+  calNone: "Buuz уже печатает так же, как вы.",
+  calSuggestLead: "Вы использовали клавиши, отличные от стандартных. Выберите, какие оставить:",
+  calSuggestion: "{letter}: вы напечатали {chunk} ({count} раз)",
+  calPair: "Относится к обоим: {target}.",
+  calDisplaces: "{chunk} перестанет давать {other}.",
+  calTie: "Вы использовали другую клавишу так же часто, поэтому предложены обе.",
+  calConflict: "Вы напечатали {chunk} для {letter} ({count} раз) и для {other} ({other_count} раз), поэтому это не предлагается.",
+  calUnsupported: "Вы напечатали {chunk} для {letter} ({count} раз). Настройки не могут это хранить, поэтому пропущено.",
+  calUnmatched: "Предложение {n} не совпало и пропущено.",
+  calNotTyped: "Предложение {n} не напечатано и пропущено.",
+  calSkipped: "Буквы не проверены: {letters}.",
+  calSave: "Сохранить",
+  calDefault: "Оставить по умолчанию",
+  calSavedOne: "Настройки сохранены. Добавлена 1 клавиша.",
+  calSaved: "Настройки сохранены. Добавлено клавиш: {n}.",
+  calNothing: "Ничего подходящего не напечатано. Попробуйте ещё раз.",
+  calRetry: "Попробовать снова",
+  calError: "Не удалось обновить настройки.",
+  calNotReady: "Страница ещё загружается. Подождите немного и попробуйте снова.",
+  udTitle: "Слова, которые выучил Buuz",
+  udHint:
+    "Здесь видны добавленные вами слова. Buuz никогда не исправляет добавленное слово, а Tab может его дополнить. Этот список остаётся в этом браузере на этом устройстве и никуда не отправляется. Он не входит в файл настроек. На этом сайте Buuz не учит слова сам: он хранит только добавленные вами.",
+  udEmpty: "Слов пока нет.",
+  udAddLabel: "Добавить слово (кириллицей)",
+  udAdd: "Добавить",
+  udDelete: "Удалить",
+  udDeleteLabel: "Удалить {word}",
+  udClear: "Очистить выученное Buuz",
+  udClearConfirm: "Удалить все добавленные слова? Это нельзя отменить.",
+  udExport: "Скачать файлом",
+  udImport: "Открыть файл",
+  udKindAdd: "добавлено",
+  udKindUse: "использовано",
+  udKindReject: "исправление отклонено",
+  udCount: "{n} раз",
+  udAdded: "Слово добавлено.",
+  udRemoved: "Слово удалено.",
+  udCleared: "Всё очищено.",
+  udExported: "Файл скачан",
+  udImportOk: "Слова импортированы.",
+  udImportIgnored: "Слова импортированы. Эти строки не распознаны и пропущены:",
+  udNotSaved: "Изменение не сохранено: браузер не разрешает хранение. Оно действует, пока вы не закроете страницу.",
+  cfg_ud_bad_line: "Строка {line}: нужны три части (вид, слово и число), разделённые табуляцией.",
+  cfg_ud_unknown_kind: "Строка {line}: вид должен быть add, reject или use.",
+  cfg_ud_bad_count: "Строка {line}: число недопустимо.",
+  cfg_ud_empty_word: "Слово пустое.",
+  cfg_ud_bad_word: "В слове не может быть пробела или управляющего символа.",
+  cfg_ud_word_too_long: "Слово слишком длинное (не более 64 символов).",
+  cfg_ud_duplicate: "Строка {line}: это слово уже есть.",
+  cfg_ud_not_cyrillic: "Используйте только кириллицу, \"-\" и \"'\".",
+  wordChoice: "Выбирать ө, ү по списку слов (tov → төв)",
+  wordChoiceHint:
+    "Когда после слова вы ставите пробел или знак препинания, Buuz по списку слов выбирает между о, ө, у, ү (tov даёт төв, uvul даёт өвөл). Он также добавляет долгие гласные, ь и е, когда нужно (terer даёт тэрээр, huuli даёт хууль, wed даёт үед). Частые слова из списка он не меняет (uuriin даёт уурын). На этом сайте виден уже выбранный вариант, отмены через Backspace нет. Если выключить, слово остаётся как набрано. По умолчанию включено.",
+  schemeLabel: "Язык набора",
+  schemeMn: "Монгольский (по умолчанию)",
+  schemeHint:
+    "Выберите другой язык на кириллице, чтобы печатать на нём латиницей. Страница применит привычки набора этого языка (zh даёт ж). Монгольский используется по умолчанию и работает по правилам Buuz.",
+  schemeOnlyMn: "Настройки ниже действуют только для монгольского языка.",
+  schemeDraft: "Черновик: носитель языка эту схему ещё не проверил.",
+  schemeTip:
+    "Печатайте латиницей и получайте кириллицу. Например, privet даёт привет. Один апостроф даёт ь, два апострофа дают ъ.",
+};
+
+// mn, en and ru have every key. The other languages have the keys of the main
+// page and fall back to English for the rest (see t()).
+export const strings: Record<Lang, Partial<Record<Key, string>>> = { mn, en, ru, ...more };
+
+/** The languages the language button cycles through: the fully translated ones. */
+const ORDER: Lang[] = ["mn", "en", "ru"];
+export const ALL_LANGS: Lang[] = [...ORDER, ...MORE];
+const isLang = (v: unknown): v is Lang => ALL_LANGS.includes(v as Lang);
 
 /** A parse error or warning from the config, in the current language. */
 export function issueText(issue: { code: string; number: number; detail: string }): string {
   const key = `cfg_${issue.code}` as Key;
-  const template = strings[current][key] ?? strings[current].cfg_other;
+  const template = strings[current][key] ?? en[key] ?? en.cfg_other;
   return template.replace("{line}", () => String(issue.number)).replace("{name}", () => issue.detail);
 }
 
 /** A string with `{name}` placeholders filled in (no markup, so use textContent). */
 export function fmt(key: Key, vars: Record<string, string | number>): string {
-  return strings[current][key].replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m));
+  return t(key).replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m));
 }
 
 const STORE = "buuz.lang";
+const ORIGIN = "https://buuz.thetengis.com";
+
+/** One URL for each page language, so search engines can index each one. */
+export const PATHS = Object.fromEntries(ALL_LANGS.map((l) => [l, l === "mn" ? "/" : `/${l}/`])) as Record<Lang, string>;
+
+/** The page language a path belongs to, or null (the Mongolian root is "/"). */
+export function langOfPath(path: string): Lang | null {
+  for (const l of ALL_LANGS) if (l !== "mn" && (path === PATHS[l] || path === PATHS[l].slice(0, -1) || path.startsWith(PATHS[l] + "index"))) return l;
+  return path === "/" || path === "/index.html" ? "mn" : null;
+}
 let current: Lang = "mn";
 
+/** The language the page shows now. */
+export function lang(): Lang {
+  return current;
+}
+
 export function t(key: Key): string {
-  return strings[current][key];
+  return strings[current][key] ?? en[key];
 }
 
 function save(lang: Lang): void {
@@ -457,14 +706,17 @@ function save(lang: Lang): void {
 }
 
 function initial(): Lang {
+  // The URL decides, so each language has its own page for search engines.
+  const fromPath = langOfPath(location.pathname);
+  if (fromPath && fromPath !== "mn") return fromPath;
   const q = new URLSearchParams(location.search).get("lang");
-  if (q === "mn" || q === "en") {
+  if (isLang(q)) {
     save(q);
     return q;
   }
   try {
     const s = localStorage.getItem(STORE);
-    if (s === "mn" || s === "en") return s;
+    if (isLang(s)) return s;
   } catch {
     /* ignore */
   }
@@ -476,6 +728,8 @@ export function apply(lang: Lang): void {
   const root = document.documentElement;
   root.lang = lang;
   document.title = t("title");
+  const canon = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (canon && Object.values(PATHS).includes(new URL(canon.href).pathname)) canon.href = ORIGIN + PATHS[lang];
   document
     .querySelector('meta[name="description"]')
     ?.setAttribute("content", t("description"));
@@ -494,23 +748,104 @@ export function apply(lang: Lang): void {
   for (const el of document.querySelectorAll<HTMLElement>("[data-i18n-html]")) {
     el.innerHTML = t(el.dataset.i18nHtml as Key);
   }
-  const btn = document.getElementById("lang") as HTMLButtonElement | null;
-  if (btn) {
-    btn.textContent = t("switchTo");
-    btn.setAttribute("aria-label", t("switchLabel"));
-    btn.title = t("switchLabel");
-    btn.lang = lang === "mn" ? "en" : "mn";
+  for (const a of document.querySelectorAll<HTMLAnchorElement>("#langs a")) {
+    if (a.hreflang === lang) a.setAttribute("aria-current", "true");
+    else a.removeAttribute("aria-current");
   }
+  syncLangMenu(lang);
   document.dispatchEvent(new Event("buuz:lang"));
+}
+
+/** Show the chosen language on the menu button and mark it in the list. */
+function syncLangMenu(lang: Lang): void {
+  let chosen: HTMLElement | null = null;
+  for (const li of document.querySelectorAll<HTMLElement>("#langlist [data-lang]")) {
+    const on = li.dataset.lang === lang;
+    if (on) {
+      li.setAttribute("aria-selected", "true");
+      chosen = li;
+    } else li.removeAttribute("aria-selected");
+  }
+  const cur = document.querySelector<HTMLElement>("#lang .langcur");
+  if (cur && chosen) cur.innerHTML = chosen.innerHTML;
+}
+
+/** The language menu: the whole button opens a list with a flag for each language. */
+function setupLangMenu(choose: (l: Lang) => void): void {
+  const btn = document.getElementById("lang");
+  const list = document.getElementById("langlist");
+  if (!(btn instanceof HTMLButtonElement) || !list) return;
+  const items = (): HTMLElement[] => Array.from(list.querySelectorAll<HTMLElement>("[data-lang]"));
+  const isOpen = (): boolean => !list.hidden;
+  const close = (focusButton: boolean): void => {
+    list.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    if (focusButton) btn.focus();
+  };
+  const open = (): void => {
+    list.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    (list.querySelector<HTMLElement>('[aria-selected="true"]') ?? items()[0]).focus();
+  };
+  const pick = (li: HTMLElement): void => {
+    const next = li.dataset.lang;
+    close(true);
+    if (isLang(next) && next !== current) choose(next);
+  };
+  btn.addEventListener("click", () => (isOpen() ? close(false) : open()));
+  btn.addEventListener("keydown", (e) => {
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !isOpen()) {
+      e.preventDefault();
+      open();
+    }
+  });
+  list.addEventListener("click", (e) => {
+    const li = (e.target as Element).closest<HTMLElement>("[data-lang]");
+    if (li) pick(li);
+  });
+  list.addEventListener("keydown", (e) => {
+    const all = items();
+    const i = all.indexOf(document.activeElement as HTMLElement);
+    const go = (n: number): void => {
+      e.preventDefault();
+      all[(n + all.length) % all.length].focus();
+    };
+    if (e.key === "ArrowDown") go(i + 1);
+    else if (e.key === "ArrowUp") go(i - 1);
+    else if (e.key === "Home") go(0);
+    else if (e.key === "End") go(all.length - 1);
+    else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (i >= 0) pick(all[i]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      close(true);
+    } else if (e.key === "Tab") close(false);
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (isOpen() && !(e.target as Element).closest(".langmenu")) close(false);
+  });
 }
 
 export function setupLang(): void {
   const lang = initial();
-  if (lang !== "mn") apply(lang); // HTML already ships Mongolian
+  if (lang !== "mn") apply(lang); // the HTML of "/" is Mongolian
   else current = "mn";
-  document.getElementById("lang")?.addEventListener("click", () => {
-    const next: Lang = current === "mn" ? "en" : "mn";
+  // A saved choice or ?lang= on the root page moves to that language's own URL.
+  if (langOfPath(location.pathname) === "mn" && lang !== "mn") history.replaceState(null, "", PATHS[lang]);
+  const choose = (next: Lang): void => {
     save(next);
     apply(next);
+    history.pushState(null, "", PATHS[next]);
+    document.dispatchEvent(new CustomEvent("buuz:lang-changed", { detail: next }));
+  };
+  setupLangMenu(choose);
+  // Back and forward move between the language URLs.
+  window.addEventListener("popstate", () => {
+    const l = langOfPath(location.pathname);
+    if (l && l !== current) {
+      apply(l);
+      document.dispatchEvent(new CustomEvent("buuz:lang-changed", { detail: l }));
+    }
   });
 }

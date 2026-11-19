@@ -8,7 +8,7 @@
   "scripts": {
     "wasm": "bash scripts/build-wasm.sh",
     "dev": "npm run wasm && vite",
-    "build": "npm run wasm && tsc --noEmit && vite build",
+    "build": "npm run wasm && tsc --noEmit && vite build && node --experimental-strip-types scripts/prerender.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/*.test.mjs"
