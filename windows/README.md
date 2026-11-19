@@ -77,6 +77,26 @@ settings window. The text is in Mongolian and English (`app/strings_*.tsv`).
 - "Add Buuz" calls `InstallLayoutOrTip` and then checks the profile every second.
 - The tests for the logic run in `ctest` (`app_test`). The window itself needs a manual check (#84).
 
+## Installer
+
+`installer/buuz.iss` is an [Inno Setup](https://jrsoftware.org/isinfo.php) script. CI builds one installer for each CPU:
+`Buuz-<version>-windows-x64.exe` and `Buuz-<version>-windows-arm64.exe`. Both are in the `buuz-windows-<arch>` artifact.
+
+- It needs an administrator, because the text service goes into `HKLM`.
+- It copies `buuz_tsf.dll` and `buuz_settings.exe` to `C:\Program Files\Buuz`.
+- It registers the DLL (`regserver`) and adds a Start menu entry. The last page opens the settings app.
+- If an app still holds the old DLL, Windows replaces it at the next restart.
+- Uninstall (Settings, Apps) unregisters the DLL and removes the files.
+
+CI installs the x64 installer silently, checks the registration and the files, uninstalls it, and checks again.
+Run the same test by hand with `Buuz-<version>-windows-x64.exe /VERYSILENT`.
+
+To build it yourself, install Inno Setup 6, then run:
+
+```sh
+ISCC /DArch=x64 /DSourceDir=windows\build\Release windows\installer\buuz.iss
+```
+
 ## Automated end-to-end test
 
 `tests/e2e_typing.cpp` makes a real window with a Rich Edit control and
@@ -132,7 +152,7 @@ Use the artifact `buuz-windows-x64`, and the same steps. The
 
 ## Not done yet
 
-- Installer, signing (SignPath or Microsoft Store), winget.
+- Code signing (SignPath or Microsoft Store) and winget. The installer is unsigned, so SmartScreen warns.
 - ARM64X (one DLL for ARM64 and emulated x64 apps) and x86 builds.
 - Settings app: import and export, abbreviation and key editors, per-app
   memory, update check, dark theme polish. Mongolian text needs a native
