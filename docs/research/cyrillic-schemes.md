@@ -75,15 +75,26 @@ It is the reverse of everyday translit: `p` is р, not п.
 | --- | --- |
 | `a` `c` `e` `k` `m` `o` `t` `x` | а с е к м о т х |
 | `b` `h` `p` `y` | в н р у |
-| `n` `u` `r` `w` | п и я ш |
+| `n` `u` `r` `w` `q` | п и я ш я |
 | `3` `4` `6` `9` `0` | з ч б я о |
-| `bl` `b\|` `10` `\|0` `lli` `iii` | ы ы ю ю щ ш |
-| `>\|<` | ж |
+| `bl` `b\|` `b!` `b1` `61` | ы |
+| `10` `\|0` `\|o` `i-0` `\|-0` | ю |
+| `iii` `lli` | ш |
+| `iii_` `lli_` | щ |
+| `>\|<` `}\|{` `*` | ж |
+| `e"` `e~` | ё |
+| `e'` `~)` | э |
+| `j\|` `jl` `/\` | л |
+| `u_` | ц |
+| `(\|)` | ф |
+| `u~` `u'` | й |
+| `~b` `` `b `` | ъ |
+| `9\|` `91` | я |
 
-- A digit gives a letter only next to a letter. `2026` stays a number.
+- A digit gives a letter only next to a letter. `2026` and `61` stay numbers. `a61` is аы.
 - A capital inside a word is a look-alike, not a capital letter. `npuBeT`
   gives привет. Only the first letter of a word keeps its case.
-- `b` is в, except in `bl` and `b|`, which are ы. Write `'` for ь.
+- `b` is в, except in `bl`, `b|`, `b!` and `b1`, which are ы. Write `'` for ь.
 - `bI` (capital i) is not ы: the capital turns to lower case, so it is `bi`, ви.
 - Letters with no look-alike use their sound (`d` д, `f` ф, `z` з).
 
