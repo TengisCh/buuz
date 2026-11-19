@@ -29,7 +29,7 @@ set_target_properties(buuz_ffi PROPERTIES
 if(WIN32)
   # System libraries the Rust standard library needs on Windows.
   set_property(TARGET buuz_ffi PROPERTY INTERFACE_LINK_LIBRARIES
-    ws2_32 userenv ntdll bcrypt advapi32 kernel32)
+    ws2_32 userenv ntdll bcrypt advapi32 kernel32 synchronization)
 elseif(UNIX)
   set_property(TARGET buuz_ffi PROPERTY INTERFACE_LINK_LIBRARIES pthread dl m)
 endif()
@@ -46,7 +46,7 @@ add_test(NAME engine_test COMMAND engine_test)
 
 if(WIN32)
   add_library(buuz_tsf SHARED
-    src/text_service.cpp src/registration.cpp src/display_attributes.cpp buuz_tsf.def)
+    src/text_service.cpp src/registration.cpp src/display_attributes.cpp src/guids.cpp buuz_tsf.def)
   target_compile_definitions(buuz_tsf PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
   target_link_libraries(buuz_tsf PRIVATE buuz_shell ole32 oleaut32 uuid advapi32 user32)
   if(MSVC)
