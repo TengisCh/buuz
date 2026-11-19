@@ -41,6 +41,21 @@ the switches to the portable config file.
 If the button does not work, open System Settings › Keyboard › Input Sources › Edit › ＋ › Mongolian ›
 Buuz. Log out and in once if macOS does not list Buuz.
 
+## End-to-end test
+
+`macos/e2e/run.sh` tests the installed app on a real Mac. CI runs it on the
+macOS runner after each change in `macos/`, `ffi/` or `core/src/`.
+
+1. It turns on the installed Buuz input method (`TISRegisterInputSource`,
+   `TISEnableInputSource`).
+2. It makes a window with a standard Cocoa text view and selects Buuz for it.
+3. It sends key events through `NSTextInputContext`. macOS routes them to the
+   real Buuz process, as it does for any app.
+4. It compares the text in the text view with the expected Cyrillic.
+
+The test needs no Accessibility permission. It does not use TextEdit: reading
+TextEdit needs an Automation permission that a runner cannot grant.
+
 ## How typing works
 
 1. IMK gives each key down to `BuuzController.handle`.
