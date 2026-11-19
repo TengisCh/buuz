@@ -15,3 +15,11 @@ pkill -x Buuz 2>/dev/null || true
 rm -rf "$DEST/Buuz.app"
 cp -R "$APP" "$DEST/Buuz.app"
 echo "Installed $DEST/Buuz.app"
+
+# The welcome and settings app.
+if [ -d build/Settings.app ]; then
+  rm -rf "$HOME/Applications/Buuz.app"
+  mkdir -p "$HOME/Applications"
+  cp -R build/Settings.app "$HOME/Applications/Buuz.app"
+  echo "Installed $HOME/Applications/Buuz.app (open it for the welcome steps)"
+fi

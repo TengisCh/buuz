@@ -4,8 +4,8 @@
 A thin Swift InputMethodKit shell over the shared Rust core. It calls the core
 through the C library `buuz-ffi` (`ffi/include/buuz.h`).
 
-Status: first version of the input method (issue #77). The onboarding and
-settings app are a separate piece (`docs/desktop-onboarding.md`).
+Status: first version. The input method is issue #77. The welcome steps and
+settings app follow `docs/desktop-onboarding.md`.
 
 ## Layout
 
@@ -13,6 +13,8 @@ settings app are a separate piece (`docs/desktop-onboarding.md`).
 | --- | --- |
 | `Sources/Core/` | Logic with no AppKit: `Engine` (the C ABI), `KeyMap`, `Session`, `ConfigStore` |
 | `Sources/App/` | The IMK app: `main.swift`, `BuuzController` |
+| `Settings/` | The Buuz app in SwiftUI: welcome steps and settings (`Settings.app`) |
+| `App/Strings/` | Mongolian and English UI strings |
 | `Tests/main.swift` | Tests that run the real FFI with a fake text field |
 | `Info.plist` | Input method keys (Mongolian, Cyrillic) |
 | `Resources/` | Menu icon `Buuz-menu.png` (made by `tools/make-menu-icon.py`) |
@@ -28,10 +30,15 @@ You need Xcode command line tools and Rust (`rustup`).
 ```sh
 macos/build.sh test   # Swift tests for this Mac
 macos/build.sh        # build/Buuz.app, universal (arm64 and x86_64), ad-hoc signed
-macos/install.sh      # copy to ~/Library/Input Methods
+macos/install.sh      # copy to ~/Library/Input Methods and ~/Applications/Buuz.app
 ```
 
-Then open System Settings › Keyboard › Input Sources › Edit › ＋ › Mongolian ›
+Open `~/Applications/Buuz.app` for the welcome steps. The app adds Buuz to the
+keyboards with one click (`TISRegisterInputSource` and `TISEnableInputSource`).
+It switches to ✅ by itself when Buuz is added. The settings window writes
+the switches to the portable config file.
+
+If the button does not work, open System Settings › Keyboard › Input Sources › Edit › ＋ › Mongolian ›
 Buuz. Log out and in once if macOS does not list Buuz.
 
 ## How typing works

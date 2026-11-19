@@ -45,3 +45,45 @@ export function groupKeys(table: string, language: string): Row[] {
     .map(([out, keys]) => ({ out, keys: keys.sort((a, b) => keyOrder(a.latin, b.latin)) }))
     .sort((a, b) => collator.compare(a.out, b.out));
 }
+
+/** The languages of the typing picker, in its order, with their own names. */
+export const TYPING_LANGS = [
+  ["mn", "Монгол"],
+  ["ru", "Русский"],
+  ["uk", "Українська"],
+  ["be", "Беларуская"],
+  ["bg", "Български"],
+  ["sr", "Српски"],
+  ["mk", "Македонски"],
+  ["kk", "Қазақша"],
+  ["ky", "Кыргызча"],
+] as const;
+
+export type FormatKind = "chat" | "official" | "lookalike";
+
+/** What a scheme id means in the picker: its language and its kind of format. */
+export function formatOf(id: string): { lang: string; kind: FormatKind; name: string | null } {
+  const lang = id.split("-")[0];
+  const official: Record<string, string> = { "mn-mns": "MNS 5217", "ru-gost": "ГОСТ 7.79", "uk-kmu": "КМУ 2010" };
+  if (official[id]) return { lang, kind: "official", name: official[id] };
+  if (id === "ru-volapuk") return { lang, kind: "lookalike", name: null };
+  return { lang, kind: "chat", name: id === "mn" ? "Buuz" : null };
+}
+
+/** The scheme ids of one language: the chat format first. */
+export function formatsOf(lang: string, ids: readonly string[]): string[] {
+  return ["mn", ...ids].filter((id) => id.split("-")[0] === lang);
+}
+
+/** A few multi-letter keys for the line under the output, in table order. */
+export function sampleKeys(rows: Row[], max = 6): { latin: string; out: string }[] {
+  const out: { latin: string; out: string }[] = [];
+  for (const r of rows) {
+    // A letter with a one-key way (х: h) says less than one without (ж: zh).
+    if (r.keys.some((k) => k.latin.length === 1)) continue;
+    const ok = r.keys.filter((k) => /^[a-z]+$/.test(k.latin) && (k.when === "always" || k.when === "smart"));
+    const k = ok.find((k) => !k.latin.startsWith("j")) ?? ok[0];
+    if (k && out.length < max) out.push({ latin: k.latin, out: r.out });
+  }
+  return out;
+}
