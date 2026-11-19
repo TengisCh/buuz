@@ -63,7 +63,8 @@ pump(0.5)
 log("current keyboard after the text view selected Buuz: \(InputSource.currentID ?? "none")")
 if InputSource.currentID != InputSource.id {
     // Select it for the whole login session instead.
-    log("TISSelectInputSource returned \(InputSource.select())")
+    log("select capable: \(InputSource.isSelectCapable)")
+    log("TISSelectInputSource status: \(String(describing: InputSource.select()))")
     _ = waitFor("Buuz is the current keyboard", timeout: 20, { InputSource.currentID == InputSource.id })
 }
 log("current keyboard: \(InputSource.currentID ?? "none")")

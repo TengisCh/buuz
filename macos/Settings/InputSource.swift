@@ -47,10 +47,19 @@ enum InputSource {
     }
 
     /// Make Buuz the current keyboard for the whole session. The e2e test uses this.
+    /// Gives the OS status, or nil when the source is not found.
     @discardableResult
-    static func select() -> Bool {
-        guard let source = find() else { return false }
-        return TISSelectInputSource(source) == noErr
+    static func select() -> OSStatus? {
+        guard let source = find() else { return nil }
+        return TISSelectInputSource(source)
+    }
+
+    /// Whether macOS lets a program select Buuz.
+    static var isSelectCapable: Bool {
+        guard let source = find(),
+            let p = TISGetInputSourceProperty(source, kTISPropertyInputSourceIsSelectCapable)
+        else { return false }
+        return CFBooleanGetValue(Unmanaged<CFBoolean>.fromOpaque(p).takeUnretainedValue())
     }
 
     /// The id of the current keyboard input source.
