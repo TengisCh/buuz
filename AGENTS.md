@@ -128,7 +128,7 @@ Chat replies and the reasoning in ADRs and `grill` sessions are exempt.
 - Branch from `main`: `issue-<n>-<slug>` for an issue, otherwise
   `<area>/<slug>`. Never commit to `main` directly.
 - Commit subject: `<area>: <what changed>` in lower case, for example
-  `core: accept ö/ü as input for ө/ү`. Areas: `core`, `web`, `docs`,
+  `core: accept ö/ü as input for ө/ү`. Areas: `core`, `macos`, `web`, `docs`,
   `brand`, `design`, `lint`, `ci`, `deps`, `agents`.
 - One concern per PR. Link the issue (`Closes #n`). PRs are squash-merged.
 - Only commit, push or open a PR when the maintainer asks.
