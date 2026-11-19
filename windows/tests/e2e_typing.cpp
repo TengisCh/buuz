@@ -64,6 +64,9 @@ void type(const char* keys) {
 // Windows refuses SetForegroundWindow from a background process. Sharing
 // the input queue of the current foreground thread makes it work.
 void take_focus(HWND top) {
+    // Allow this process to take the foreground at once (no lock timeout).
+    SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, nullptr, SPIF_SENDCHANGE);
+    AllowSetForegroundWindow(ASFW_ANY);
     const DWORD me = GetCurrentThreadId();
     const HWND fg = GetForegroundWindow();
     const DWORD fg_thread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
@@ -142,6 +145,16 @@ int main() {
 
     std::printf("foreground is the test window: %s, focus is the control: %s\n",
                 GetForegroundWindow() == top ? "yes" : "no", GetFocus() == g_edit ? "yes" : "no");
+    {
+        wchar_t cls[128] = L"(none)";
+        wchar_t title[128] = L"";
+        const HWND fg = GetForegroundWindow();
+        if (fg) {
+            GetClassNameW(fg, cls, 128);
+            GetWindowTextW(fg, title, 128);
+        }
+        std::printf("foreground window: %p class=%ls title=%ls\n", static_cast<void*>(fg), cls, title);
+    }
     const bool loaded = GetModuleHandleW(L"buuz_tsf.dll") != nullptr;
     std::printf("buuz_tsf.dll loaded into this process: %s\n", loaded ? "yes" : "no");
 
