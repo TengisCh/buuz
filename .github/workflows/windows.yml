@@ -52,8 +52,9 @@ jobs:
         shell: pwsh
         run: |
           $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
-          regsvr32 /s $dll
-          if ($LASTEXITCODE -ne 0) { throw "regsvr32 failed: $LASTEXITCODE" }
+          # regsvr32 is a GUI program: wait for it and read its exit code.
+          $p = Start-Process regsvr32 -ArgumentList "/s", "`"$dll`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "regsvr32 failed: $($p.ExitCode)" }
           if (-not (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{5E0B7A2C-9D41-4C7E-8B1A-3F6D2A9C4E10}\InprocServer32")) { throw "CLSID not registered" }
-          regsvr32 /s /u $dll
-          if ($LASTEXITCODE -ne 0) { throw "unregister failed: $LASTEXITCODE" }
+          $p = Start-Process regsvr32 -ArgumentList "/s", "/u", "`"$dll`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "unregister failed: $($p.ExitCode)" }
