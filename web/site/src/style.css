@@ -185,9 +185,12 @@ body[data-scheme="mn"] .other-only, body:not([data-scheme]) .other-only { displa
 .keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem 1.5rem; margin: 1rem 0 0.75rem; }
 .keys h3 { margin: 0 0 0.4rem; font-size: 0.8rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .keys ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
-.keys li { display: grid; grid-template-columns: 3.2rem 1fr; align-items: center; gap: 0.5rem; font-size: 1.15rem; font-weight: 800; }
-.keys li kbd { text-align: center; }
-.keys li span::before { content: "→ "; color: var(--muted); font-weight: 600; }
+.keys ul { gap: 0; }
+.keys li { display: grid; grid-template-columns: 6.5rem 1fr; align-items: center; gap: 0.5rem; padding: 0.3rem 0; border-bottom: 1px solid var(--line); font-size: 1.1rem; font-weight: 800; }
+.keys li:last-child { border-bottom: 0; }
+.keys li .in { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.keys li kbd { min-width: 2.2rem; text-align: center; }
+.keys li .out::before { content: "→ "; color: var(--muted); font-weight: 600; }
 
 a.button {
   display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;
@@ -425,17 +428,18 @@ a.button.mail { width: 100%; justify-content: center; }
 
 .rules-h { margin: 0.9rem 0 0.4rem; font-size: 0.95rem; font-weight: 900; }
 .rules-h:first-child { margin-top: 0; }
-.kb { display: grid; gap: 4px; }
-.kr { display: flex; gap: 4px; }
-.kr:nth-child(2) { padding-left: 4%; }
-.kr:nth-child(3) { padding-left: 8%; }
-.k { position: relative; flex: 0 0 calc((100% - 36px) / 10); aspect-ratio: 1; border-radius: 8px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line), 0 2px 0 var(--press); font-weight: 900; font-size: 1rem; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 0.3rem 0.1rem 0; }
-.k i { position: absolute; left: 0.25rem; top: 0.05rem; font-style: normal; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.65rem; font-weight: 600; color: var(--muted); }
-.k.v { background: color-mix(in srgb, var(--sun) 30%, var(--card)); box-shadow: inset 0 0 0 1.5px var(--amber), 0 2px 0 var(--sun-press); font-size: 0.8rem; }
-.combos { list-style: none; margin: 0.6rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; }
-.combos li { padding: 0.1rem 0.45rem; border-radius: 8px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--line); font-size: 0.85rem; }
-.combos li.s { box-shadow: inset 0 0 0 1.5px var(--accent); }
-.combos kbd { color: var(--muted); font-weight: 700; }
+.keys:has(.map) { display: block; }
+.map { list-style: none; margin: 0; padding: 0; columns: 4 8.5rem; column-gap: 1.25rem; }
+.map li { break-inside: avoid; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.5rem; padding: 0.25rem 0; border-bottom: 1px solid var(--line); }
+.map .in { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
+.map kbd { min-width: 1.6rem; padding-inline: 0.3rem; text-align: center; font-size: 0.85rem; }
+.map kbd.smart::after { content: "✨"; font-size: 0.65rem; margin-left: 0.1rem; }
+.map small { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+.map .out { font-size: 1.15rem; font-weight: 900; text-align: right; }
+.keys-rules .map { columns: 2 8.5rem; }
+.map-format { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0 0.5rem; font-weight: 800; }
+.map-format select { font: inherit; font-weight: 700; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.3rem 0.5rem; max-width: 100%; }
+.map-legend { margin-top: 0.5rem; }
 #pane-rules details { border-top: 1px solid var(--line); padding: 0.4rem 0; }
 #pane-rules summary { cursor: pointer; font-weight: 800; font-size: 0.92rem; }
 .rules-link { margin-top: 0.7rem; }

@@ -253,17 +253,10 @@
         </div>
 
         <div id="pane-rules" class="set-pane" role="tabpanel" aria-labelledby="tab-rules" hidden>
+          <p class="map-format"><label for="scheme-rules"><span aria-hidden="true">📋 </span><span data-i18n="mapFormat">Формат</span></label> <select id="scheme-rules" class="scheme-mirror"></select></p>
+          <div id="keys-rules" class="keys keys-rules"></div>
+          <p class="hint map-legend mn-only"><span aria-hidden="true">✨ </span><span data-i18n="mapSmart">ухаалаг горимд</span> · <span aria-hidden="true">🎵 </span><span data-i18n="mapHarmony">эгшиг зохицлоор о/ө, у/ү</span></p>
           <div class="mn-only">
-            <h3 class="rules-h" data-i18n="rulesKeys">Товчлуурууд</h3>
-            <div class="kb" lang="mn" aria-hidden="true">
-              <div class="kr"><span class="k v"><i>q</i>ө</span><span class="k v"><i>w</i>ү</span><span class="k"><i>e</i>э</span><span class="k"><i>r</i>р</span><span class="k"><i>t</i>т</span><span class="k"><i>y</i>ы</span><span class="k v"><i>u</i>у/ү</span><span class="k"><i>i</i>и</span><span class="k v"><i>o</i>о/ө</span><span class="k"><i>p</i>п</span></div>
-              <div class="kr"><span class="k"><i>a</i>а</span><span class="k"><i>s</i>с</span><span class="k"><i>d</i>д</span><span class="k"><i>f</i>ф</span><span class="k"><i>g</i>г</span><span class="k"><i>h</i>х</span><span class="k"><i>j</i>ж</span><span class="k"><i>k</i>к</span><span class="k"><i>l</i>л</span><span class="k"><i>'</i>ь</span></div>
-              <div class="kr"><span class="k"><i>z</i>з</span><span class="k"><i>x</i>х</span><span class="k"><i>c</i>ц</span><span class="k"><i>v</i>в</span><span class="k"><i>b</i>б</span><span class="k"><i>n</i>н</span><span class="k"><i>m</i>м</span><span class="k"><i>"</i>ъ</span></div>
-            </div>
-            <ul class="combos" lang="mn">
-              <li><kbd>sh</kbd> ш</li><li><kbd>ch</kbd> ч</li><li><kbd>kh</kbd> х</li><li><kbd>ya</kbd> я</li><li><kbd>ye</kbd> е</li><li><kbd>yo</kbd> ё</li><li><kbd>yu</kbd> ю</li><li><kbd>ii</kbd> ий/ы</li><li><kbd>ii'</kbd> ий</li><li><kbd>iii</kbd> ы</li><li><kbd>sxc</kbd> щ</li>
-              <li class="s"><kbd>vv</kbd> үү</li><li class="s"><kbd>ts</kbd> ц</li><li class="s"><kbd>zh</kbd> ж</li><li class="s"><kbd>ö</kbd> ө</li><li class="s"><kbd>ü</kbd> ү</li>
-            </ul>
             <h3 class="rules-h" data-i18n="rulesFeatures">Боломж бүрийн тайлбар</h3>
             <details><summary><span aria-hidden="true">🎵 </span><span data-i18n="smartVowels">Эгшиг зохицох</span></summary><p class="hint" data-i18n="smartVowelsHint">Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.</p></details>
             <details><summary><span aria-hidden="true">✂️ </span><span data-i18n="abbreviations">Товчлол</span></summary><p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p></details>
@@ -276,7 +269,6 @@
             <p class="hint rules-link"><a href="https://github.com/TengisCh/buuz/blob/main/docs/typing-rules.md" target="_blank" rel="noopener"><span aria-hidden="true">📄 </span><span data-i18n="rulesFull">Бүрэн дүрэм (GitHub)</span></a></p>
           </div>
           <div class="other-only">
-            <p class="hint" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно.</p>
             <p class="hint rules-link"><a href="https://github.com/TengisCh/buuz/blob/main/docs/research/cyrillic-schemes.md" target="_blank" rel="noopener"><span aria-hidden="true">📄 </span><span data-i18n="rulesOther">Энэ хэлний бүрэн хүснэгт (GitHub)</span></a></p>
           </div>
         </div>
@@ -372,43 +364,44 @@
 
       <details class="cheat">
         <summary><span aria-hidden="true">⌨️ </span><span data-i18n="howTo">Яаж бичих вэ?</span></summary>
-        <div class="keys">
+        <p class="map-format"><label for="scheme-cheat"><span aria-hidden="true">📋 </span><span data-i18n="mapFormat">Формат</span></label> <select id="scheme-cheat" class="scheme-mirror"></select></p>
+        <div class="keys" id="keys-cheat">
           <div class="col">
             <h3 data-i18n="vowels">Эгшиг</h3>
             <ul>
-              <li><kbd>e</kbd><span>э</span></li>
-              <li><kbd>w</kbd> <kbd>ü</kbd> <kbd>vv</kbd><span>ү / үү</span></li>
-              <li><kbd>q</kbd> <kbd>ö</kbd><span>ө</span></li>
-              <li><kbd>y</kbd><span>ы</span></li>
-              <li><kbd>ii</kbd><span>ий / ы</span></li>
-              <li><kbd>ii'</kbd><span>ий</span></li>
+              <li><span class="in"><kbd>e</kbd></span><span class="out">э</span></li>
+              <li><span class="in"><kbd>w</kbd> <kbd>ü</kbd> <kbd>vv</kbd></span><span class="out">ү / үү</span></li>
+              <li><span class="in"><kbd>q</kbd> <kbd>ö</kbd></span><span class="out">ө</span></li>
+              <li><span class="in"><kbd>y</kbd></span><span class="out">ы</span></li>
+              <li><span class="in"><kbd>ii</kbd></span><span class="out">ий / ы</span></li>
+              <li><span class="in"><kbd>ii'</kbd></span><span class="out">ий</span></li>
             </ul>
           </div>
           <div class="col">
             <h3 data-i18n="yVowels">Й-тэй эгшиг</h3>
             <ul>
-              <li><kbd>ye</kbd><span>е</span></li>
-              <li><kbd>yo</kbd><span>ё</span></li>
-              <li><kbd>yu</kbd><span>ю</span></li>
-              <li><kbd>ya</kbd><span>я</span></li>
+              <li><span class="in"><kbd>ye</kbd></span><span class="out">е</span></li>
+              <li><span class="in"><kbd>yo</kbd></span><span class="out">ё</span></li>
+              <li><span class="in"><kbd>yu</kbd></span><span class="out">ю</span></li>
+              <li><span class="in"><kbd>ya</kbd></span><span class="out">я</span></li>
             </ul>
           </div>
           <div class="col">
             <h3 data-i18n="consonants">Гийгүүлэгч</h3>
             <ul>
-              <li><kbd>h</kbd><span>х</span></li>
-              <li><kbd>c</kbd> <kbd>ts</kbd><span>ц</span></li>
-              <li><kbd>ch</kbd><span>ч</span></li>
-              <li><kbd>sh</kbd><span>ш</span></li>
-              <li><kbd>j</kbd> <kbd>zh</kbd><span>ж</span></li>
-              <li><kbd>z</kbd><span>з</span></li>
+              <li><span class="in"><kbd>h</kbd></span><span class="out">х</span></li>
+              <li><span class="in"><kbd>c</kbd> <kbd>ts</kbd></span><span class="out">ц</span></li>
+              <li><span class="in"><kbd>ch</kbd></span><span class="out">ч</span></li>
+              <li><span class="in"><kbd>sh</kbd></span><span class="out">ш</span></li>
+              <li><span class="in"><kbd>j</kbd> <kbd>zh</kbd></span><span class="out">ж</span></li>
+              <li><span class="in"><kbd>z</kbd></span><span class="out">з</span></li>
             </ul>
           </div>
           <div class="col">
             <h3 data-i18n="signs">Тэмдэг</h3>
             <ul>
-              <li><kbd>'</kbd><span>ь</span></li>
-              <li><kbd>"</kbd><span>ъ</span></li>
+              <li><span class="in"><kbd>'</kbd></span><span class="out">ь</span></li>
+              <li><span class="in"><kbd>"</kbd></span><span class="out">ъ</span></li>
             </ul>
           </div>
         </div>

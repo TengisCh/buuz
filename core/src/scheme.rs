@@ -294,6 +294,30 @@ pub enum Scheme {
     Kyrgyz,
 }
 
+/// When a row of a key table applies.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum KeyWhen {
+    /// Always.
+    Always,
+    /// After a vowel only.
+    AfterVowel,
+    /// At the start of a word only.
+    WordStart,
+    /// The vowel follows the vowel harmony of the word (Buuz only).
+    Harmony,
+    /// In smart mode only, with its switch on (Buuz only).
+    Smart,
+}
+
+/// One row of a key table for people: the Latin keys, the Cyrillic they give
+/// (lower case) and when the row applies.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KeyRow {
+    pub latin: String,
+    pub cyrillic: String,
+    pub when: KeyWhen,
+}
+
 /// The id of a scheme is not known.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UnknownScheme(pub String);
@@ -388,6 +412,24 @@ impl Scheme {
             Scheme::Kazakh => (KK, KK_VOWELS),
             Scheme::Kyrgyz => (KY, KY_VOWELS),
         }
+    }
+
+    /// The rules as a key table, in table order. Rules that need a letter
+    /// next to them (signs, Volapük digits) count as `Always`.
+    pub fn key_table(self) -> Vec<KeyRow> {
+        self.table()
+            .0
+            .iter()
+            .map(|&(latin, cyrillic, cond)| KeyRow {
+                latin: latin.to_string(),
+                cyrillic: cyrillic.to_string(),
+                when: match cond {
+                    Cond::AfterVowel => KeyWhen::AfterVowel,
+                    Cond::WordStart => KeyWhen::WordStart,
+                    Cond::Any | Cond::AfterLetter | Cond::TouchesLetter => KeyWhen::Always,
+                },
+            })
+            .collect()
     }
 
     /// Convert Latin text to Cyrillic. Characters without a rule (digits,
