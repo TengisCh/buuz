@@ -2,7 +2,7 @@
 
 Status: describes `buuz-core` with smart vowel harmony (issue #7), which is
 on by default, and abbreviation expansion (issue #5), which is opt-in; the original left-to-right behaviour is kept as the "classic"
-option. Buuz is a port of the original by Odbayar Nyamtseren. Planned changes
+option. Planned changes
 are linked at the end and are **not** implemented yet.
 
 Source: [`core/src/rules.rs`](../core/src/rules.rs) (the table) and

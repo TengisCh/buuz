@@ -53,7 +53,7 @@ Most letters are what you'd guess (`b` → б, `d` → д, `sain` → сайн).
 
 - ⚡ **Instant.** Native compiled code on every keystroke. No lag.
 - 🔒 **Private.** Works offline and never stores or sends what you type.
-- 🥟 **Familiar.** Same rules as the original [Buuz](https://github.com/odbayar/buuz) by Odbayar Nyamtseren, which many Mongolians have typed with since 2009. Buuz 2.0 is its community continuation.
+- 🥟 **Familiar.** The typing rules Mongolians have used since 2009, with smart vowel harmony on top.
 - 💛 **Free and open source.**
 
 ## 📦 What's inside
