@@ -288,9 +288,11 @@ fn config_switch_follows_the_preset() {
     assert!(classic.needs_word_list());
     smart.options(); // options() never loads data
     assert!(smart.options().words.is_none());
-    let parsed = Config::parse("buuz_config = 1\n[options]\ncompletion = false\n")
-        .unwrap()
-        .config;
+    // Word choice also needs the list, so turn it off too.
+    let parsed =
+        Config::parse("buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\n")
+            .unwrap()
+            .config;
     assert_eq!(parsed.completion(), Some(false));
     assert!(!parsed.needs_word_list());
     assert_eq!(Config::parse(&parsed.to_text()).unwrap().config, parsed);

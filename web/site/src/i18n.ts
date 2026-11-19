@@ -42,6 +42,9 @@ const mn = {
   habitKeys: "ts-г ц, zh-г ж болгох (tsagaan → цагаан)",
   habitKeysHint:
     "Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.",
+  wordChoice: "ө, ү-г үгийн жагсаалтаар сонгох (tov → төв)",
+  wordChoiceHint:
+    "Үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz о, ө, у, ү үсгийн алийг нь бичихийг үгийн жагсаалтаас харж сонгоно (tov → төв, uvul → өвөл). Мөн урт эгшиг, ь, е-г шаардлагатай үед нөхнө (terer → тэрээр, huuli → хууль, wed → үед). Жагсаалтад байгаа түгээмэл үгийг өөрчлөхгүй (uuriin → уурын). Энэ сайт дээр сонгосон үг шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Унтраавал үг бичсэнээрээ үлдэнэ. Анхнаасаа асаалттай.",
   mode: "Горим",
   modeSmart: "Ухаалаг (үндсэн)",
   modeClassic: "Сонгодог (анхны Buuz)",
@@ -250,6 +253,9 @@ const en: Record<Key, string> = {
   habitKeys: "Type ts as ц and zh as ж (tsagaan → цагаан)",
   habitKeysHint:
     "Two keys <kbd>ts</kbd> give ц and <kbd>zh</kbd> gives ж (tsagaan gives цагаан, gezh gives гэж). When the word list is loaded, a word that has тс or зх keeps them (hwrtsen gives хүртсэн). Without the list the keys always give ц and ж. Turn the checkbox off to type тс and зх. It is on by default.",
+  wordChoice: "Choose ө and ү with the word list (tov → төв)",
+  wordChoiceHint:
+    "When you type a space or punctuation after a word, Buuz uses the word list to choose between о, ө, у and ү (tov gives төв, uvul gives өвөл). It also adds a long vowel, ь or е where the list needs them (terer gives тэрээр, huuli gives хууль, wed gives үед). It does not change a common word that is in the list (uuriin gives уурын). This website shows the chosen word and has no Backspace undo. Turn the checkbox off to keep words as typed. It is on by default.",
   mode: "Mode",
   modeSmart: "Smart (default)",
   modeClassic: "Classic (original Buuz)",

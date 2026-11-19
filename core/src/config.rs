@@ -511,11 +511,13 @@ impl Config {
     }
 
     /// Whether the shell must load the word list and set [`Options::words`]:
-    /// true when completion or autocorrect is on (the override, else the
-    /// preset; autocorrect is off in both presets). `options()` cannot load
+    /// true when completion, autocorrect or word choice is on (the override,
+    /// else the preset; autocorrect is off in both presets). `options()` cannot load
     /// data, so shells read this first.
     pub fn needs_word_list(&self) -> bool {
-        self.completion.unwrap_or(self.preset == Preset::Smart) || self.autocorrect.unwrap_or(false)
+        self.completion.unwrap_or(self.preset == Preset::Smart)
+            || self.autocorrect.unwrap_or(false)
+            || self.word_choice.unwrap_or(self.preset == Preset::Smart)
     }
 
     /// User abbreviations in file order, with lowercase keys. They go on top
