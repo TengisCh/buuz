@@ -27,7 +27,8 @@ use crate::abbrev::Abbreviations;
 use crate::autocorrect::{self, Scratch};
 use crate::keys::KeyMap;
 use crate::rules::{
-    rules, to_lower, Rule, RuleSet, II_FINAL_STEMS, KEEP_II, X_DV, X_F, X_HK, X_II, X_M, X_MF, X_MM,
+    rules, to_lower, Rule, RuleSet, GUI_STEMS, II_FINAL_STEMS, KEEP_II, X_AC, X_DV, X_F, X_HK,
+    X_II, X_M, X_MF, X_MM,
 };
 use crate::userdict::{Learned, UserSnapshot};
 use crate::wordlist::WordList;
@@ -450,6 +451,52 @@ fn list_prefers_ii(words: &WordList, out: &[char], buf: &mut String) -> bool {
     !probe("ы") && probe("ий")
 }
 
+/// Should this `ui` after г become үй (the negation suffix -гүй)? `out` ends
+/// in г. The text before г needs a vowel. With a word list, keep гуй when the
+/// best listed word that starts with `out` + уй has a higher count than the
+/// best one that starts with `out` + үй. When neither spelling is listed, and
+/// without a list, use `gui_is_gwi_plain`.
+fn gui_is_gwi(words: Option<&WordList>, out: &[char], buf: &mut String) -> bool {
+    let stem = &out[..out.len() - 1];
+    if !stem.iter().any(|&c| is_vowel(c)) {
+        return false;
+    }
+    if let Some(w) = words {
+        let mut count = |tail: &str| {
+            buf.clear();
+            buf.extend(out.iter().map(|&c| to_lower(c)));
+            buf.push_str(tail);
+            w.top_two(buf).0.map_or(0, |(_, n)| n)
+        };
+        let back = count("уй");
+        let front = count("үй");
+        if back > 0 || front > 0 {
+            return back <= front;
+        }
+    }
+    gui_is_gwi_plain(stem)
+}
+
+/// The rules without a word list. The past negative -сангүй and -сонгүй gives
+/// гүй. Other stems that end in н, and the stems in `GUI_STEMS`, keep гуй.
+fn gui_is_gwi_plain(stem: &[char]) -> bool {
+    let ends = |tail: &str| {
+        let n = tail.chars().count();
+        stem.len() >= n
+            && stem[stem.len() - n..]
+                .iter()
+                .zip(tail.chars())
+                .all(|(&c, t)| to_lower(c) == t)
+    };
+    if ends("сан") || ends("сон") {
+        return true;
+    }
+    !ends("н")
+        && !GUI_STEMS
+            .iter()
+            .any(|s| stem.len() == s.chars().count() && ends(s))
+}
+
 /// True when the keys `rest` (the part of a word that starts at the `s` of
 /// `ts`) start a key longer than one character, such as `sh` or `sxc`.
 fn s_starts_longer_key(rs: &RuleSet, rest: &[char]) -> bool {
@@ -624,11 +671,34 @@ fn read_to_comp(
     let mut word = initial;
     let mut out = Vec::with_capacity(read.len());
     let mut edits = Edits::default();
-    for tok in tokens.iter() {
-        let chosen = tok_rules(rs, tok).iter().find(|r| word & r.flags == word);
+    for (idx, tok) in tokens.iter().enumerate() {
+        let mut chosen = tok_rules(rs, tok).iter().find(|r| word & r.flags == word);
+        let mut forced_front = false;
+        // The suffix -гүй is always гүй: a harmony `ui` after г gives үй.
+        if let Some(r) = chosen {
+            if ctx.smart
+                && word == X_M
+                && r.flags & X_F == 0
+                && r.flags & X_AC != 0
+                && r.to.len() == 2
+                && to_lower(r.to[0]) == 'у'
+                && to_lower(r.to[1]) == 'й'
+                && idx > 0
+                && gives(rs, &tokens[idx - 1], 'г')
+                && gui_is_gwi(ctx.words, &out, buf)
+            {
+                if let Some(f) = tok_rules(rs, tok)
+                    .iter()
+                    .find(|f| f.flags & X_F != 0 && f.flags & X_AC != 0 && f.to.len() == 2)
+                {
+                    chosen = Some(f);
+                    forced_front = true;
+                }
+            }
+        }
         match chosen {
             Some(rule) => {
-                if rule.flags & X_MF != 0 {
+                if rule.flags & X_MF != 0 || forced_front {
                     word = X_F;
                 } else if rule.flags & X_MM != 0 {
                     word = X_M;
