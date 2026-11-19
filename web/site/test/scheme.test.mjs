@@ -25,7 +25,7 @@ function fakeStore(initial = {}, blocked = false) {
 }
 
 test("the core lists the schemes the page offers", () => {
-  assert.deepEqual(ids, ["ru", "ru-gost", "ru-volapuk", "uk", "be", "bg", "sr", "mk", "kk", "ky"]);
+  assert.deepEqual(ids, ["ru", "ru-gost", "ru-volapuk", "uk", "uk-kmu", "be", "bg", "sr", "mk", "kk", "ky", "mn-mns"]);
   assert.equal(convert_scheme("ru", "Privet, mir!"), "Привет, мир!");
   assert.equal(convert_scheme("sr", "ljubav"), "љубав");
   assert.equal(scheme_for_language("ru"), "ru");

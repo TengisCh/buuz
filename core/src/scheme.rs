@@ -21,8 +21,8 @@
 //! ([`crate::Composer`]) with vowel harmony.
 //!
 //! The tables follow how people type each language in Latin letters. They
-//! are not the official romanisation standards, except `ru-gost`, which is
-//! GOST 7.79 system B read backwards. See `docs/research/cyrillic-schemes.md`.
+//! are not the official romanisation standards, except `ru-gost`, `uk-kmu` and
+//! `mn-mns`, which are the official tables read backwards. See `docs/research/cyrillic-schemes.md`.
 
 use std::fmt;
 
@@ -105,6 +105,39 @@ const RU_VOLAPUK: &[Rule] = &[
     ("3", "з", TouchesLetter), ("4", "ч", TouchesLetter), ("6", "б", TouchesLetter),
     ("9", "я", TouchesLetter), ("0", "о", TouchesLetter),
     ("''", "ъ", AfterLetter), ("'", "ь", AfterLetter),
+];
+
+/// Mongolian, MNS 5217:2012 (the national Latin standard, used on passports)
+/// read backwards. The standard writes и, й, ъ and ь as `i`, and ш and щ as
+/// `sh`, so this table cannot give them back: `i` is и and `sh` is ш.
+#[rustfmt::skip]
+const MN_MNS: &[Rule] = &[
+    ("ye", "е", Any), ("yo", "ё", Any), ("yu", "ю", Any), ("ya", "я", Any),
+    ("kh", "х", Any), ("ts", "ц", Any), ("ch", "ч", Any), ("sh", "ш", Any),
+    ("ö", "ө", Any), ("ü", "ү", Any),
+    ("a", "а", Any), ("b", "б", Any), ("v", "в", Any), ("g", "г", Any), ("d", "д", Any),
+    ("e", "э", Any), ("j", "ж", Any), ("z", "з", Any), ("i", "и", Any), ("k", "к", Any),
+    ("l", "л", Any), ("m", "м", Any), ("n", "н", Any), ("o", "о", Any), ("p", "п", Any),
+    ("r", "р", Any), ("s", "с", Any), ("t", "т", Any), ("u", "у", Any), ("f", "ф", Any),
+    ("y", "ы", Any),
+];
+
+/// Ukrainian, the 2010 national romanisation (Cabinet of Ministers
+/// resolution 55) read backwards. `ie`, `iu` and `ia` are є, ю and я, so the
+/// letter і before a vowel needs another spelling. The soft sign has no
+/// letter in the standard: `'` is ь.
+#[rustfmt::skip]
+const UK_KMU: &[Rule] = &[
+    ("shch", "щ", Any), ("zgh", "зг", Any),
+    ("zh", "ж", Any), ("kh", "х", Any), ("ts", "ц", Any), ("ch", "ч", Any), ("sh", "ш", Any),
+    ("ie", "є", Any), ("iu", "ю", Any), ("ia", "я", Any),
+    ("ye", "є", Any), ("yu", "ю", Any), ("ya", "я", Any), ("yi", "ї", Any),
+    ("a", "а", Any), ("b", "б", Any), ("v", "в", Any), ("h", "г", Any), ("g", "ґ", Any),
+    ("d", "д", Any), ("e", "е", Any), ("z", "з", Any), ("y", "и", Any), ("i", "і", Any),
+    ("k", "к", Any), ("l", "л", Any), ("m", "м", Any), ("n", "н", Any), ("o", "о", Any),
+    ("p", "п", Any), ("r", "р", Any), ("s", "с", Any), ("t", "т", Any), ("u", "у", Any),
+    ("f", "ф", Any),
+    ("'", "ь", AfterLetter), ("’", "ь", AfterLetter),
 ];
 
 /// Everyday Ukrainian translit. `h` is г and `g` is ґ, as in the 2010
@@ -243,6 +276,10 @@ pub enum Scheme {
     RussianVolapuk,
     /// Ukrainian, everyday translit.
     Ukrainian,
+    /// Ukrainian, the 2010 national romanisation read backwards.
+    UkrainianKmu,
+    /// Mongolian, MNS 5217:2012 read backwards. Not the Buuz typing rules.
+    MongolianMns,
     /// Belarusian, everyday translit.
     Belarusian,
     /// Bulgarian, everyday translit.
@@ -271,27 +308,31 @@ impl std::error::Error for UnknownScheme {}
 
 impl Scheme {
     /// Every scheme, in the order a settings list shows them.
-    pub const ALL: [Scheme; 10] = [
+    pub const ALL: [Scheme; 12] = [
         Scheme::Russian,
         Scheme::RussianGost,
         Scheme::RussianVolapuk,
         Scheme::Ukrainian,
+        Scheme::UkrainianKmu,
         Scheme::Belarusian,
         Scheme::Bulgarian,
         Scheme::Serbian,
         Scheme::Macedonian,
         Scheme::Kazakh,
         Scheme::Kyrgyz,
+        Scheme::MongolianMns,
     ];
 
     /// The short id used in settings and in the portable config: `ru`,
-    /// `ru-gost`, `ru-volapuk`, `uk`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`.
+    /// `ru-gost`, `ru-volapuk`, `uk`, `uk-kmu`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`, `mn-mns`.
     pub fn id(self) -> &'static str {
         match self {
             Scheme::Russian => "ru",
             Scheme::RussianGost => "ru-gost",
             Scheme::RussianVolapuk => "ru-volapuk",
             Scheme::Ukrainian => "uk",
+            Scheme::UkrainianKmu => "uk-kmu",
+            Scheme::MongolianMns => "mn-mns",
             Scheme::Belarusian => "be",
             Scheme::Bulgarian => "bg",
             Scheme::Serbian => "sr",
@@ -313,13 +354,18 @@ impl Scheme {
     pub fn language(self) -> &'static str {
         match self {
             Scheme::RussianGost | Scheme::RussianVolapuk => "ru",
+            Scheme::UkrainianKmu => "uk",
+            Scheme::MongolianMns => "mn",
             other => other.id(),
         }
     }
 
     /// The scheme is a draft: its habits are not checked by a native speaker.
     pub fn is_draft(self) -> bool {
-        !matches!(self, Scheme::Russian | Scheme::RussianGost)
+        !matches!(
+            self,
+            Scheme::Russian | Scheme::RussianGost | Scheme::UkrainianKmu | Scheme::MongolianMns
+        )
     }
 
     /// The scheme a language uses by default, for a page in that language.
@@ -333,6 +379,8 @@ impl Scheme {
             Scheme::RussianGost => (RU_GOST, RU_VOWELS),
             Scheme::RussianVolapuk => (RU_VOLAPUK, ""),
             Scheme::Ukrainian => (UK, UK_VOWELS),
+            Scheme::UkrainianKmu => (UK_KMU, ""),
+            Scheme::MongolianMns => (MN_MNS, ""),
             Scheme::Belarusian => (BE, BE_VOWELS),
             Scheme::Bulgarian => (BG, BG_VOWELS),
             Scheme::Serbian => (SR, ""),

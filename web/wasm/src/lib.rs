@@ -870,7 +870,7 @@ mod tests {
     fn schemes_convert_and_list() {
         assert_eq!(super::convert_scheme("ru", "privet"), "привет");
         assert_eq!(super::convert_scheme("nope", "privet"), "privet");
-        assert_eq!(super::scheme_ids().split(',').count(), 10);
+        assert_eq!(super::scheme_ids().split(',').count(), 12);
         assert_eq!(super::scheme_for_language("uk"), "uk");
         assert_eq!(super::scheme_for_language("mn"), "");
         assert!(super::scheme_is_draft("kk"));

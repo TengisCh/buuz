@@ -210,3 +210,41 @@ fn russian_volapuk() {
         ],
     );
 }
+
+#[test]
+fn mongolian_mns_5217() {
+    check(
+        Scheme::MongolianMns,
+        &[
+            ("Avarga, khalbaga, aav", "Аварга, халбага, аав"),
+            ("Ulaanbaatar", "Улаанбаатар"),
+            ("Mongol uls", "Монгол улс"),
+            ("tsagaan chuluu", "цагаан чулуу"),
+            ("Shine jil", "Шинэ жил"),
+            ("ünen", "үнэн"),
+            ("yu ya yo ye", "ю я ё е"),
+            ("öndör", "өндөр"),
+        ],
+    );
+    assert_eq!(Scheme::MongolianMns.language(), "mn");
+    assert!(!Scheme::MongolianMns.is_draft());
+}
+
+#[test]
+fn ukrainian_national_2010() {
+    check(
+        Scheme::UkrainianKmu,
+        &[
+            ("Zghorany", "Згорани"),
+            ("Shchastia", "Щастя"),
+            ("diakuiu", "дякую"),
+            ("yizhak", "їжак"),
+            ("Ie", "Є"),
+            ("hora", "гора"),
+            ("gandzh", "ґандж"),
+        ],
+    );
+    assert_eq!(Scheme::UkrainianKmu.language(), "uk");
+    assert_eq!(Scheme::for_language("uk"), Some(Scheme::Ukrainian));
+    assert_eq!(Scheme::for_language("mn"), None);
+}

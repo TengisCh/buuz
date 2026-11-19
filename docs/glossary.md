@@ -73,5 +73,5 @@ when a new concept appears; rename here first when a name changes.
 
 | Term | Meaning | In code |
 | --- | --- | --- |
-| Scheme | A table that turns Latin keys into the Cyrillic of one language other than Mongolian. Matched longest first, with no word list. Ids: `ru`, `ru-gost`, `ru-volapuk`, `uk`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`. See ADR 0007 | `Scheme`, `core/src/scheme.rs` |
+| Scheme | A table that turns Latin keys into the Cyrillic of one language other than Mongolian. Matched longest first, with no word list. Ids: `ru`, `ru-gost`, `ru-volapuk`, `uk`, `uk-kmu`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`, `mn-mns`. See ADR 0007 | `Scheme`, `core/src/scheme.rs` |
 | Draft scheme | A scheme that no native speaker has checked yet. The page marks it | `Scheme::is_draft` |

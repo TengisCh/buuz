@@ -109,6 +109,30 @@ Serbian and Macedonian have a one-to-one Latin alphabet, so these tables are
 exact for text in that alphabet. The ASCII digraphs `dj`, `nj` and `lj` can
 be wrong for a word that really has д+ј (подјела), as in Serbian Latin.
 
+## Official standards, read backwards
+
+Each language can have two schemes: the casual habit, and the official
+romanisation read backwards. The casual one is the default.
+
+| Id | Standard | Source |
+| --- | --- | --- |
+| `ru-gost` | GOST 7.79 system B | [Wikipedia][gost] |
+| `uk-kmu` | Ukrainian national system, 2010 (resolution 55) | [Wikipedia][uk] |
+| `mn-mns` | MNS 5217:2012, used on Mongolian passports | [CLDR rules][mns] |
+
+An official table is made to go from Cyrillic to Latin. Read backwards, it
+cannot give back every letter.
+
+- `mn-mns` writes и, й, ъ and ь all as `i`, and ш and щ both as `sh`.
+  The reverse table gives и and ш. This is the Mongolian official standard.
+  The typing rules of Buuz stay the casual way for Mongolian.
+- `uk-kmu` writes ї as `i` after the first letter, and drops ь. So
+  `Ukraina` gives Украіна, not Україна.
+
+Not added, because no source table was checked: the Bulgarian 2009
+streamlined system, the Kazakh 2021 Latin alphabet and the Belarusian 2000
+instruction. The Bulgarian system is the casual table without ъ.
+
 ## Not in Buuz
 
 - **Wrong layout repair.** Text typed with the Latin layout by mistake
@@ -124,3 +148,5 @@ be wrong for a word that really has д+ј (подјела), as in Serbian Latin.
 3. Ask a native speaker to check the draft, then remove its draft flag.
 
 [gost]: https://en.wikipedia.org/wiki/GOST_7.79-2000
+[uk]: https://en.wikipedia.org/wiki/Romanization_of_Ukrainian
+[mns]: https://cobalt.googlesource.com/cobalt/+/3f5e51355f2ee9074dbf39b90e7732e31303fb5c%5E/third_party/icu/source/data/translit/mn_mn_Latn_MNS.txt
