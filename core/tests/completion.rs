@@ -561,3 +561,30 @@ fn config_completion_parses_without_warning_and_a_duplicate_is_an_error() {
         buuz_core::ConfigError::DuplicateKey { line: 4, .. }
     ));
 }
+
+// ---- a rejected list word shows no ghost (docs/research/other-imes.md) ----
+
+fn with_user(user: buuz_core::UserDict) -> Composer {
+    Composer::with_options(Options {
+        user: Some(Arc::new(user.snapshot())),
+        ..with_list(Options::smart())
+    })
+}
+
+#[test]
+fn rejected_list_word_shows_no_ghost() {
+    let mut d = buuz_core::UserDict::new();
+    d.reject("баярлалаа");
+    let mut c = with_user(d);
+    type_str(&mut c, "bayarl");
+    assert_eq!(c.completion(), None);
+}
+
+#[test]
+fn a_word_that_is_not_rejected_still_shows_a_ghost() {
+    let mut d = buuz_core::UserDict::new();
+    d.reject("сайхан");
+    let mut c = with_user(d);
+    type_str(&mut c, "bayarl");
+    assert_eq!(c.completion(), Some("алаа"));
+}

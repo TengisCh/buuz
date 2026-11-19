@@ -595,6 +595,9 @@ and Tab accepts it (issue #2). It reads the word list
   the preedit and clearly ahead: it is the only candidate, or its count is at
   least twice the second one's. With custom keys the ghost follows the
   converted preedit.
+- **Rejected words.** A list word that the personal dictionary rejects
+  (section 14) shows no ghost. The check runs only for the best list word, so
+  it costs one set lookup.
 - **Case.** An all upper-case preedit gives an upper-case ghost. Otherwise
   the ghost is lower case (`Баярл` gives `алаа`).
 - **Accept.** Tab, or Right with the caret at the end, turns the preedit into

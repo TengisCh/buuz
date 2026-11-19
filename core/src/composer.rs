@@ -912,6 +912,10 @@ impl Composer {
             None => {
                 let (top, second) = words.top_two(&self.lower);
                 let Some((word, count)) = top else { return };
+                // The user rejected this list word: show no ghost for it.
+                if self.opts.user.as_ref().is_some_and(|u| u.is_rejected(word)) {
+                    return;
+                }
                 (word, count, second)
             }
         };
