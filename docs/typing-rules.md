@@ -723,8 +723,10 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
 - **Extra edits.** For a word with at most 3 such letters, each combination
   also gets one more edit: `э` to `е` (`wed` gives `үед`), a doubled vowel
   (`terer` gives `тэрээр`), `и` to `ь` (`huuli` gives `хууль`), or an added
-  `ь` (`surguul` gives `сургууль`). No edit changes the last letter's vowel
-  length, and `э` to `е` skips the last letter.
+  `ь` (`surguul` gives `сургууль`). A doubled vowel can also end the word
+  (`boro` gives `бороо`, `gerte` gives `гэртээ`): chat often drops the
+  long vowel of a case ending. The choice rules below keep a listed word
+  (`shine` stays `шинэ`). `э` to `е` skips the last letter.
 - **Choice.** All candidates share one tally. The winner has a count of at least 50, at least 3 times the
   next candidate's, and at least 50 times the count of the word as typed
   (0 if it is not listed). The last rule keeps `уурын` (642) against

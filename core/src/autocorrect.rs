@@ -235,8 +235,9 @@ pub(crate) fn choose(
 }
 
 /// Call `f` with each single extra edit of `cur`, built in `out`: `э` to `е`
-/// (not at the end), a doubled vowel (not at the end), `и` to `ь`, and an
-/// added `ь` after the first letter at the earliest.
+/// (not at the end), a doubled vowel (also at the end: `боро` gives
+/// `бороо`), `и` to `ь`, and an added `ь` after the first letter at the
+/// earliest.
 fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
     let n = cur.len();
     for i in 0..n {
@@ -250,7 +251,7 @@ fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
             fill(out, &cur[..i], &['ь'], &cur[i + 1..]);
             f(out);
         }
-        if is_vowel(c) && !last && (i == 0 || cur[i - 1] != c) && cur[i + 1] != c {
+        if is_vowel(c) && (i == 0 || cur[i - 1] != c) && cur.get(i + 1) != Some(&c) {
             fill(out, &cur[..=i], &[c], &cur[i + 1..]);
             f(out);
         }

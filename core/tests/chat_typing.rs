@@ -62,3 +62,17 @@ fn classic_mode_is_unchanged() {
         "болох у? сну "
     );
 }
+
+#[test]
+fn a_short_final_long_vowel_is_chosen_from_the_list() {
+    eq("boro orson ", "бороо орсон ");
+    eq("bi odo gerte ", "би одоо гэртээ ");
+    eq("dara ", "дараа ");
+    eq("ajlaasa garaad ", "ажлаасаа гараад ");
+}
+
+#[test]
+fn a_listed_word_with_a_short_final_vowel_stays() {
+    eq("shine ", "шинэ ");
+    eq("ene ", "энэ ");
+}
