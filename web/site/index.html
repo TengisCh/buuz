@@ -177,104 +177,112 @@
       </header>
       <dialog id="settings" class="settings" aria-labelledby="settings-title">
         <div class="fb-head">
-          <h2 id="settings-title" data-i18n="settings">Тохиргоо</h2>
+          <h2 id="settings-title"><span aria-hidden="true">⚙️ </span><span data-i18n="settings">Тохиргоо</span></h2>
           <button type="button" class="fb-close" data-i18n-aria="close" aria-label="Хаах" title="Хаах"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
         </div>
-        <section class="scheme" aria-labelledby="scheme-label">
-          <label id="scheme-label" for="scheme"><span aria-hidden="true">🌐</span> <span data-i18n="schemeLabel">Бичих хэл</span></label>
-          <select id="scheme">
-            <option value="mn" data-i18n="schemeMn">Монгол (үндсэн)</option>
-            <option value="mn-mns" lang="mn">Монгол (MNS 5217:2012)</option>
-            <option value="ru" lang="ru">Русский</option>
-            <option value="ru-gost" lang="ru">Русский (ГОСТ 7.79 B)</option>
-            <option value="ru-volapuk" lang="ru">Русский (воляпюк: 4 → ч)</option>
-            <option value="uk" lang="uk">Українська</option>
-            <option value="uk-kmu" lang="uk">Українська (КМУ 2010)</option>
-            <option value="be" lang="be">Беларуская</option>
-            <option value="bg" lang="bg">Български</option>
-            <option value="sr" lang="sr">Српски</option>
-            <option value="mk" lang="mk">Македонски</option>
-            <option value="kk" lang="kk">Қазақша</option>
-            <option value="ky" lang="ky">Кыргызча</option>
-          </select>
-          <p class="hint" data-i18n="schemeHint">Өөр кирилл хэлээр латин үсгээр бичих бол тэр хэлээ сонгоорой. Тэгвэл хуудас тухайн хэлний бичих зуршлаар хөрвүүлнэ (zh → ж). Монгол хэл үндсэн бөгөөд Buuz-ийн дүрмээр бичнэ.</p>
-          <p id="scheme-tip" class="hint other-only" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно. Жишээ нь privet гэвэл привет болно. Нэг апостроф (') бичвэл ь, хоёр апостроф бичвэл ъ болно.</p>
-          <p id="scheme-draft" class="hint other-only" data-i18n="schemeDraft" hidden>Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.</p>
-          <p class="hint other-only" data-i18n="schemeOnlyMn">Доорх тохиргоо зөвхөн монгол хэлэнд ажиллана.</p>
-        </section>
-        <fieldset class="mode mn-only">
-          <legend data-i18n="mode">Горим</legend>
-          <label class="toggle"><input type="radio" name="mode" value="smart" checked /><span data-i18n="modeSmart">Ухаалаг (үндсэн)</span></label>
-          <label class="toggle"><input type="radio" name="mode" value="classic" /><span data-i18n="modeClassic">Сонгодог (анхны Buuz)</span></label>
-        </fieldset>
-        <p class="hint mn-only" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p>
-        <p id="classic-note" class="hint mn-only" data-i18n="classicFeaturesOn" hidden>Сонгодог горимд зарим ухаалаг боломж асаалттай байна.</p>
-        <p id="cfg-notice" class="hint" data-i18n="configReset" hidden>Хадгалсан тохиргоо уншигдсангүй тул үндсэн тохиргоог ашиглаж байна. Муу текстийг buuz.config.bad дээр хадгалсан.</p>
-        <fieldset id="features" class="features mn-only">
-          <label class="toggle">
-            <input id="smart" type="checkbox" checked />
-            <span data-i18n="smartVowels">Ухаалаг эгшиг</span>
-          </label>
-          <p class="hint" data-i18n="smartVowelsHint">Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.</p>
-          <label class="toggle">
-            <input id="abbr" type="checkbox" checked />
-            <span data-i18n="abbreviations">Товчлол (bn → байна)</span>
-          </label>
-          <p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p>
-          <label class="toggle">
-            <input id="completion" type="checkbox" checked />
-            <span data-i18n="completion">Tab-аар үг гүйцээх</span>
-          </label>
-          <p class="hint" data-i18n="completionHint">Үгийн эхийг бичихэд (3-аас дээш үсэг) Buuz хамгийн магадлалтай үгийг ард нь сааралаар харуулна. Санал харагдаж байхад Tab дарвал үг бүтнээрээ орно. Esc дарвал тухайн үгийн санал арилж, дараагийн Tab ердийнхөөрөө (дараагийн талбар руу) шилжинэ. Санал байхгүй үед Tab ердийнхөөрөө ажиллана. Үгийн жагсаалт энэ сайтаас нэг удаа татагдаж, таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p>
-          <p class="hint" data-i18n-html="completionCredit">Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.</p>
-          <label class="toggle">
-            <input id="double-v" type="checkbox" checked />
-            <span data-i18n="doubleV">vv-г үү болгох (svv → сүү)</span>
-          </label>
-          <p class="hint" data-i18n-html="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p>
-          <label class="toggle">
-            <input id="habit-keys" type="checkbox" checked />
-            <span data-i18n="habitKeys">ts-г ц, zh-г ж болгох (tsagaan → цагаан)</span>
-          </label>
-          <p class="hint" data-i18n-html="habitKeysHint">Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.</p>
-          <label class="toggle">
-            <input id="word-choice" type="checkbox" checked />
-            <span data-i18n="wordChoice">ө, ү-г үгийн жагсаалтаар сонгох (tov → төв)</span>
-          </label>
-          <p class="hint" data-i18n="wordChoiceHint">Үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz о, ө, у, ү үсгийн алийг нь бичихийг үгийн жагсаалтаас харж сонгоно (tov → төв, uvul → өвөл). Мөн урт эгшиг, ь, е-г шаардлагатай үед нөхнө (terer → тэрээр, huuli → хууль, wed → үед). Жагсаалтад байгаа түгээмэл үгийг өөрчлөхгүй (uuriin → уурын). Энэ сайт дээр сонгосон үг шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Унтраавал үг бичсэнээрээ үлдэнэ. Анхнаасаа асаалттай.</p>
-          <label class="toggle">
-            <input id="autocorrect" type="checkbox" />
-            <span data-i18n="autocorrect">Үсгийн алдаа засах</span>
-          </label>
-          <p class="hint" data-i18n="autocorrectHint">Алдаатай бичсэн үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz дээрх ижил үгийн жагсаалтаар алдааг нь засна (delgur + зай → дэлгүүр). Жагсаалтад байгаа үгийг хэзээ ч өөрчлөхгүй. Энэ сайт дээр засварласан бичвэр шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Засуулахыг хүсэхгүй бол унтраана уу. Анхнаасаа унтраалттай.</p>
-        </fieldset>
-        <section class="cfg mn-only" aria-labelledby="cal-open-title">
-          <h3 id="cal-open-title" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</h3>
-          <p class="hint" data-i18n="calHint">Хэдэн өгүүлбэрийг өөрийн ердийн аргаар латинаар бичихэд Buuz таны товчлуурыг сурна. Бичсэн зүйл тань хадгалагдахгүй, цонхыг хаахад хаягдана.</p>
-          <div class="cfg-row">
-            <button id="cal-open" type="button" class="ghost" aria-haspopup="dialog" aria-controls="calibrate" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</button>
+        <div class="set-tabs" role="tablist">
+          <button id="tab-typing" type="button" role="tab" aria-selected="true" aria-controls="pane-typing"><span aria-hidden="true">✨ </span><span data-i18n="tabTyping">Бичих</span></button>
+          <button id="tab-words" type="button" role="tab" aria-selected="false" aria-controls="pane-words" tabindex="-1" class="mn-only"><span aria-hidden="true">📒 </span><span data-i18n="tabWords">Үгс</span><span id="ud-count" class="tab-count"></span></button>
+          <button id="tab-rules" type="button" role="tab" aria-selected="false" aria-controls="pane-rules" tabindex="-1"><span aria-hidden="true">📖 </span><span data-i18n="tabRules">Дүрэм</span></button>
+        </div>
+
+        <div id="pane-typing" class="set-pane" role="tabpanel" aria-labelledby="tab-typing">
+          <section class="scheme" aria-labelledby="scheme-label">
+            <label id="scheme-label" for="scheme"><span aria-hidden="true">🌐</span> <span data-i18n="schemeLabel">Бичих хэл</span></label>
+            <select id="scheme">
+              <option value="mn" data-i18n="schemeMn">Монгол (үндсэн)</option>
+              <option value="mn-mns" lang="mn">Монгол (MNS 5217:2012)</option>
+              <option value="ru" lang="ru">Русский</option>
+              <option value="ru-gost" lang="ru">Русский (ГОСТ 7.79 B)</option>
+              <option value="ru-volapuk" lang="ru">Русский (воляпюк: 4 → ч)</option>
+              <option value="uk" lang="uk">Українська</option>
+              <option value="uk-kmu" lang="uk">Українська (КМУ 2010)</option>
+              <option value="be" lang="be">Беларуская</option>
+              <option value="bg" lang="bg">Български</option>
+              <option value="sr" lang="sr">Српски</option>
+              <option value="mk" lang="mk">Македонски</option>
+              <option value="kk" lang="kk">Қазақша</option>
+              <option value="ky" lang="ky">Кыргызча</option>
+            </select>
+            <p id="scheme-tip" class="hint other-only" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно. Жишээ нь privet гэвэл привет болно. Нэг апостроф (') бичвэл ь, хоёр апостроф бичвэл ъ болно.</p>
+            <p id="scheme-draft" class="hint other-only" data-i18n="schemeDraft" hidden>Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.</p>
+          </section>
+          <fieldset class="mode seg mn-only">
+            <legend class="sr-only" data-i18n="mode">Горим</legend>
+            <label><input type="radio" name="mode" value="smart" checked /><span><span aria-hidden="true">✨ </span><span data-i18n="modeSmart">Ухаалаг</span></span></label>
+            <label><input type="radio" name="mode" value="classic" /><span><span aria-hidden="true">🕰️ </span><span data-i18n="modeClassic">Сонгодог</span></span></label>
+          </fieldset>
+          <p class="hint center mn-only" data-i18n="modeShort">Сонгодог = анхны Buuz, нэмэлтгүй</p>
+          <p id="classic-note" class="hint mn-only" data-i18n="classicFeaturesOn" hidden>Сонгодог горимд зарим ухаалаг боломж асаалттай байна.</p>
+          <p id="cfg-notice" class="hint" data-i18n="configReset" hidden>Хадгалсан тохиргоо уншигдсангүй тул үндсэн тохиргоог ашиглаж байна. Муу текстийг buuz.config.bad дээр хадгалсан.</p>
+          <div class="tiles mn-only">
+          <fieldset id="features" class="features">
+            <legend class="sr-only" data-i18n="tileHint">Хавтан дээр дарж асаана, унтраана</legend>
+            <label class="tile"><input id="smart" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">🎵</span><b data-i18n="smartVowels">Эгшиг зохицох</b><span class="tile-ex" lang="mn">unee → үнээ</span></label>
+            <label class="tile"><input id="abbr" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">✂️</span><b data-i18n="abbreviations">Товчлол</b><span class="tile-ex" lang="mn">bn → байна</span></label>
+            <label class="tile"><input id="completion" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">⇥</span><b data-i18n="completion">Tab-аар үг гүйцээх</b><span class="tile-ex" lang="mn">сайх ⇥ → сайхан</span></label>
+            <label class="tile"><input id="double-v" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">🥛</span><b data-i18n="doubleV">vv → үү</b><span class="tile-ex" lang="mn">svv → сүү</span></label>
+            <label class="tile"><input id="habit-keys" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">🔡</span><b data-i18n="habitKeys">ts → ц, zh → ж</b><span class="tile-ex" lang="mn">tsagaan → цагаан</span></label>
+            <label class="tile"><input id="word-choice" type="checkbox" checked /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">📚</span><b data-i18n="wordChoice">ө, ү-г үгээр таах</b><span class="tile-ex" lang="mn">tov → төв</span></label>
+            <label class="tile"><input id="autocorrect" type="checkbox" /><span class="tile-dot" aria-hidden="true"></span><span class="tile-e" aria-hidden="true">🩹</span><b data-i18n="autocorrect">Алдаа засах</b><span class="tile-ex" lang="mn">delgur → дэлгүүр</span></label>
+          </fieldset>
+            <button id="cal-open" type="button" class="tile tile-btn" aria-haspopup="dialog" aria-controls="calibrate"><span class="tile-e" aria-hidden="true">🎯</span><b data-i18n="calTile">Бичих хэвээ заах</b><span class="tile-ex"><span data-i18n="calTileSub">1 минут</span> ›</span></button>
           </div>
-        </section>
-        <section class="cfg mn-only" aria-labelledby="ud-title">
-          <h3 id="ud-title" data-i18n="udTitle">Buuz-ийн сурсан үгс</h3>
-          <p class="hint" data-i18n="udHint">Энд таны нэмсэн үгс харагдана. Нэмсэн үгийг Buuz алдаа гэж засахгүй, Tab-аар гүйцээнэ. Энэ жагсаалт зөвхөн энэ төхөөрөмж дээрх хөтөч дотор хадгалагдаж, хаашаа ч илгээгдэхгүй. Тохиргооны файлд ордоггүй. Энэ сайт дээр Buuz өөрөө үг сурдаггүй: та нэмсэн үгээ л хадгална.</p>
-          <ul id="ud-list" class="ud-list" lang="mn"></ul>
-          <p id="ud-empty" class="hint" data-i18n="udEmpty">Одоогоор үг алга.</p>
-          <label class="cfg-label" for="ud-word" data-i18n="udAddLabel">Үг нэмэх (кириллээр)</label>
-          <div class="cfg-row">
-            <input id="ud-word" type="text" lang="mn" maxlength="64" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
-            <button id="ud-add" type="button" class="ghost" data-i18n="udAdd">Нэмэх</button>
+          <p class="hint center"><span aria-hidden="true">🔒 </span><span data-i18n="privacyShort">Бүгд зөвхөн таны төхөөрөмж дээр</span></p>
+        </div>
+
+        <div id="pane-words" class="set-pane mn-only" role="tabpanel" aria-labelledby="tab-words" hidden>
+          <section class="cfg" aria-labelledby="ud-title">
+            <h3 id="ud-title" class="sr-only" data-i18n="udTitle">Buuz-ийн сурсан үгс</h3>
+            <p class="hint" data-i18n="udHint">Таны нэмсэн үгийг Buuz алдаа гэж засахгүй, Tab-аар гүйцээнэ. Зөвхөн энэ хөтөч дотор хадгалагдана.</p>
+            <div class="cfg-row">
+              <input id="ud-word" type="text" lang="mn" maxlength="64" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-i18n-aria="udAddLabel" aria-label="Үг нэмэх (кириллээр)" data-i18n-ph="udAddLabel" placeholder="Үг нэмэх (кириллээр)" />
+              <button id="ud-add" type="button" class="ghost" data-i18n="udAdd">Нэмэх</button>
+            </div>
+            <ul id="ud-list" class="ud-list" lang="mn"></ul>
+            <p id="ud-empty" class="hint" data-i18n="udEmpty">Одоогоор үг алга.</p>
+            <div class="cfg-row">
+              <button id="ud-export" type="button" class="ghost" data-i18n="udExport">Файл болгон татах</button>
+              <button id="ud-open" type="button" class="ghost" data-i18n="udImport">Файл нээх</button>
+              <button id="ud-clear" type="button" class="ghost" data-i18n="udClear">Buuz-ийн сурсныг арилгах</button>
+              <input id="ud-file" type="file" accept=".txt,text/plain" hidden />
+            </div>
+            <div id="ud-msg" class="cfg-msg" role="status"></div>
+            <div id="ud-err" class="cfg-msg err" role="alert"></div>
+          </section>
+        </div>
+
+        <div id="pane-rules" class="set-pane" role="tabpanel" aria-labelledby="tab-rules" hidden>
+          <div class="mn-only">
+            <h3 class="rules-h" data-i18n="rulesKeys">Товчлуурууд</h3>
+            <div class="kb" lang="mn" aria-hidden="true">
+              <div class="kr"><span class="k v"><i>q</i>ө</span><span class="k v"><i>w</i>ү</span><span class="k"><i>e</i>э</span><span class="k"><i>r</i>р</span><span class="k"><i>t</i>т</span><span class="k"><i>y</i>ы</span><span class="k v"><i>u</i>у/ү</span><span class="k"><i>i</i>и</span><span class="k v"><i>o</i>о/ө</span><span class="k"><i>p</i>п</span></div>
+              <div class="kr"><span class="k"><i>a</i>а</span><span class="k"><i>s</i>с</span><span class="k"><i>d</i>д</span><span class="k"><i>f</i>ф</span><span class="k"><i>g</i>г</span><span class="k"><i>h</i>х</span><span class="k"><i>j</i>ж</span><span class="k"><i>k</i>к</span><span class="k"><i>l</i>л</span><span class="k"><i>'</i>ь</span></div>
+              <div class="kr"><span class="k"><i>z</i>з</span><span class="k"><i>x</i>х</span><span class="k"><i>c</i>ц</span><span class="k"><i>v</i>в</span><span class="k"><i>b</i>б</span><span class="k"><i>n</i>н</span><span class="k"><i>m</i>м</span><span class="k"><i>"</i>ъ</span></div>
+            </div>
+            <ul class="combos" lang="mn">
+              <li><kbd>sh</kbd> ш</li><li><kbd>ch</kbd> ч</li><li><kbd>kh</kbd> х</li><li><kbd>ya</kbd> я</li><li><kbd>ye</kbd> е</li><li><kbd>yo</kbd> ё</li><li><kbd>yu</kbd> ю</li><li><kbd>ii</kbd> ий/ы</li><li><kbd>ii'</kbd> ий</li><li><kbd>iii</kbd> ы</li><li><kbd>sxc</kbd> щ</li>
+              <li class="s"><kbd>vv</kbd> үү</li><li class="s"><kbd>ts</kbd> ц</li><li class="s"><kbd>zh</kbd> ж</li><li class="s"><kbd>ö</kbd> ө</li><li class="s"><kbd>ü</kbd> ү</li>
+            </ul>
+            <h3 class="rules-h" data-i18n="rulesFeatures">Боломж бүрийн тайлбар</h3>
+            <details><summary><span aria-hidden="true">🎵 </span><span data-i18n="smartVowels">Эгшиг зохицох</span></summary><p class="hint" data-i18n="smartVowelsHint">Үгийн эгшгийг урагш харж сонгоно (unee → үнээ, aaviin → аавын). Унтраавал анхны Buuz-ийн дүрмээр бичнэ.</p></details>
+            <details><summary><span aria-hidden="true">✂️ </span><span data-i18n="abbreviations">Товчлол</span></summary><p class="hint" data-i18n="abbreviationsHint">Товчилсон үгийн дараа зай эсвэл цэг, таслал бичихэд бүтнээр нь бичигдэнэ (bn + зай → байна). Энэ сайт дээр тэр зайг арилгавал товчлол буцна. Удахгүй гарах компьютерийн гарт зайны дараа Backspace дарвал буцаана. Унтраавал хэзээ ч өргөжихгүй.</p></details>
+            <details><summary><span aria-hidden="true">⇥ </span><span data-i18n="completion">Tab-аар үг гүйцээх</span></summary><p class="hint" data-i18n="completionHint">Үгийн эхийг бичихэд (3-аас дээш үсэг) Buuz хамгийн магадлалтай үгийг ард нь сааралаар харуулна. Санал харагдаж байхад Tab дарвал үг бүтнээрээ орно. Esc дарвал тухайн үгийн санал арилж, дараагийн Tab ердийнхөөрөө (дараагийн талбар руу) шилжинэ. Санал байхгүй үед Tab ердийнхөөрөө ажиллана. Үгийн жагсаалт энэ сайтаас нэг удаа татагдаж, таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.</p><p class="hint" data-i18n-html="completionCredit">Үгийн жагсаалт: Монгол Википедиа (хувь нэмэр оруулагчид), <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. <a href="https://github.com/TengisCh/buuz/blob/main/data/wordlist/README.md" target="_blank" rel="noopener">Дэлгэрэнгүй</a>.</p></details>
+            <details><summary><span aria-hidden="true">🥛 </span><span data-i18n="doubleV">vv → үү</span></summary><p class="hint" data-i18n-html="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p></details>
+            <details><summary><span aria-hidden="true">🔡 </span><span data-i18n="habitKeys">ts → ц, zh → ж</span></summary><p class="hint" data-i18n-html="habitKeysHint">Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.</p></details>
+            <details><summary><span aria-hidden="true">📚 </span><span data-i18n="wordChoice">ө, ү-г үгээр таах</span></summary><p class="hint" data-i18n="wordChoiceHint">Үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz о, ө, у, ү үсгийн алийг нь бичихийг үгийн жагсаалтаас харж сонгоно (tov → төв, uvul → өвөл). Мөн урт эгшиг, ь, е-г шаардлагатай үед нөхнө (terer → тэрээр, huuli → хууль, wed → үед). Жагсаалтад байгаа түгээмэл үгийг өөрчлөхгүй (uuriin → уурын). Энэ сайт дээр сонгосон үг шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Унтраавал үг бичсэнээрээ үлдэнэ. Анхнаасаа асаалттай.</p></details>
+            <details><summary><span aria-hidden="true">🩹 </span><span data-i18n="autocorrect">Алдаа засах</span></summary><p class="hint" data-i18n="autocorrectHint">Алдаатай бичсэн үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz дээрх ижил үгийн жагсаалтаар алдааг нь засна (delgur + зай → дэлгүүр). Жагсаалтад байгаа үгийг хэзээ ч өөрчлөхгүй. Энэ сайт дээр засварласан бичвэр шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Засуулахыг хүсэхгүй бол унтраана уу. Анхнаасаа унтраалттай.</p></details>
+            <details><summary><span aria-hidden="true">🕰️ </span><span data-i18n="modeClassic">Сонгодог</span></summary><p class="hint" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p></details>
+            <p class="hint rules-link"><a href="https://github.com/TengisCh/buuz/blob/main/docs/typing-rules.md" target="_blank" rel="noopener"><span aria-hidden="true">📄 </span><span data-i18n="rulesFull">Бүрэн дүрэм (GitHub)</span></a></p>
           </div>
-          <div class="cfg-row">
-            <button id="ud-clear" type="button" class="ghost" data-i18n="udClear">Buuz-ийн сурсныг арилгах</button>
-            <button id="ud-export" type="button" class="ghost" data-i18n="udExport">Файл болгон татах</button>
-            <button id="ud-open" type="button" class="ghost" data-i18n="udImport">Файл нээх</button>
-            <input id="ud-file" type="file" accept=".txt,text/plain" hidden />
+          <div class="other-only">
+            <p class="hint" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно.</p>
+            <p class="hint rules-link"><a href="https://github.com/TengisCh/buuz/blob/main/docs/research/cyrillic-schemes.md" target="_blank" rel="noopener"><span aria-hidden="true">📄 </span><span data-i18n="rulesOther">Энэ хэлний бүрэн хүснэгт (GitHub)</span></a></p>
           </div>
-          <div id="ud-msg" class="cfg-msg" role="status"></div>
-          <div id="ud-err" class="cfg-msg err" role="alert"></div>
-        </section>
-        <section class="cfg" aria-labelledby="cfg-title">
+        </div>
+
+        <!-- Settings file (import and export): hidden until the desktop apps ship. The code in main.ts stays. -->
+        <section class="cfg" aria-labelledby="cfg-title" hidden>
           <h3 id="cfg-title" data-i18n="settingsFile">Тохиргооны файл</h3>
           <p class="hint" data-i18n="settingsFileHint">Тохиргоогоо хуулж эсвэл файл болгон хадгалаад өөр төхөөрөмж дээрээ оруулж болно. Файл тань энэ төхөөрөмжөөс гадагш илгээгдэхгүй.</p>
           <div class="cfg-row">

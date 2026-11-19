@@ -87,6 +87,32 @@ function applyScheme(): void {
   schemeSelect.value = scheme;
   document.body.dataset.scheme = scheme;
   (document.getElementById("scheme-draft") as HTMLElement).hidden = typesMongolian() || !scheme_is_draft(scheme);
+  // The Words tab is for Mongolian only; leave it when another scheme is picked.
+  if (!typesMongolian() && document.getElementById("tab-words")?.getAttribute("aria-selected") === "true") selectSetTab("tab-typing");
+}
+
+// Settings tabs (Typing, Words, Rules): one panel shows at a time. Arrow keys
+// move between the visible tabs, as in the WAI-ARIA tabs pattern.
+const setTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.set-tabs [role="tab"]'));
+function selectSetTab(id: string, focus = false): void {
+  for (const tab of setTabs) {
+    const on = tab.id === id;
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    (document.getElementById(tab.getAttribute("aria-controls") ?? "") as HTMLElement).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+}
+for (const tab of setTabs) {
+  tab.addEventListener("click", () => selectSetTab(tab.id));
+  tab.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const shown = setTabs.filter((t) => t.offsetParent !== null);
+    const i = shown.indexOf(tab);
+    const next = shown[(i + (e.key === "ArrowRight" ? 1 : shown.length - 1)) % shown.length];
+    e.preventDefault();
+    selectSetTab(next.id, true);
+  });
 }
 
 function setScheme(id: string): void {
@@ -357,6 +383,7 @@ const KIND_KEY = { add: "udKindAdd", use: "udKindUse", reject: "udKindReject" } 
 function showUserDict(): void {
   const entries = entriesOf(userText).reverse(); // the newest first
   udEmpty.hidden = entries.length > 0;
+  (document.getElementById("ud-count") as HTMLElement).textContent = entries.length > 0 ? String(entries.length) : "";
   udList.hidden = entries.length === 0;
   document.getElementById("ud-clear")?.toggleAttribute("disabled", entries.length === 0);
   document.getElementById("ud-export")?.toggleAttribute("disabled", entries.length === 0);
