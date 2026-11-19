@@ -608,16 +608,30 @@ struct Confetti: View {
                 GeometryReader { geo in
                     let t = ctx.date.timeIntervalSinceReferenceDate
                     ForEach(0..<40, id: \.self) { i in
-                        let speed = 60 + Double(i % 5) * 18
-                        let y = (t * speed + Double(i) * 53).truncatingRemainder(dividingBy: Double(geo.size.height + 40)) - 20
-                        Rectangle().fill(colors[i % colors.count]).frame(width: 6, height: 10)
-                            .rotationEffect(.degrees(Double(i) * 23 + t * 90))
-                            .position(x: geo.size.width * CGFloat((i * 37) % 100) / 100, y: CGFloat(y))
-                            .opacity(0.8)
+                        piece(i, time: t, size: geo.size)
                     }
                 }
             }
             .allowsHitTesting(false)
         }
+    }
+
+    /// One piece. The maths uses typed steps, so the compiler on the CI
+    /// runner can type-check it in reasonable time.
+    private func piece(_ i: Int, time t: Double, size: CGSize) -> some View {
+        let speed: Double = 60.0 + Double(i % 5) * 18.0
+        let span: Double = Double(size.height) + 40.0
+        let travelled: Double = t * speed + Double(i) * 53.0
+        let y: Double = travelled.truncatingRemainder(dividingBy: span) - 20.0
+        let column: CGFloat = CGFloat((i * 37) % 100) / 100.0
+        let x: CGFloat = size.width * column
+        let angle: Double = Double(i) * 23.0 + t * 90.0
+        let color: Color = colors[i % colors.count]
+        return Rectangle()
+            .fill(color)
+            .frame(width: 6, height: 10)
+            .rotationEffect(.degrees(angle))
+            .position(x: x, y: CGFloat(y))
+            .opacity(0.8)
     }
 }
