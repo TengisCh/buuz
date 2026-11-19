@@ -55,6 +55,61 @@ enum ConfigEditor {
         return lines.joined(separator: "\n") + "\n"
     }
 
+    /// "smart" or "classic": the top-level `preset` before the first section.
+    /// A file without it is smart.
+    static func preset(_ text: String?) -> String {
+        guard let text = text else { return "smart" }
+        for raw in text.components(separatedBy: "\n") {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.hasPrefix("[") { break }
+            guard let (k, v) = pair(line), k == "preset" else { continue }
+            let value = v.split(separator: "\"", omittingEmptySubsequences: true).first.map(String.init) ?? v
+            return value == "classic" ? "classic" : "smart"
+        }
+        return "smart"
+    }
+
+    /// The config text with the preset set to `name` ("smart" or "classic").
+    static func setPreset(_ text: String?, _ name: String) -> String {
+        var lines = (text ?? "").components(separatedBy: "\n")
+        if lines.last == "" { lines.removeLast() }
+        if !lines.contains(where: { pair($0.trimmingCharacters(in: .whitespaces))?.0 == "buuz_config" }) {
+            lines.insert(header, at: 0)
+        }
+        let newLine = "preset = \"\(name)\""
+        var insertAt = lines.count
+        for (i, raw) in lines.enumerated() {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.hasPrefix("[") { insertAt = i; break }
+            if pair(line)?.0 == "preset" {
+                lines[i] = newLine
+                return lines.joined(separator: "\n") + "\n"
+            }
+        }
+        // Put it right after the header line, before comments and sections.
+        if let h = lines.firstIndex(where: { pair($0.trimmingCharacters(in: .whitespaces))?.0 == "buuz_config" }),
+            h < insertAt
+        { insertAt = h + 1 }
+        lines.insert(newLine, at: insertAt)
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Reads the file now, applies `edit` and writes the result. The text
+    /// comes from the file and not from an old copy, so the user's own edits
+    /// stay. Gives the new text, or nil when the write fails.
+    static func modify(at url: URL, _ edit: (String?) -> String) -> String? {
+        let current = try? String(contentsOf: url, encoding: .utf8)
+        let text = edit(current)
+        do {
+            try FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: url, atomically: true, encoding: .utf8)
+            return text
+        } catch {
+            return nil
+        }
+    }
+
     private static func sectionName(_ line: String) -> String {
         line.trimmingCharacters(in: CharacterSet(charactersIn: "[] \t"))
     }

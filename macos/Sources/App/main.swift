@@ -10,6 +10,7 @@ let connectionName = Bundle.main.object(forInfoDictionaryKey: "InputMethodConnec
 
 // The word list is in the app bundle. The shared store loads it once.
 SharedStore.configure(wordListURL: Bundle.main.url(forResource: "mn", withExtension: "txt"))
+HotkeyManager.shared.start()
 
 let server = IMKServer(name: connectionName, bundleIdentifier: Bundle.main.bundleIdentifier)
 if server == nil {

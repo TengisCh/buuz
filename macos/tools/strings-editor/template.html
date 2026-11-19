@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Buuz strings editor</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f6f4; --panel: #ffffff; --text: #1d1d1b; --muted: #6a6a64; --line: #deded8;
+  --accent: #1f6feb; --changed: #fff3c4; --changed-line: #e0b800; --warn: #b42318; --warn-bg: #fde8e6;
+  --field: #fbfbfa;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161615; --panel: #1f1f1d; --text: #ececE8; --muted: #9a9a92; --line: #34342f;
+    --accent: #6ea8ff; --changed: #3a3210; --changed-line: #b89b1a; --warn: #ff8b80; --warn-bg: #3b1c19;
+    --field: #191917;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 16px; }
+h1 { font-size: 16px; margin: 0 0 8px; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.bar label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+input[type=search], select { background: var(--field); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+input[type=search] { min-width: 220px; }
+button { font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.meta { margin-top: 6px; color: var(--muted); font-size: 12px; display: flex; gap: 16px; flex-wrap: wrap; }
+main { padding: 12px 16px 60px; }
+table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 14px; }
+thead th, tbody.group th { text-align: left; padding: 8px 10px; }
+thead th { position: sticky; top: var(--head, 96px); background: var(--panel); border-bottom: 1px solid var(--line); z-index: 3; color: var(--muted); font-weight: 600; }
+tbody.group th { text-transform: uppercase; letter-spacing: .06em; font-size: 12px; color: var(--accent); background: var(--bg); border-top: 1px solid var(--line); }
+col.k { width: 20%; } col.l { width: 40%; }
+td { vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--line); }
+td.key code { font-size: 12px; word-break: break-all; }
+.warn { margin-top: 4px; color: var(--warn); background: var(--warn-bg); border-radius: 4px; padding: 2px 6px; font-size: 12px; }
+td.cell textarea { width: 100%; resize: vertical; min-height: 34px; field-sizing: content; background: var(--field); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+td.cell.changed { background: var(--changed); box-shadow: inset 3px 0 0 var(--changed-line); }
+td.cell.empty textarea { border-color: var(--warn); }
+textarea:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tools { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-size: 11px; padding: 1px 7px; border-radius: 999px; color: var(--muted); }
+.chip.on { color: var(--accent); border-color: var(--accent); }
+.chip.ph { font-family: ui-monospace, Menlo, monospace; }
+.chip.revert { margin-top: 4px; }
+.phs { display: contents; }
+#empty { padding: 30px; text-align: center; color: var(--muted); }
+.chip.alt { color: var(--accent); border-color: var(--accent); cursor: pointer; }
+#altmenu { position: fixed; z-index: 100; min-width: 240px; max-width: min(560px, 92vw); max-height: 50vh; overflow: auto; margin: 0; padding: 4px; list-style: none; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+#altmenu li { padding: 6px 8px 6px 26px; border-radius: 5px; cursor: pointer; position: relative; white-space: pre-wrap; overflow-wrap: anywhere; }
+#altmenu li.active, #altmenu li:hover { background: var(--changed); }
+#altmenu li.chosen::before { content: "\2713"; position: absolute; left: 8px; color: var(--accent); font-weight: 700; }
+#altmenu li small { display: block; color: var(--muted); font-size: 11px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Buuz strings editor</h1>
+  <div class="bar">
+    <input id="search" type="search" placeholder="Search key, English or Mongolian" aria-label="Search">
+    <label>Show
+      <select id="filter" aria-label="Filter">
+        <option value="all">all</option>
+        <option value="changed">changed only</option>
+        <option value="missing">missing</option>
+        <option value="warn">placeholder warnings</option>
+      </select>
+    </label>
+    <label><input id="typeMn" type="checkbox"> Type Latin → Cyrillic (Mongolian cells)</label>
+    <label><input id="typeEn" type="checkbox"> Type Latin → Cyrillic (English cells)</label>
+    <label><input id="showAlt" type="checkbox"> Show alternatives</label>
+    <button id="dl-mn" class="primary" type="button">Download strings.mn.json</button>
+    <button id="dl-en" class="primary" type="button">Download strings.en.json</button>
+    <button id="copy" type="button">Copy changes as a list</button>
+    <button id="reset" type="button">Reset all</button>
+  </div>
+  <div class="meta"><span id="counts"></span><span id="status" role="status"></span></div>
+</header>
+<main>
+  <table id="rows">
+    <colgroup><col class="k"><col class="l"><col class="l"></colgroup>
+    <thead><tr><th scope="col">Key</th><th scope="col">English</th><th scope="col">Mongolian</th></tr></thead>
+  </table>
+  <p id="empty" hidden>No string matches.</p>
+</main>
+<script id="data-mn" type="application/json">/*@MN@*/</script>
+<script id="data-en" type="application/json">/*@EN@*/</script>
+<script id="data-alt" type="application/json">/*@ALT@*/</script>
+<script id="wordlist" type="text/plain">/*@WORDS@*/</script>
+<script id="wasm-b64" type="text/plain">/*@WASM@*/</script>
+<script>
+/*@GLUE@*/
+</script>
+<script>
+/*@LOGIC@*/
+</script>
+<script>
+/*@APP@*/
+</script>
+</body>
+</html>

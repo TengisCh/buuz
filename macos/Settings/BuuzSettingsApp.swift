@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// The Buuz app: first-run welcome steps and the settings window. It is
-// separate from the input method process, which stays tiny.
+// The Buuz app: tutorial, lessons and settings. It is separate from the input
+// method process, which stays tiny.
 
 import SwiftUI
 
@@ -10,12 +10,19 @@ struct BuuzSettingsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if model.showOnboarding { OnboardingView() } else { SettingsView() }
+            AppShell()
+                .environmentObject(model)
+                // 568 + the 32 pt title bar area gives a 600 pt window at the smallest size.
+                .frame(minWidth: 880, maxWidth: .infinity, minHeight: 568, maxHeight: .infinity)
+                .onAppear { model.applyTheme() }
+        }
+        .windowStyle(.hiddenTitleBar)
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button(model.t("nav.settings") + "…") { model.openSettings() }
+                    .keyboardShortcut(",", modifiers: .command)
+                    .disabled(model.tourActive)
             }
-            .environmentObject(model)
-            .frame(width: 760, height: 540)
-            .preferredColorScheme(model.dark ? .dark : .light)
         }
     }
 }

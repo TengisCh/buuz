@@ -1,0 +1,1258 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buuz macOS app</title>
+<style>
+/* ---------- Page (outside the window) ---------- */
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: #E9E3DA; color: #1E1838; min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+body.light { background: radial-gradient(120% 100% at 10% 0%, #F3D9C4 0%, #E7E1EF 55%, #DDE6F4 100%); }
+body.dark { background: radial-gradient(120% 100% at 10% 0%, #2A1A22 0%, #121019 55%, #0B0D16 100%); color: #EEE; color-scheme: dark; }
+.bar {
+  position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 10px 16px; background: rgba(255,255,255,.72); backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+body.dark .bar { background: rgba(20,18,28,.8); border-color: rgba(255,255,255,.08); }
+.bar b { font-weight: 700; margin-right: 4px; }
+.bar select, .bar button {
+  font: inherit; padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15);
+  background: #fff; color: #1E1838; cursor: pointer;
+}
+body.dark .bar select, body.dark .bar button { background: #241F31; color: #EEE; border-color: rgba(255,255,255,.15); }
+.bar .seg { display: inline-flex; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,.15); }
+body.dark .bar .seg { border-color: rgba(255,255,255,.15); }
+.bar .seg button { border: 0; border-radius: 0; }
+.bar .seg button.on { background: #2E6BFF; color: #fff; }
+.bar .sp { flex: 1; }
+.bar .note { opacity: .6; font-size: 12px; }
+.stage { padding: 28px 16px 60px; display: flex; justify-content: center; overflow-x: auto; }
+
+/* ---------- Window tokens ---------- */
+.win {
+  --frame: #F4EFE8; --panel: #FFFFFF; --panel-line: #EAE2D7; --text: #1E1838; --text-2: #645D72; --text-3: #9A93A6;
+  --fill: #F7F3EE; --fill-2: #EFE8DF; --hover: rgba(30,24,56,.05); --selected: rgba(30,24,56,.07);
+  --sep: #EAE2D7; --accent: #2E6BFF; --accent-edge: #1D4FD1; --accent-soft: #EAF0FF;
+  --ember: #FF6A3D; --amber: #FFB648; --success: #17915F; --success-bg: #E5F6EE; --warn: #A85400; --warn-bg: #FFF2DF;
+  --danger: #D23B3B; --danger-bg: #FDECEC; --key-bg: #FFFFFF; --key-line: #D8CFC2; --key-edge: #CFC5B8;
+  --btn2: #FFFFFF; --btn2-line: #E3DACE;
+  --hero: #1E1838; --track: #E6DED3; --scrim: rgba(30,24,56,.30);
+  --sheet-shadow: 0 24px 64px rgba(30,24,56,.28), 0 0 0 .5px rgba(30,24,56,.18);
+  --win-shadow: 0 30px 80px rgba(30,24,56,.28), 0 0 0 .5px rgba(0,0,0,.25);
+}
+.win.dark {
+  --frame: #121019; --panel: #1B1825; --panel-line: rgba(255,255,255,.07); --text: #F3F0F9; --text-2: #A8A2B7; --text-3: #6F6981;
+  --fill: #221E2E; --fill-2: #2B2639; --hover: rgba(255,255,255,.05); --selected: rgba(255,255,255,.08);
+  --sep: rgba(255,255,255,.07); --accent: #4D82FF; --accent-edge: #2D5FD6; --accent-soft: rgba(77,130,255,.15);
+  --success: #43D196; --success-bg: rgba(67,209,150,.12); --warn: #FFC266; --warn-bg: rgba(255,182,72,.11);
+  --danger: #FF7B7B; --danger-bg: rgba(255,123,123,.12);
+  --key-bg: #2A2537; --key-line: #3B3550; --key-edge: #15121D;
+  --btn2: #2E2940; --btn2-line: transparent;
+  --hero: #0D0B14; --track: #2E2940; --scrim: rgba(0,0,0,.55);
+  --sheet-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.14);
+  --win-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 .5px rgba(255,255,255,.18);
+}
+
+/* ---------- Window frame ---------- */
+.win {
+  position: relative; width: 1000px; height: 680px; min-width: 880px; min-height: 600px; max-width: 1600px;
+  resize: both; overflow: hidden; border-radius: 12px; background: var(--frame); color: var(--text);
+  box-shadow: var(--win-shadow); display: grid; grid-template-columns: 200px minmax(0, 1fr);
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+.round { font-family: ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.lights { position: absolute; top: 16px; left: 18px; display: flex; gap: 8px; z-index: 5; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.15); }
+.lights i:nth-child(1) { background: #FF5F57; } .lights i:nth-child(2) { background: #FEBC2E; } .lights i:nth-child(3) { background: #28C840; }
+.topicons { position: absolute; top: 7px; right: 12px; display: flex; gap: 2px; z-index: 5; align-items: center; }
+.ibtn {
+  width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--text-2);
+  background: transparent; border: 0; cursor: pointer; position: relative; flex: none;
+}
+.ibtn:hover { background: var(--hover); color: var(--text); }
+.ibtn svg { width: 17px; height: 17px; }
+.ibtn .badge { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 0 2px var(--frame); }
+.ibtn.lang { width: auto; padding: 0 9px; font-weight: 700; font-size: 11.5px; letter-spacing: .02em; }
+.ibtn.lang span { border: 1.5px solid currentColor; border-radius: 999px; padding: 1px 6px; }
+.sidebtn { position: absolute; top: 7px; left: 84px; z-index: 5; }
+
+/* ---------- Sidebar ---------- */
+.side { padding: 48px 8px 12px 12px; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.logo { display: flex; align-items: center; gap: 8px; padding: 2px 10px 16px; }
+.logo img { width: 26px; height: 26px; border-radius: 7px; }
+.logo b { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.logo small { font-size: 10.5px; font-weight: 700; color: var(--text-3); }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a {
+  display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: 8px;
+  color: var(--text); text-decoration: none; font-size: 13.5px; font-weight: 500; cursor: pointer; white-space: nowrap;
+}
+.nav a svg { width: 16px; height: 16px; color: var(--text-2); flex: none; }
+.nav a:hover { background: var(--hover); }
+.nav a.on { background: var(--selected); font-weight: 600; }
+.nav a.on svg { color: var(--text); }
+.side .grow { flex: 1; min-height: 12px; }
+.side .rule { height: 1px; background: var(--sep); margin: 8px 10px; flex: none; }
+
+/* compact setup card (collapsible) */
+.setup { background: var(--panel); border-radius: 12px; padding: 12px 12px 6px; flex: none; }
+.win.dark .setup { background: var(--fill); }
+.setup .hd { display: flex; align-items: center; gap: 6px; width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 700 12.5px/1.2 -apple-system, sans-serif; color: var(--text); text-align: left; }
+.setup .hd .n { margin-left: auto; color: var(--text-3); font-weight: 600; }
+.setup .hd svg { width: 13px; height: 13px; color: var(--text-3); transition: transform .15s; }
+.setup.closed { padding-bottom: 12px; }
+.setup.closed .hd svg { transform: rotate(-90deg); }
+.setup.closed .rows { display: none; }
+.progress { height: 4px; background: var(--track); border-radius: 999px; margin: 10px 0 4px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.citem { display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 2px; font-size: 12.5px; color: var(--text); white-space: nowrap; cursor: pointer; border-radius: 6px; min-width: 0; }
+.citem .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.citem .c { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--text-3); flex: none; display: grid; place-items: center; }
+.citem.done { color: var(--text-2); }
+.citem.done .c { background: var(--success); border-color: var(--success); color: #fff; }
+.citem.done .c svg { width: 9px; height: 9px; stroke-width: 3.4; }
+.citem.now .c { border-color: var(--accent); box-shadow: inset 0 0 0 2.5px var(--panel), inset 0 0 0 7px var(--accent); }
+.win.dark .setup .citem.now .c { box-shadow: inset 0 0 0 2.5px var(--fill), inset 0 0 0 7px var(--accent); }
+.citem .go { margin-left: auto; color: var(--text-3); font-weight: 600; font-size: 11.5px; }
+
+/* ---------- Content panel: ONE scroll view, ONE centred column ---------- */
+.panel {
+  margin: 44px 12px 12px 0; background: var(--panel); border-radius: 14px; box-shadow: 0 0 0 1px var(--panel-line);
+  min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; position: relative;
+}
+.scroll { flex: 1; overflow: auto; padding: 40px max(48px, 9%) 56px; container-type: inline-size; }
+.scroll::-webkit-scrollbar { width: 10px; } .scroll::-webkit-scrollbar-thumb { background: var(--fill-2); border-radius: 10px; border: 3px solid var(--panel); }
+.col { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+.ph { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.ph > div { min-width: 0; }
+.ph h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+.ph p { margin: 6px 0 0; color: var(--text-2); font-size: 13.5px; }
+.sec { display: flex; flex-direction: column; gap: 12px; }
+.sh { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 22px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.sh .ibtn { width: 28px; height: 28px; margin: -4px -6px -4px 0; }
+.sh .ibtn svg { width: 15px; height: 15px; }
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-3); }
+
+/* ---------- Common bits ---------- */
+.card { background: var(--fill); border-radius: 12px; }
+.pad { padding: 20px; }
+.group { background: var(--fill); border-radius: 12px; padding: 0 20px; }
+.srow { display: flex; align-items: center; gap: 16px; min-height: 60px; padding: 12px 0; border-top: 1px solid var(--sep); }
+.srow:first-child { border-top: 0; }
+.srow .t { flex: 1; min-width: 0; }
+.srow .t > b { display: block; font-weight: 600; font-size: 13.5px; }
+.srow .t > span { display: block; color: var(--text-2); font-size: 12.5px; margin-top: 2px; }
+.srow .t .ok { color: var(--success); font-weight: 600; }
+.srow .t .path { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srow > :not(.t) { flex: none; }
+.srow.soon { opacity: .55; }
+.btn {
+  font: 600 13px/1 -apple-system, sans-serif; height: 32px; padding: 0 14px; border-radius: 8px; border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--text);
+}
+.btn.primary { background: var(--accent); color: #fff; box-shadow: 0 2px 0 var(--accent-edge); }
+.btn.primary:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--accent-edge); }
+.btn.primary[disabled] { background: var(--fill-2); color: var(--text-3); box-shadow: none; cursor: default; }
+.btn.secondary { background: var(--btn2); box-shadow: inset 0 0 0 1px var(--btn2-line); }
+.btn.ghost { background: transparent; color: var(--text-2); padding: 0 10px; }
+.btn.ghost:hover { background: var(--hover); color: var(--text); }
+.btn.big { height: 38px; padding: 0 18px; font-size: 14px; }
+.btn svg { width: 14px; height: 14px; }
+.link { color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+kbd {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 7px;
+  font: 600 12px/1 ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); background: var(--key-bg);
+  border: 1px solid var(--key-line); border-bottom-width: 2.5px; border-bottom-color: var(--key-edge); border-radius: 6px; vertical-align: middle; white-space: nowrap;
+}
+kbd.big { height: 32px; min-width: 32px; font-size: 14px; padding: 0 10px; border-radius: 8px; }
+kbd.lit { background: var(--accent); color: #fff; border-color: var(--accent-edge); }
+.keys { display: inline-flex; gap: 4px; align-items: center; }
+.latin { font: 600 13.5px ui-monospace, "SF Mono", Menlo, monospace; background: var(--fill-2); padding: 3px 8px; border-radius: 6px; color: var(--text); white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--fill-2); color: var(--text-2); white-space: nowrap; vertical-align: 1px; }
+.pill.blue { background: var(--accent-soft); color: var(--accent); }
+.pill.green { background: var(--success-bg); color: var(--success); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.kb-chip {
+  display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px 0 4px; border-radius: 999px;
+  font-weight: 600; font-size: 12.5px; background: var(--fill-2); color: var(--text); white-space: nowrap; flex: none;
+}
+.kb-chip .glyph { width: 18px; height: 18px; border-radius: 999px; display: grid; place-items: center; font: 800 11px/1 ui-rounded, sans-serif; background: var(--text-3); color: var(--panel); }
+.kb-chip.buuz .glyph { background: var(--ember); color: #fff; }
+.kb-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+.kb-chip.other .dot { background: var(--warn); }
+@keyframes pulse { 50% { opacity: .4; } }
+.switch { width: 36px; height: 20px; border-radius: 999px; background: var(--track); position: relative; flex: none; cursor: pointer; transition: .15s; }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: .15s; }
+.switch.on { background: var(--accent); }
+.switch.on::after { left: 18px; }
+.switch.dim { opacity: .45; }
+.seg2 { display: inline-flex; background: var(--fill-2); border-radius: 8px; padding: 2px; gap: 2px; flex: none; }
+.group .seg2, .card .seg2 { background: var(--track); }
+.seg2 button { font: 600 12.5px -apple-system, sans-serif; border: 0; background: transparent; color: var(--text-2); height: 26px; padding: 0 12px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.seg2 button.on { background: var(--panel); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+
+/* Banner: icon, text column, optional small trailing item (.act) or a button row under the text (.acts) */
+.banner { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; font-size: 13px; line-height: 1.45; }
+.banner > svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.banner .bt { flex: 1; min-width: 0; color: var(--text); }
+.banner .bt b { display: block; font-size: 13.5px; margin-bottom: 2px; }
+.banner .act { flex: none; align-self: center; display: flex; gap: 8px; align-items: center; }
+.banner .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.banner.neutral { background: var(--fill); color: var(--text-2); }
+.banner.info { background: var(--accent-soft); color: var(--accent); }
+.banner.ok { background: var(--success-bg); color: var(--success); }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.banner.danger { background: var(--danger-bg); color: var(--danger); }
+.banner.info .bt b, .banner.ok .bt b, .banner.warn .bt b, .banner.danger .bt b { color: inherit; }
+.banner.info .bt b { color: var(--accent); } .banner.ok .bt b { color: var(--success); } .banner.warn .bt b { color: var(--warn); } .banner.danger .bt b { color: var(--danger); }
+
+/* ---------- Home ---------- */
+.hero {
+  position: relative; border-radius: 14px; overflow: hidden; color: #fff; height: 152px; padding: 0 28px;
+  background:
+    radial-gradient(70% 120% at 88% 20%, rgba(255,106,61,.7), transparent 60%),
+    radial-gradient(60% 90% at 70% 110%, rgba(255,182,72,.5), transparent 60%),
+    var(--hero);
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+}
+.hero.warnhero { background: radial-gradient(70% 120% at 88% 20%, rgba(255,182,72,.65), transparent 60%), radial-gradient(60% 90% at 70% 110%, rgba(255,106,61,.45), transparent 60%), var(--hero); }
+.hero h2 { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; max-width: calc(100% - 150px); }
+.hero p { margin: 6px 0 16px; color: rgba(255,255,255,.78); font-size: 13.5px; max-width: calc(100% - 150px); }
+.hero img { position: absolute; right: 22px; bottom: -16px; width: 122px; transform: rotate(-6deg); filter: drop-shadow(0 10px 20px rgba(0,0,0,.35)); }
+.hero .x { position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,.14); display: grid; place-items: center; color: #fff; border: 0; cursor: pointer; z-index: 1; }
+.hero .x svg { width: 12px; height: 12px; }
+.hero .btn.primary { box-shadow: 0 2px 0 #1A3FA8; }
+@container (max-width: 500px) { .hero img { display: none; } .hero h2, .hero p { max-width: 100%; } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: -12px; }
+.stile { background: var(--fill); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; min-width: 0; color: inherit; text-decoration: none; }
+.stile:hover { background: var(--fill-2); }
+.stile .v { font: 700 17px/1.3 ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
+.stile .l { color: var(--text-2); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stile .glyph { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font: 800 13px/1 ui-rounded, sans-serif; background: var(--ember); color: #fff; flex: none; }
+.stile .glyph.off { background: var(--text-3); }
+.tryfield {
+  display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 16px; border-radius: 12px;
+  background: var(--fill); border: 1.5px solid transparent; font-size: 17px;
+}
+.tryfield.focus { border-color: var(--accent); background: var(--panel); box-shadow: 0 0 0 4px var(--accent-soft); }
+.tryfield .txt { flex: 1; white-space: nowrap; overflow: hidden; }
+.ph2 { color: var(--text-3); }
+.caret { display: inline-block; width: 2px; height: 1.15em; background: var(--accent); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+u.pre { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; text-decoration-color: var(--text-2); }
+.lrow { display: grid; grid-template-columns: 64px auto minmax(0, 1fr); gap: 16px; align-items: center; min-height: 52px; padding: 10px 0; border-top: 1px solid var(--sep); }
+.lrow:first-child { border-top: 0; }
+.lrow .ex { font-size: 14px; white-space: nowrap; }
+.lrow .ex .arrow { color: var(--text-3); margin: 0 6px; }
+.lrow .ex b { font-weight: 650; }
+.lrow .desc { color: var(--text-2); font-size: 12.5px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 470px) { .lrow { grid-template-columns: 64px 1fr; } .lrow .desc { display: none; } }
+
+/* ---------- Settings sheet ---------- */
+.scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 20; }
+.sheet {
+  position: absolute; z-index: 21; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(760px, calc(100% - 64px)); height: min(560px, calc(100% - 56px));
+  background: var(--panel); border-radius: 14px; box-shadow: var(--sheet-shadow);
+  display: grid; grid-template-columns: 184px minmax(0, 1fr); overflow: hidden;
+}
+.sheet .snav { background: var(--frame); padding: 20px 10px 14px; display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.sheet .snav .eyebrow { padding: 0 10px 10px; }
+.sheet .snav .ver { margin-top: auto; padding: 0 10px; color: var(--text-3); font-size: 12px; }
+.sheet .sbody { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.sheet .sbody > .close { position: absolute; top: 12px; right: 12px; z-index: 2; }
+.sheet .scroll { padding: 32px 36px 40px; }
+.sheet .col { max-width: none; gap: 28px; }
+.sheet .ph h1 { font-size: 22px; }
+
+/* hotkey options: full-width radio rows */
+.opts { background: var(--fill); border-radius: 12px; padding: 0 20px; }
+.opt { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 12px 0; border-top: 1px solid var(--sep); cursor: pointer; }
+.opt:first-child { border-top: 0; }
+.opt .radio { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--text-3); flex: none; background: var(--panel); }
+.opt.on .radio { border: 5.5px solid var(--accent); }
+.opt .t { flex: 1; min-width: 0; }
+.opt .t b { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; flex-wrap: wrap; }
+.opt .t .n { display: block; color: var(--text-2); font-size: 12.5px; margin-top: 2px; }
+.opt .keys { flex: none; }
+.recorder {
+  display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 10px 0 16px; border-radius: 12px;
+  border: 1.5px dashed var(--key-line); background: var(--fill);
+}
+.recorder .t { flex: 1; color: var(--text-2); font-weight: 500; }
+.recorder.rec { border: 1.5px solid var(--accent); background: var(--accent-soft); }
+.recorder.rec .t { color: var(--accent); font-weight: 600; }
+.recorder.set { border: 1.5px solid var(--success); background: var(--success-bg); }
+.recorder.set .t { color: var(--success); font-weight: 600; display: flex; gap: 6px; align-items: center; }
+.recorder.set .t svg { width: 16px; height: 16px; stroke-width: 2.6; }
+.recdot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: pulse 1s infinite; flex: none; }
+.hint { margin: -4px 4px 0; color: var(--text-2); font-size: 12.5px; }
+.swapchips { display: flex; align-items: center; gap: 6px; }
+.swapchips svg { width: 16px; height: 16px; color: var(--text-3); }
+.prow { display: flex; justify-content: space-between; align-items: center; min-height: 44px; border-top: 1px solid var(--sep); font-size: 14px; gap: 12px; }
+.prow:first-child { border-top: 0; }
+.prow .mono { font-size: 13px; color: var(--text-2); }
+.abouthead { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 0; text-align: center; }
+.abouthead img.w { height: 44px; }
+.abouthead span { color: var(--text-2); }
+.crumb { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12.5px; }
+.crumb span { background: var(--fill-2); padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.crumb i { color: var(--text-3); font-style: normal; }
+.stack { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--fill-2); color: var(--text-2); flex: none; }
+.num.d { background: var(--success); color: #fff; }
+.num.d svg { width: 11px; height: 11px; stroke-width: 3.2; }
+
+/* ---------- Tutorial ---------- */
+.rail .logo { padding-bottom: 10px; }
+.rail h5 { margin: 10px 10px 4px; }
+.rail .citem { height: 28px; padding: 0 10px; border-radius: 7px; font-size: 13px; }
+.rail .citem.small { height: 26px; font-size: 12.5px; }
+.rail .citem.now { background: var(--selected); font-weight: 600; }
+.rail .citem.now .c { box-shadow: inset 0 0 0 2.5px var(--frame), inset 0 0 0 7px var(--accent); }
+.tour { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; }
+.tour .body { flex: 1; overflow: auto; padding: 28px max(40px, 8%) 20px; display: flex; flex-direction: column; }
+.tour .inner { width: 100%; max-width: 580px; margin: auto; display: flex; flex-direction: column; gap: 20px; }
+.tour .inner.center { align-items: center; text-align: center; }
+.tour .foot { flex: none; display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 20px; border-top: 1px solid var(--sep); }
+.tour .foot .sp { flex: 1; }
+.tour .foot .steps { color: var(--text-3); font-size: 12px; font-weight: 600; margin-right: 6px; }
+.th { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+.th h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; }
+.th p { margin: 0; color: var(--text-2); font-size: 14.5px; max-width: 480px; }
+.welcome img { width: 120px; animation: hop 2.4s ease-in-out infinite; }
+@keyframes hop { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-10px); } 90% { transform: translateY(0); } }
+.welcome h1 { font-size: 34px; font-weight: 800; margin: 4px 0 0; line-height: 1.12; letter-spacing: -.015em; white-space: pre-line; }
+.welcome p { color: var(--text-2); font-size: 15px; margin: 0; }
+.demo { display: inline-flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 12px; background: var(--fill); font-size: 18px; }
+.demo .out { font-weight: 700; overflow: hidden; white-space: nowrap; border-right: 2px solid var(--accent); animation: type 3.2s steps(13) infinite; width: 13ch; }
+@keyframes type { 0% { width: 0; } 60%, 100% { width: 13ch; } }
+.tick { width: 48px; height: 48px; border-radius: 50%; background: var(--success); color: #fff; display: grid; place-items: center; animation: pop .4s ease-out; align-self: center; }
+.tick svg { width: 24px; height: 24px; stroke-width: 3; }
+@keyframes pop { 0% { transform: scale(.4); opacity: 0; } 80% { transform: scale(1.08); } }
+.statusimg { width: 36px; flex: none; }
+.switchviz { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px; }
+.kbtile { width: 140px; height: 96px; border-radius: 14px; border: 1.5px solid var(--sep); background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-weight: 700; color: var(--text-2); position: relative; }
+.kbtile .g { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font: 800 18px/1 ui-rounded, sans-serif; background: var(--fill-2); color: var(--text-2); }
+.kbtile.on { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); color: var(--text); }
+.kbtile.buuz .g { background: var(--ember); color: #fff; }
+.kbtile .now { position: absolute; top: -10px; font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: #fff; letter-spacing: .04em; }
+.swarrow { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--text-3); }
+.swarrow svg { width: 22px; height: 22px; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.checkrow { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 16px; border-radius: 12px; background: var(--fill); font-weight: 600; font-size: 13px; }
+.checkrow .c { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--text-3); display: grid; place-items: center; flex: none; }
+.checkrow.done .c { background: var(--success); border-color: var(--success); color: #fff; }
+.checkrow.done .c svg { width: 11px; height: 11px; stroke-width: 3; }
+.checkrow.wait .c { border-color: var(--accent); border-top-color: transparent; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.menubar { display: flex; align-items: center; gap: 12px; height: 24px; padding: 0 10px; border-radius: 6px; background: var(--fill-2); font-size: 12px; font-weight: 600; color: var(--text-2); }
+.menubar .b { background: var(--text); color: var(--panel); border-radius: 4px; padding: 1px 5px; font: 800 11px/1.3 ui-rounded, sans-serif; outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* lessons: one task, one big field */
+.task { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-radius: 12px; background: var(--fill); }
+.task .keys { gap: 6px; flex-wrap: wrap; justify-content: center; }
+.task .latin { font-size: 16px; padding: 4px 10px; background: var(--panel); }
+.task kbd { height: 28px; font-size: 13px; }
+.task .arrow { color: var(--text-3); display: grid; } .task .arrow svg { width: 18px; height: 18px; }
+.task .out { font: 700 22px/1.2 ui-rounded, "SF Pro Rounded", -apple-system, sans-serif; }
+.why { margin: -10px 0 0; text-align: center; color: var(--text-3); font-size: 12.5px; }
+.field { min-height: 84px; padding: 14px 22px; border-radius: 14px; border: 1.5px solid var(--sep); background: var(--panel); display: flex; align-items: center; font-size: 26px; letter-spacing: -.005em; }
+.field.focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.field.ok { border-color: var(--success); box-shadow: 0 0 0 4px var(--success-bg); }
+.field.warn { border-color: var(--warn); box-shadow: 0 0 0 4px var(--warn-bg); }
+.ftools { display: flex; align-items: center; gap: 8px; margin-top: -8px; flex-wrap: wrap; }
+.ftools .sp { flex: 1; }
+.subcheck { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--fill); font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+.subcheck .c { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--text-3); display: grid; place-items: center; }
+.subcheck.done { color: var(--success); background: var(--success-bg); }
+.subcheck.done .c { background: var(--success); border-color: var(--success); color: #fff; }
+.subcheck.done .c svg { width: 9px; height: 9px; stroke-width: 3.4; }
+.diff b { color: var(--danger); text-decoration: underline; }
+/* short windows: the tutorial body tightens before it scrolls */
+.tour .body { container-type: size; }
+@container (max-height: 570px) {
+  .tour .inner { gap: 16px; }
+  .opt { min-height: 56px; padding: 8px 0; }
+}
+@container (max-height: 520px) {
+  .tour .inner { gap: 14px; }
+  .th { gap: 4px; }
+  .th h1 { font-size: 24px; }
+  .th p { font-size: 13.5px; }
+  .field { min-height: 68px; font-size: 22px; padding: 10px 20px; }
+  .task { padding: 12px 18px; }
+  .why { margin-top: -8px; }
+  .ftools { margin-top: -6px; }
+  .welcome img { width: 96px; }
+}
+.hop { width: 36px; animation: hop 1.2s ease-in-out 2; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden;  z-index: 0; }
+.tour .body, .tour .foot { position: relative; z-index: 1; }
+.th.welcome img { margin-bottom: 6px; }
+.confetti i { position: absolute; top: -12px; width: 8px; height: 13px; border-radius: 2px; animation: fall 3.4s linear infinite; opacity: .9; }
+@keyframes fall { to { transform: translateY(720px) rotate(540deg); } }
+.loginrow { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hidden { display: none !important; }
+/* screenshot mode: ?shot=1&size=WxH shows only the window */
+html.shot .bar { display: none; }
+html.shot .stage { padding: 0; }
+html.shot .win { border-radius: 0; box-shadow: none; }
+</style>
+</head>
+<body class="light">
+<div class="bar">
+  <b>Buuz · macOS app</b>
+  <select id="screen" aria-label="Screen"></select>
+  <select id="state" aria-label="State"></select>
+  <span class="seg" id="themeSeg"><button data-v="light">Light</button><button data-v="dark">Dark</button></span>
+  <span class="seg" id="langSeg"><button data-v="mn">МН</button><button data-v="en">EN</button></span>
+  <span class="seg" id="sizeSeg"><button data-v="880x600">880×600</button><button data-v="1000x680">1000×680</button><button data-v="1280x800">1280×800</button></span>
+  <span class="sp"></span>
+  <span class="note">Drag the window corner to resize. Keys ← → change the screen.</span>
+</div>
+<div class="stage"><div class="win" id="win"></div></div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Strings. NEW = keys the implementer adds (spec.md lists them). OLD = keys
+// that exist in macos/App/Strings today and are reused as they are.
+// ---------------------------------------------------------------------------
+const NEW = {
+  "nav.home": ["Home", "Нүүр"],
+  "nav.typing": ["Typing", "Бичих"],
+  "nav.shortcuts": ["Shortcuts", "Товчлол"],
+  "nav.privacy": ["Privacy", "Нууцлал"],
+  "nav.about": ["About", "Тухай"],
+  "nav.settings": ["Settings", "Тохиргоо"],
+  "nav.help": ["Help", "Тусламж"],
+  "nav.lessons": ["Lessons", "Хичээл"],
+  "top.theme": ["Appearance", "Харагдах байдал"],
+  "top.whatsNew": ["Updates", "Шинэчлэл"],
+  "top.language": ["Language", "Хэл"],
+  "setup.title": ["Setup", "Тохируулга"],
+  "setup.count": ["{done}/{total}", "{done}/{total}"],
+  "setup.add": ["Add the keyboard", "Гарт нэмэх"],
+  "setup.key": ["Switch key", "Солих товч"],
+  "setup.switch": ["Switch to Buuz", "Buuz руу шилжих"],
+  "setup.lessons": ["Lessons", "Хичээлүүд"],
+  "setup.open": ["Open", "Нээх"],
+  "home.greeting.morning": ["Good morning", "Өглөөний мэнд"],
+  "home.greeting.afternoon": ["Good afternoon", "Өдрийн мэнд"],
+  "home.greeting.evening": ["Good evening", "Оройн мэнд"],
+  "home.subtitle": ["Type Latin, get Cyrillic in every app.", "Латинаар бич, бүх апп дотор кирилл болоод гарна."],
+  "home.hero.lessons.title": ["Learn Buuz in 3 minutes", "Buuz-ийг 3 минутад сур"],
+  "home.hero.lessons.body": ["Eight short lessons. You type, Buuz checks.", "Найман богино хичээл. Та бичнэ, Buuz шалгана."],
+  "home.hero.lessons.continue": ["Continue · {done}/{total}", "Үргэлжлүүлэх · {done}/{total}"],
+  "home.hero.off.title": ["Buuz is not in your keyboards", "Buuz гарын жагсаалтад алга"],
+  "home.hero.off.body": ["Add it back with one click. Your settings stay.", "Нэг товшоод буцааж нэм. Тохиргоо тань хэвээрээ."],
+  "home.hero.tip.title": ["Esc keeps a word in Latin", "Esc дарвал үг латинаараа үлдэнэ"],
+  "home.hero.tip.body": ["Type zoom, press Esc, then Space.", "zoom гэж бичээд Esc, дараа нь Space дар."],
+  "home.hero.tip.button": ["Try it", "Туршаад үз"],
+  "home.card.keyboard": ["is your keyboard now", "одоогийн гар"],
+  "home.card.switchKey": ["switch key", "солих товч"],
+  "home.card.mode": ["mode", "горим"],
+  "home.card.notAdded": ["Not added", "Нэмээгүй"],
+  "home.try.title": ["Try it here", "Энд туршаад үз"],
+  "home.try.placeholder": ["Type in Latin…", "Латинаар бичээрэй…"],
+  "home.cheat.title": ["Cheat sheet", "Товчны хүснэгт"],
+  "home.cheat.find": ["Find a key", "Товч хайх"],
+  "cheat.q": ["ө, anywhere in a word", "ө, үгийн хаана ч"],
+  "cheat.w": ["ү, anywhere in a word", "ү, үгийн хаана ч"],
+  "cheat.soft": ["soft sign ь", "зөөлний тэмдэг ь"],
+  "cheat.hard": ["hard sign ъ", "хатуугийн тэмдэг ъ"],
+  "cheat.harmony": ["o and u follow the word", "o, u үгэндээ зохицно"],
+  "cheat.vv": ["vv gives үү", "vv нь үү"],
+  "cheat.ts": ["ts gives ц", "ts нь ц"],
+  "cheat.zh": ["zh gives ж", "zh нь ж"],
+  "cheat.esc": ["keep the word in Latin", "үгийг латинаар үлдээх"],
+  "cheat.backspace": ["undo the last automatic change", "сүүлийн автомат өөрчлөлтийг буцаах"],
+  "cheat.abbr": ["abbreviation", "товчилсон үг"],
+  "typing.subtitle": ["Changes apply the next time you click in a text field.", "Дараагийн удаа бичих талбарт дарахад өөрчлөлт хэрэгжинэ."],
+  "typing.mode": ["Mode", "Горим"],
+  "typing.mode.smart": ["Smart", "Ухаалаг"],
+  "typing.mode.classic": ["Classic", "Сонгодог"],
+  "typing.mode.hint": ["Classic types exactly like the original Buuz.", "Сонгодог горим анхны Buuz-тэй яг адилхан бичнэ."],
+  "typing.classicNote": ["Classic mode turns off the smart switches below.", "Сонгодог горимд доорх ухаалаг тохиргоо ажиллахгүй."],
+  "typing.group.vowels": ["Vowels and words", "Эгшиг ба үг"],
+  "typing.group.keys": ["Extra keys", "Нэмэлт товч"],
+  "typing.group.latin": ["Latin words", "Латин үг"],
+  "typing.group.soon": ["Coming soon", "Удахгүй"],
+  "typing.smartVowels": ["Smart vowels", "Ухаалаг эгшиг"],
+  "typing.smartVowels.hint": ["o and u match the word: gertoo → гэртөө", "o, u үгэндээ зохицно: gertoo → гэртөө"],
+  "typing.autocorrect": ["Autocorrect", "Автомат засвар"],
+  "typing.autocorrect.hint": ["хуухэд → хүүхэд at Space. Off by default.", "Space дарахад хуухэд → хүүхэд. Анхдагчаар унтраалттай."],
+  "typing.doubleV": ["vv for үү", "vv-ээр үү бичих"],
+  "typing.doubleV.hint": ["svv → сүү", "svv → сүү"],
+  "typing.habitKeys": ["ts for ц, zh for ж", "ts-ээр ц, zh-ээр ж"],
+  "typing.habitKeys.hint": ["tsai → цай, zhims → жимс", "tsai → цай, zhims → жимс"],
+  "typing.abbreviations": ["Abbreviations", "Товчилсон үг"],
+  "typing.abbreviations.hint": ["bn → байна, zgr → зүгээр. Backspace right after undoes it.", "bn → байна, zgr → зүгээр. Шууд Backspace дарвал буцна."],
+  "typing.keepLatin": ["Esc keeps Latin", "Esc дарвал латинаар үлдэнэ"],
+  "typing.keepLatin.hint": ["Press Esc while you type a word to keep it in Latin.", "Үг бичиж байхдаа Esc дарвал латинаараа үлдэнэ."],
+  "typing.autoLatin": ["Links and emails stay Latin", "Холбоос, имэйл латинаараа үлдэнэ"],
+  "typing.autoLatin.hint": ["name@mail.com and https://… do not change.", "name@mail.com, https://… өөрчлөгдөхгүй."],
+  "typing.preview": ["Preview", "Урьдчилан харах"],
+  "typing.preview.hint": ["What these keys give with your settings.", "Таны тохиргоогоор эдгээр товч юу гаргахыг харуулна."],
+  "shortcuts.switchKey.hint": ["Press it to switch between Buuz and your Latin keyboard.", "Buuz болон латин гарын хооронд шилжинэ."],
+  "shortcuts.test.title": ["Test your key", "Товчоо шалга"],
+  "shortcuts.test.body": ["Press {key}. The keyboard below changes.", "{key} дар. Доорх гар солигдоно."],
+  "shortcuts.typingKeys": ["Keys while you type", "Бичих үеийн товч"],
+  "shortcuts.key.commit": ["Finish the word", "Үгийг дуусгах"],
+  "shortcuts.key.esc": ["Keep the word in Latin", "Үгийг латинаар үлдээх"],
+  "shortcuts.key.backspace": ["Undo the last automatic change", "Сүүлийн автомат өөрчлөлтийг буцаах"],
+  "hotkey.fn": ["Globe key", "Глобус товч"],
+  "hotkey.fn.note": ["On newer Macs. Set in macOS.", "Шинэ Mac-д. macOS-д тохируулна."],
+  "hotkey.controlSpace.note": ["The macOS input source shortcut", "macOS-ийн оролтын хэл солих товчлол"],
+  "hotkey.capsLock.note": ["Switches between Buuz and ABC", "Buuz, ABC хоёрын хооронд солино"],
+  "hotkey.custom": ["My own shortcut", "Өөрийн товчлол"],
+  "hotkey.custom.note": ["Record any key combination", "Дурын товчлол бичүүлэх"],
+  "hotkey.record": ["Click to record a shortcut", "Товчлол бичүүлэхийн тулд дарна уу"],
+  "hotkey.recording": ["Press your shortcut…", "Товчлолоо дарна уу…"],
+  "hotkey.needsModifier": ["Add ⌃, ⌥ or ⌘ to the key.", "Товч дээр ⌃, ⌥ эсвэл ⌘ нэмж дарна уу."],
+  "hotkey.clear": ["Clear", "Арилгах"],
+  "hotkey.saved": ["Saved", "Хадгалагдлаа"],
+  "hotkey.system": ["macOS owns this key. Buuz opens the right settings page for you.", "Энэ товчийг macOS удирддаг. Buuz тохирох хуудсыг нь нээж өгнө."],
+  "hotkey.conflict.title": ["macOS already uses {keys}", "{keys}-г macOS ашигладаг"],
+  "hotkey.conflict.body": ["It is the shortcut for “{action}”.", "Энэ нь «{action}» товчлол."],
+  "hotkey.conflict.another": ["Try another", "Өөрийг сонгох"],
+  "hotkey.conflict.useAnyway": ["Use anyway", "Ингээд ашиглах"],
+  "hotkey.action.prevSource": ["Select the previous input source", "Өмнөх оролтын хэлийг сонгох"],
+  "hotkey.action.nextSource": ["Select the next input source", "Дараагийн оролтын хэлийг сонгох"],
+  "hotkey.action.spotlight": ["Spotlight", "Spotlight хайлт"],
+  "hotkey.action.emoji": ["Emoji & Symbols", "Эможи ба тэмдэгт"],
+  "hotkey.action.appSwitcher": ["Switch apps", "Апп солих"],
+  "hotkey.action.screenshot": ["Screenshot", "Дэлгэцийн зураг"],
+  "privacy.keeps.title": ["What Buuz keeps on this Mac", "Энэ Mac дээр Buuz юу хадгалдаг вэ"],
+  "privacy.keeps.config": ["Your typing settings, in one small text file", "Бичих тохиргоо тань, нэг жижиг текст файлд"],
+  "privacy.keeps.prefs": ["Language, appearance and lesson progress", "Хэл, харагдах байдал, хичээлийн явц"],
+  "privacy.keeps.never": ["Never what you type", "Таны бичсэн зүйлийг хэзээ ч хадгалахгүй"],
+  "privacy.keeps.reveal": ["Show in Finder", "Finder-т харуулах"],
+  "general.theme.system": ["System", "Системийн"],
+  "general.tutorial": ["Tutorial", "Заавар"],
+  "general.tutorial.hint": ["Setup and all eight lessons, from the start.", "Тохируулга болон найман хичээл, эхнээс нь."],
+  "general.updates.hint": ["Buuz asks only when you click. It never sends what you type.", "Зөвхөн таныг дарахад асууна. Бичсэн зүйлийг тань илгээхгүй."],
+  "about.website": ["Website", "Вэбсайт"],
+  "help.title": ["Help", "Тусламж"],
+  "help.subtitle": ["Fix the keyboard, or tell us what is wrong.", "Гараа засах эсвэл бидэнд хэлэх."],
+  "help.lessons": ["Lessons", "Хичээлүүд"],
+  "help.replay": ["Replay", "Дахин"],
+  "help.replayAll": ["Start all again", "Бүгдийг дахин эхлэх"],
+  "help.missing": ["Buuz is not in the keyboard list?", "Buuz гарын жагсаалтад алга уу?"],
+  "tour.setup": ["Setup", "Тохируулга"],
+  "tour.lessons": ["Lessons", "Хичээлүүд"],
+  "tour.step.welcome": ["Welcome", "Тавтай морил"],
+  "tour.step.privacy": ["Privacy", "Нууцлал"],
+  "tour.step.add": ["Add the keyboard", "Гарт нэмэх"],
+  "tour.step.key": ["Switch key", "Солих товч"],
+  "tour.step.switch": ["Switch to Buuz", "Buuz руу шилжих"],
+  "tour.step.done": ["Done", "Дууслаа"],
+  "tour.skipAll": ["Skip the tutorial", "Зааврыг алгасах"],
+  "tour.skipStep": ["Skip", "Алгасах"],
+  "tour.eyebrow": ["Step {n} of {total}", "Алхам {n}/{total}"],
+  "tour.lessonEyebrow": ["Lesson {n} of {total}", "Хичээл {n}/{total}"],
+  "tour.welcome.time": ["About 3 minutes. You can skip any step.", "3 минут орчим. Аль ч алхмыг алгасаж болно."],
+  "tour.add.live": ["Buuz checks this by itself", "Buuz өөрөө шалгаж байна"],
+  "tour.key.title": ["Choose your switch key", "Солих товчоо сонго"],
+  "tour.switch.title": ["Switch to Buuz", "Buuz руу шилж"],
+  "tour.switch.subtitle": ["Press {key}. The keyboard below changes by itself.", "{key} дар. Доорх гар өөрөө солигдоно."],
+  "tour.switch.now": ["Now", "Одоо"],
+  "tour.switch.press": ["press {key}", "{key} дар"],
+  "tour.switch.toBuuz": ["Switch to Buuz", "Buuz руу шилжих"],
+  "tour.switch.back": ["Switch back to {name}", "{name} руу буцах"],
+  "tour.switch.backHint": ["Now press {key} again to go back to {name}. Then come back to Buuz.", "Одоо {key}-г дахин дарж {name} руу буц. Тэгээд Buuz руу эргэж ир."],
+  "tour.switch.done": ["You can switch both ways", "Та хоёр тийш шилжиж чаддаг боллоо"],
+  "tour.switch.menu": ["Key does not work? Click the input menu in the menu bar and choose Buuz.", "Товч ажиллахгүй байна уу? Дээд мөрний оролтын цэснээс Buuz-ийг сонго."],
+  "lesson.type": ["Type", "Бич"],
+  "lesson.get": ["You get", "Гарна"],
+  "lesson.field": ["Practice", "Дасгал"],
+  "lesson.waiting": ["Type the keys above. Buuz checks as you type.", "Дээрх товчнуудыг бич. Бичих явцад Buuz шалгана."],
+  "lesson.wrong.title": ["Your keyboard is {name}", "Таны гар {name} байна"],
+  "lesson.wrong.body": ["Press {key} to switch to Buuz, then type again.", "{key} дарж Buuz руу шилжээд дахин бич."],
+  "lesson.latin.title": ["Only Latin letters", "Зөвхөн латин үсэг гарлаа"],
+  "lesson.latin.body": ["Did you press Esc? Press it again while you type. Or check that Б is in the menu bar.", "Esc дарсан уу? Бичиж байхдаа дахин дар. Эсвэл дээд мөрөнд Б байгаа эсэхийг шалга."],
+  "lesson.close.title": ["Almost", "Бараг боллоо"],
+  "lesson.close.body": ["You got {got}. Look at the hint and try again.", "{got} гарлаа. Зөвлөгөөг хараад дахин оролд."],
+  "lesson.success": ["Correct!", "Зөв!"],
+  "lesson.clear": ["Clear", "Арилгах"],
+  "lesson.next": ["Next lesson", "Дараагийн хичээл"],
+  "lesson.finish": ["Finish", "Дуусгах"],
+  "lesson1.title": ["Your first words", "Анхны үгс"],
+  "lesson1.body": ["Type in Latin. The word is underlined until you press Space.", "Латинаар бич. Space дартал үг доогуур зураастай байна."],
+  "lesson1.why": ["The underline means Buuz is still working on the word.", "Доогуур зураас нь Buuz үгээ боловсруулж байна гэсэн үг."],
+  "lesson1.success": ["You typed your first Mongolian words.", "Та анхны монгол үгсээ бичлээ."],
+  "lesson2.title": ["Vowels match the word", "Эгшиг үгэндээ зохицно"],
+  "lesson2.body": ["In a word with э, ө or ү, o becomes ө and u becomes ү.", "э, ө, ү-тэй үгэнд o нь ө, u нь ү болно."],
+  "lesson2.why": ["You type o and u. Buuz picks о or ө, у or ү.", "Та o, u л бичнэ. Buuz о эсвэл ө, у эсвэл ү-г сонгоно."],
+  "lesson2.success": ["Buuz matched the vowels for you.", "Buuz эгшгийг тань тааруулж өглөө."],
+  "lesson3.title": ["q for ө, w for ү", "q нь ө, w нь ү"],
+  "lesson3.body": ["Use q and w when you want ө or ү for sure, also at the start of a word.", "ө, ү заавал хэрэгтэй бол q, w ашигла. Үгийн эхэнд ч болно."],
+  "lesson3.why": ["q and w are free keys in Mongolian, so Buuz uses them.", "Монголд q, w үсэг байхгүй тул Buuz тэдгээрийг ашиглана."],
+  "lesson3.success": ["ө and ү whenever you want them.", "ө, ү хүссэн үедээ."],
+  "lesson4.title": ["' for ь, \" for ъ", "' нь ь, \" нь ъ"],
+  "lesson4.body": ["The apostrophe gives the soft sign. Shift and apostrophe give the hard sign.", "Апостроф зөөлний тэмдэг ь, Shift + апостроф хатуугийн тэмдэг ъ өгнө."],
+  "lesson4.why": ["The ' key is next to Return on most keyboards.", "' товч ихэнх гар дээр Return-ий хажууд байдаг."],
+  "lesson4.success": ["Soft sign done.", "Зөөлний тэмдэг боллоо."],
+  "lesson5.title": ["Space and Enter finish a word", "Space, Enter үгийг дуусгана"],
+  "lesson5.body": ["Type nom. It stays underlined. Press Enter to finish it.", "nom гэж бич. Доогуур зураастай үлдэнэ. Enter дарж дуусга."],
+  "lesson5.why": ["Space, Enter, Tab and punctuation all finish the word.", "Space, Enter, Tab, цэг таслал бүгд үгийг дуусгана."],
+  "lesson5.close": ["The word is still underlined. Press Enter.", "Үг доогуур зураастай хэвээр байна. Enter дар."],
+  "lesson5.success": ["The word is finished and sent.", "Үг дуусаж, илгээгдлээ."],
+  "lesson6.title": ["Backspace undoes a change", "Backspace өөрчлөлтийг буцаана"],
+  "lesson6.body": ["Type tov and Space. Buuz makes it төв. Press Backspace right after to get тов.", "tov гээд Space дар. Buuz төв болгоно. Шууд Backspace дарвал тов болно."],
+  "lesson6.why": ["This works for word choice, abbreviations and autocorrect.", "Үг сонголт, товчилсон үг, автомат засварт ажиллана."],
+  "lesson6.step1": ["tov + Space gives төв", "tov + Space → төв"],
+  "lesson6.step2": ["Backspace gives тов", "Backspace → тов"],
+  "lesson6.close": ["Press Backspace right after Space, before you type anything else.", "Space-ийн дараа өөр юм бичихээс өмнө шууд Backspace дар."],
+  "lesson6.success": ["Buuz gave your word back.", "Buuz үгийг тань буцааж өглөө."],
+  "lesson7.title": ["Esc keeps Latin", "Esc дарвал латинаараа үлдэнэ"],
+  "lesson7.body": ["For a name like zoom, press Esc before Space. The word stays in Latin.", "zoom гэх мэт нэрийг бичээд Space-ээс өмнө Esc дар. Үг латинаараа үлдэнэ."],
+  "lesson7.why": ["Press Esc again to get the Cyrillic back.", "Esc-ийг дахин дарвал кирилл буцаж гарна."],
+  "lesson7.step1": ["zoom shows as зоом", "zoom → зоом"],
+  "lesson7.step2": ["Esc and Space give zoom", "Esc, Space → zoom"],
+  "lesson7.close": ["Press Esc before Space.", "Space-ээс өмнө Esc дар."],
+  "lesson7.success": ["Latin when you need it.", "Хэрэгтэй үед латин."],
+  "lesson8.title": ["Short forms", "Товчилсон үг"],
+  "lesson8.body": ["Some short forms grow into full words at Space.", "Зарим товчлол Space дарахад бүтэн үг болно."],
+  "lesson8.why": ["See all short forms in Typing › Abbreviations.", "Бүх товчлолыг Бичих › Товчилсон үг хэсгээс хар."],
+  "lesson8.off": ["Abbreviations are off. Turn them on in Typing, or skip this lesson.", "Товчилсон үг унтраалттай байна. Бичих хэсэгт асаах эсвэл энэ хичээлийг алгас."],
+  "lesson8.turnOn": ["Turn on", "Асаах"],
+  "lesson8.success": ["Three keys, one word.", "Гурван товч, нэг үг."],
+  "tour.done.lessons": ["{done} of {total} lessons", "{done}/{total} хичээл"],
+  "tour.done.tricks": ["Tricks", "Заль"],
+  "tour.done.replay": ["Replay any lesson from Lessons.", "Хичээлийг Хичээл хэсгээс дахин үзэж болно."]
+};
+const OLD = {
+  "common.next": ["Next", "Цааш"], "common.back": ["Back", "Буцах"], "common.close": ["Close", "Хаах"],
+  "common.comingSoon": ["coming soon", "удахгүй"], "common.recommended": ["Recommended", "Санал болгох"],
+  "welcome.title": ["Type Latin,\nget Cyrillic", "Латинаар бич,\nкирилл болоод гарна"],
+  "welcome.subtitle": ["In every app. Offline. Instantly.", "Бүх апп дотор. Интернэтгүй. Шууд."],
+  "welcome.button": ["Get started", "Эхлэх"],
+  "privacy.title": ["What you type stays yours", "Бичсэн зүйл тань зөвхөн танд"],
+  "privacy.subtitle": ["Buuz runs on your computer only.", "Buuz таны компьютер дээр л ажиллана."],
+  "privacy.card.offline.title": ["📴 Works offline", "📴 Интернэт хэрэггүй"], "privacy.card.offline.body": ["Everything stays on this computer", "Бүх зүйл энэ компьютер дээр"],
+  "privacy.card.noLogging.title": ["🙈 No keystroke logs", "🙈 Товчлуур хадгалахгүй"], "privacy.card.noLogging.body": ["Buuz does not record or send what you type", "Юу ч бичигдэхгүй, илгээгдэхгүй"],
+  "privacy.card.noAccount.title": ["👤 No account", "👤 Бүртгэл хэрэггүй"], "privacy.card.noAccount.body": ["No sign-in, no email, no password", "Нэвтрэх, имэйл, нууц үг байхгүй"],
+  "privacy.card.passwords.title": ["🔐 Off in password fields", "🔐 Нууц үг бичихэд унтарна"], "privacy.card.passwords.body": ["Buuz does not touch password fields", "Нууц үгийн талбарт оролцохгүй"],
+  "privacy.githubPill": ["See the source on GitHub", "GitHub дээр эх кодыг нь хар"], "privacy.button": ["Got it", "Ойлголоо"],
+  "enable.title": ["Add Buuz to your keyboards", "Buuz-ийг гарын жагсаалтад нэмье"],
+  "enable.subtitle": ["Click once. Then type in every app.", "Нэг товшино. Тэгээд бүх апп дотор бичнэ."],
+  "enable.status.name": ["Buuz · Mongolian", "Buuz · Монгол"], "enable.status.kind": ["Input method", "Оролтын хэрэгсэл"],
+  "enable.status.waiting": ["⏳ Waiting", "⏳ Хүлээж байна"], "enable.status.added": ["✅ Added", "✅ Нэмэгдлээ"],
+  "enable.button": ["Add Buuz", "Нэмэх"], "enable.note": ["macOS can ask you to confirm. Click «OK».", "macOS зөвшөөрөл асууж магадгүй. «OK» дараарай."],
+  "enable.manual.title": ["or do it yourself", "эсвэл өөрөө"], "enable.manual.button": ["Open System Settings", "System Settings нээх"],
+  "enable.success": ["Done! 🎉", "Болчихлоо! 🎉"], "enable.error": ["Buuz could not add itself. Add it yourself with the steps below.", "Нэмж чадсангүй. Доорх замаар өөрөө нэмээрэй."],
+  "shortcut.subtitle": ["Mongolian ⇄ Latin with one key", "Монгол ⇄ Латин, нэг л товч"],
+  "shortcut.controlSpace.title": ["⌃ Control + Space", "⌃ Control + Space"], "shortcut.capsLock.title": ["⇪ Caps Lock", "⇪ Caps Lock"],
+  "shortcut.manual.button": ["Open Keyboard Shortcuts", "Keyboard Shortcuts нээх"], "shortcut.works": ["✅ It works!", "✅ Ажиллаж байна!"],
+  "done.title": ["You are ready! 🎉", "Бэлэн! 🎉"], "done.subtitle": ["Find Buuz as «Б» in the menu bar.", "Buuz дээд мөрөнд «Б» тэмдгээр харагдана."],
+  "done.recap.switchKey": ["Switch key: {key}", "Солих товч: {key}"], "done.login": ["Ready when my computer starts", "Компьютер асахад бэлэн байлгах"],
+  "done.button": ["Start typing", "Бичиж эхлэх"],
+  "settings.typing.title": ["Typing", "Бичих"], "settings.shortcuts.title": ["Shortcuts", "Товчлол"],
+  "settings.shortcuts.switchKey": ["Key to switch Mongolian ⇄ Latin", "Монгол ⇄ Латин солих товч"],
+  "settings.shortcuts.rerunTutorial": ["Show the tutorial again", "Зааврыг дахин үзэх"],
+  "settings.typing.autoCapitals": ["🔤 Auto capitals", "🔤 Том үсэг"], "settings.typing.autoCapitals.hint": ["Starts each sentence with a capital letter", "Өгүүлбэрийн эхний үсгийг томоор бичнэ"],
+  "settings.typing.customKeys": ["🎛️ My own keys", "🎛️ Өөрийн товчлуур"], "settings.typing.customKeys.hint": ["v → ү, zh → ж and more", "v → ү, zh → ж гэх мэт"],
+  "settings.typing.perApp": ["🧠 Remember per app", "🧠 Апп бүрийг санах"], "settings.typing.perApp.hint": ["Stays Latin in code editors", "Код бичдэг апп-д латинаараа үлдэнэ"],
+  "settings.privacy.title": ["Privacy", "Нууцлал"], "settings.privacy.promises": ["Our promises", "Бидний амлалт"],
+  "settings.privacy.noNetwork": ["Buuz makes no network calls while you type.", "Бичих үед Buuz интернэт огт ашигладаггүй."],
+  "settings.privacy.source": ["See the source on GitHub", "Эх кодыг нь GitHub дээр хар"],
+  "settings.general.title": ["General", "Ерөнхий"], "settings.general.language": ["Language", "Хэл"],
+  "settings.general.language.mn": ["Монгол", "Монгол"], "settings.general.language.en": ["English", "English"],
+  "settings.general.theme": ["Appearance", "Харагдах байдал"], "settings.general.theme.light": ["☀️ Light", "☀️ Цайвар"], "settings.general.theme.dark": ["🌙 Dark", "🌙 Харанхуй"],
+  "settings.general.openAtLogin": ["Ready when my computer starts", "Компьютер асахад бэлэн байлгах"],
+  "settings.general.showOnboarding": ["Show the welcome steps again", "Танилцуулгыг дахин үзэх"],
+  "settings.general.checkUpdates": ["Check for updates", "Шинэчлэл шалгах"], "settings.general.upToDate": ["✅ You have the latest version", "✅ Хамгийн сүүлийн хувилбар байна"],
+  "settings.feedback.title": ["Feedback", "Санал хүсэлт"], "settings.feedback.body": ["Found a bug, or have an idea? Tell us.", "Алдаа олсон уу, эсвэл гоё санаа байна уу? Бидэнд хэлээрэй."],
+  "settings.feedback.button": ["Write on GitHub", "GitHub дээр бичих"],
+  "settings.about.title": ["About", "Тухай"], "settings.about.version": ["Version {version}", "Хувилбар {version}"],
+  "settings.about.credit": ["Buuz 2.0 continues Buuz by Odbayar Nyamtseren.", "Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн Buuz-ийн үргэлжлэл."],
+  "settings.about.original": ["The original Buuz", "Анхны Buuz"], "settings.about.license": ["Open source · MIT or Apache-2.0", "Нээлттэй эх · MIT эсвэл Apache-2.0"],
+  "settings.about.licenseCore": ["Typing rules from the original Buuz · Apache-2.0", "Бичих дүрэм нь анхны Buuz-ээс · Apache-2.0"],
+  "settings.about.website": ["buuz.thetengis.com", "buuz.thetengis.com"]
+};
+let LANG = "mn";
+function t(key, vals) {
+  const e = NEW[key] || OLD[key];
+  let s = e ? e[LANG === "en" ? 0 : 1] : "⟦" + key + "⟧";
+  if (vals) for (const k in vals) s = s.split("{" + k + "}").join(vals[k]);
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Icons (stand-ins for SF Symbols; spec.md names the real symbol).
+// ---------------------------------------------------------------------------
+const P = {
+  home: '<path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z"/>',
+  typing: '<path d="M4 20h16"/><path d="M14.5 4.5 19 9 9 19H4.5v-4.5z"/>',
+  command: '<path d="M9 9V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V9z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.8v.01"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="8.6" stroke-width="2.6" stroke-dasharray="3.2 3.55"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.6M12 16.8v.01"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  bell: '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  arrow: '<path d="M4.5 12h15M13.5 6l6 6-6 6"/>',
+  swap: '<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>',
+  sparkle: '<path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1-5.1-1.9 5.1-1.9z"/><path d="M19 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+  bulb: '<path d="M9 17.5h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  warn: '<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.01"/>',
+  play: '<path d="M8 5.5v13l10.5-6.5z"/>',
+  replay: '<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v4.5h4.5"/>',
+  vowel: '<path d="M5 19 10.5 5h3L19 19M7.4 13.5h9.2"/>',
+  key: '<rect x="2.5" y="6.5" width="19" height="11" rx="2.5"/><path d="M6.5 10.5h.01M10 10.5h.01M13.5 10.5h.01M17 10.5h.01M8 14h8"/>',
+  scissors: '<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5 20 17M8 15.5 20 7"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  esc: '<path d="M9 7H5v4M5 7l6 6"/><path d="M13 7h6v10H9v-2"/>',
+  wand: '<path d="M4 20 15 9M14 4v3M18.5 5.5l-2 2M20 10h-3M12 5.5l1.5 1.5"/>',
+  folder: '<path d="M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4.5l2 2.5H19a1.5 1.5 0 0 1 1.5 1.5v8.5A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
+  bubble: '<path d="M4 5.5h16v11H10l-5 4v-4H4z"/>',
+  sidebar: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/>',
+  person: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.3-3 5.5-3s4.2 1 5.5 3"/>',
+  book: '<path d="M12 6.5C10.5 5 8 4.5 4 4.5v14c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-14c-4 0-6.5.5-8 2z"/><path d="M12 6.5v14"/>',
+  chev: '<path d="M7 9.5l5 5 5-5"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  network: '<path d="M2.5 9.5a14 14 0 0 1 19 0M5.5 13a9.5 9.5 0 0 1 13 0M8.8 16.4a5 5 0 0 1 6.4 0M12 19.8v.01"/><path d="M3 3l18 18"/>'
+};
+const I = (n, extra) => `<svg viewBox="0 0 24 24" ${extra || ""}>${P[n] || ""}</svg>`;
+const BUDDY = "../../brand/export/buuz-buddy-256.png";
+const BUDDY_S = "../../brand/export/buuz-buddy-128.png";
+const k = (s, cls) => `<kbd class="${cls || ""}">${s}</kbd>`;
+const chip = (on, name) => on
+  ? `<span class="kb-chip buuz"><span class="glyph">Б</span>Buuz<span class="dot"></span></span>`
+  : `<span class="kb-chip other"><span class="glyph">A</span>${name || "ABC"}<span class="dot"></span></span>`;
+const sw = (on, dim) => `<span class="switch ${on ? "on" : ""} ${dim ? "dim" : ""}" role="switch" aria-checked="${on}"></span>`;
+const caret = '<span class="caret"></span>';
+const FN = () => k("🌐 fn");
+
+// ---------------------------------------------------------------------------
+// Screens
+// Layout rule: every page is ONE scroll view with ONE centred column
+// (max 720 wide, side gutters max(48, 9 % of the panel)). No side cards.
+// ---------------------------------------------------------------------------
+const LESSONS = [
+  { n: 1, keys: ["sain", "baina", "uu"], out: "сайн байна уу", typed: ["сайн ", "бай"], latin: "sain baina", close: "сайн <b>баи</b>на уу", closeTxt: "сайн баина уу" },
+  { n: 2, keys: ["gertoo", "teruu"], out: "гэртөө тэрүү", typed: ["гэртөө ", "тэр"], latin: "gertoo teruu", close: "гэрт<b>оо</b> тэр<b>уу</b>", closeTxt: "гэртоо тэруу" },
+  { n: 3, keys: ["qndqr", "wg"], out: "өндөр үг", typed: ["өндөр ", "ү"], latin: "qndqr wg", close: "<b>о</b>нд<b>о</b>р <b>у</b>г", closeTxt: "ондор уг" },
+  { n: 4, keys: ["mor'", "hon'"], out: "морь хонь", typed: ["морь ", "хон"], latin: "mor' hon'", close: "мор хон", closeTxt: "мор хон" },
+  { n: 5, keys: ["nom", "⏎ Enter"], out: "ном", typed: ["", "ном"], latin: "nom", closeOwn: "lesson5.close", closeField: ["", "ном"] },
+  { n: 6, keys: ["tov", "␣ Space", "⌫"], out: "тов", typed: ["", "т"], latin: "tov", closeOwn: "lesson6.close", closeField: ["төв т", ""], steps: ["lesson6.step1", "lesson6.step2"] },
+  { n: 7, keys: ["zoom", "esc", "␣ Space"], out: "zoom", typed: ["", "зоо"], latin: "zoom", closeOwn: "lesson7.close", closeField: ["зоом ", ""], steps: ["lesson7.step1", "lesson7.step2"] },
+  { n: 8, keys: ["bi", "zgr", "bn"], out: "би зүгээр байна", typed: ["би ", "згр"], latin: "bi zgr bn", close: "би <b>згр</b> <b>бн</b>", closeTxt: "би згр бн" }
+];
+const LESSON_STATES = ["waiting", "wrong", "latin", "close", "success"];
+
+const SCREENS = [
+  { id: "home", group: "Main window", label: "Home", states: ["setup", "done", "off"] },
+  { id: "lessons", group: "Main window", label: "Lessons", states: ["default"] },
+  { id: "help", group: "Main window", label: "Help", states: ["default"] },
+  { id: "general", group: "Settings sheet", label: "General", states: ["default"] },
+  { id: "typing", group: "Settings sheet", label: "Typing", states: ["smart", "classic"] },
+  { id: "shortcuts", group: "Settings sheet", label: "Shortcuts", states: ["fn", "recording", "conflict", "custom"] },
+  { id: "privacy", group: "Settings sheet", label: "Privacy", states: ["default"] },
+  { id: "about", group: "Settings sheet", label: "About", states: ["default"] },
+  { id: "t-welcome", group: "Tutorial", label: "1 Welcome", states: ["default"] },
+  { id: "t-privacy", group: "Tutorial", label: "2 Privacy", states: ["default"] },
+  { id: "t-add", group: "Tutorial", label: "3 Add the keyboard", states: ["waiting", "added", "failed"] },
+  { id: "t-key", group: "Tutorial", label: "4 Switch key", states: ["choose", "recording", "conflict", "saved"] },
+  { id: "t-switch", group: "Tutorial", label: "5 Switch to Buuz", states: ["other", "buuz", "done"] },
+  ...LESSONS.map(l => ({ id: "t-l" + l.n, group: "Tutorial", label: (5 + l.n) + " Lesson " + l.n + ": " + NEW["lesson" + l.n + ".title"][0], states: l.n === 8 ? LESSON_STATES.concat("off") : LESSON_STATES })),
+  { id: "t-done", group: "Tutorial", label: "14 Done", states: ["default"] }
+];
+const SHEET = ["general", "typing", "shortcuts", "privacy", "about"];
+let SETUP_OPEN = true;
+
+const ph = (title, sub, right) => `<div class="ph"><div><h1 class="round">${title}</h1>${sub ? `<p>${sub}</p>` : ""}</div>${right || ""}</div>`;
+const page = inner => `<div class="scroll"><div class="col">${inner}</div></div>`;
+const noEmoji = s => s.replace(/^\S+\s/, "");
+
+// ---- App sidebar ----
+function appSidebar(active, setupDone) {
+  const nav = [["home", "home"], ["lessons", "book"]].map(([id, ic]) => `<a class="${active === id ? "on" : ""}" data-go="${id}">${I(ic)}${t("nav." + id)}</a>`).join("");
+  const steps = [["setup.add", 1, "t-add"], ["setup.key", 1, "t-key"], ["setup.switch", 1, "t-switch"], ["setup.lessons", 0, "t-l6"]];
+  const card = setupDone ? "" : `
+    <div class="setup ${SETUP_OPEN ? "" : "closed"}">
+      <button class="hd" data-act="setup" aria-expanded="${SETUP_OPEN}">${I("chev")}${t("setup.title")}<span class="n">${t("setup.count", { done: 3, total: 4 })}</span></button>
+      <div class="progress"><i style="width:75%"></i></div>
+      <div class="rows">${steps.map(([key, d, go], i) => `<div class="citem ${d ? "done" : "now"}" data-go="${go}"><span class="c">${d ? I("check") : ""}</span><span class="lbl">${t(key)}</span>${i === 3 ? `<span class="go">5/8</span>` : ""}</div>`).join("")}</div>
+    </div>`;
+  return `<aside class="side">
+    <div class="logo"><img src="${BUDDY_S}" alt=""><b class="round">Buuz</b><small>2.0</small></div>
+    <nav class="nav">${nav}</nav>
+    <div class="grow"></div>
+    ${card}
+    <div class="rule"></div>
+    <nav class="nav">
+      <a class="${active === "settings" ? "on" : ""}" data-go="general">${I("gear")}${t("nav.settings")}</a>
+      <a class="${active === "help" ? "on" : ""}" data-go="help">${I("help")}${t("nav.help")}</a>
+    </nav>
+  </aside>`;
+}
+
+// ---- Tour rail ----
+const TOUR_IDS = ["t-welcome", "t-privacy", "t-add", "t-key", "t-switch", "t-l1", "t-l2", "t-l3", "t-l4", "t-l5", "t-l6", "t-l7", "t-l8", "t-done"];
+function tourRail(cur) {
+  const idx = TOUR_IDS.indexOf(cur);
+  const row = (id, label, small) => {
+    const i = TOUR_IDS.indexOf(id);
+    const st = i < idx ? "done" : i === idx ? "now" : "";
+    return `<div class="citem ${st} ${small ? "small" : ""}" data-go="${id}"><span class="c">${st === "done" ? I("check") : ""}</span><span class="lbl">${label}</span></div>`;
+  };
+  const setup = ["welcome", "privacy", "add", "key", "switch"].map(s => row("t-" + s, t("tour.step." + s))).join("");
+  const lessons = LESSONS.map(l => row("t-l" + l.n, t("lesson" + l.n + ".title"), true)).join("");
+  return `<aside class="side rail">
+    <div class="logo"><img src="${BUDDY_S}" alt=""><b class="round">Buuz</b><small>2.0</small></div>
+    <h5 class="eyebrow">${t("tour.setup")}</h5>${setup}
+    <h5 class="eyebrow">${t("tour.lessons")}</h5>${lessons}
+    ${row("t-done", t("tour.step.done"), true)}
+    <div class="grow"></div>
+    <div class="rule"></div>
+    <nav class="nav"><a>${I("x")}${t("tour.skipAll")}</a></nav>
+  </aside>`;
+}
+
+// ---- Home ----
+function home(state) {
+  const h = new Date().getHours();
+  const greet = t(h < 12 ? "home.greeting.morning" : h < 18 ? "home.greeting.afternoon" : "home.greeting.evening");
+  const off = state === "off", done = state === "done";
+  const x = `<button class="x" aria-label="${t("common.close")}">${I("x")}</button>`;
+  let hero;
+  if (off) hero = `<div class="hero warnhero"><h2 class="round">${t("home.hero.off.title")}</h2><p>${t("home.hero.off.body")}</p><button class="btn primary big">${t("enable.button")}</button><img src="${BUDDY}" alt=""></div>`;
+  else if (done) hero = `<div class="hero">${x}<h2 class="round">${t("home.hero.tip.title")}</h2><p>${t("home.hero.tip.body")}</p><button class="btn primary big">${t("home.hero.tip.button")} ${I("arrow")}</button><img src="${BUDDY}" alt=""></div>`;
+  else hero = `<div class="hero">${x}<h2 class="round">${t("home.hero.lessons.title")}</h2><p>${t("home.hero.lessons.body")}</p><button class="btn primary big" data-go="t-l6">${I("play")} ${t("home.hero.lessons.continue", { done: 5, total: 8 })}</button><img src="${BUDDY}" alt=""></div>`;
+  const stats = `<div class="stats">
+    <a class="stile" data-go="shortcuts"><span class="v">${off ? `<span class="glyph off">A</span>ABC` : `<span class="glyph">Б</span>Buuz`}</span><span class="l">${t("home.card.keyboard")}</span></a>
+    <a class="stile" data-go="shortcuts"><span class="v">🌐 fn</span><span class="l">${t("home.card.switchKey")}</span></a>
+    <a class="stile" data-go="typing"><span class="v">${t("typing.mode.smart")}</span><span class="l">${t("home.card.mode")}</span></a>
+  </div>`;
+  const rows = [
+    [k("q"), "qndqr", "өндөр", "cheat.q"],
+    [k("w"), "wg", "үг", "cheat.w"],
+    [k("'"), "mor'", "морь", "cheat.soft"],
+    [k('"'), '"', "ъ", "cheat.hard"],
+    [k("o") + k("u"), "gertoo", "гэртөө", "cheat.harmony"],
+    [k("v") + k("v"), "svv", "сүү", "cheat.vv"],
+    [k("t") + k("s"), "tsai", "цай", "cheat.ts"],
+    [k("z") + k("h"), "zhims", "жимс", "cheat.zh"],
+    [k("esc"), "zoom ⎋", "zoom", "cheat.esc"],
+    [k("⌫"), "tov ␣ ⌫", "тов", "cheat.backspace"],
+    [k("b") + k("n"), "bn", "байна", "cheat.abbr"]
+  ].map(([keys, lat, cyr, d]) => `<div class="lrow"><span class="keys">${keys}</span><span class="ex"><span class="latin">${lat}</span><span class="arrow">→</span><b>${cyr}</b></span><span class="desc">${t(d)}</span></div>`).join("");
+  return page(`
+    ${ph(greet + " 👋", t("home.subtitle"))}
+    ${hero}
+    ${stats}
+    <section class="sec">
+      <div class="sh">${t("home.try.title")}${chip(!off)}</div>
+      <div class="tryfield ${off ? "" : "focus"}"><span class="txt">${off ? `<span class="ph2">${t("home.try.placeholder")}</span>` : `сайн байна уу, <u class="pre">найз</u>${caret}`}</span></div>
+    </section>
+    <section class="sec">
+      <div class="sh">${t("home.cheat.title")}<button class="ibtn" title="${t("home.cheat.find")}" aria-label="${t("home.cheat.find")}">${I("search")}</button></div>
+      <div class="group">${rows}</div>
+    </section>`);
+}
+
+// ---- Lessons (main window) ----
+function lessons() {
+  const rows = LESSONS.map(l => `<div class="srow"><span class="num ${l.n <= 5 ? "d" : ""}">${l.n <= 5 ? I("check") : l.n}</span><div class="t"><b>${t("lesson" + l.n + ".title")}</b><span>${l.keys.map(x => `<span class="mono">${x}</span>`).join(" ")} → ${l.out}</span></div><button class="btn ghost" data-go="t-l${l.n}">${I("replay")} ${t("help.replay")}</button></div>`).join("");
+  return page(`
+    ${ph(t("help.lessons"), t("home.hero.lessons.body"), `<button class="btn primary">${I("play")} ${t("help.replayAll")}</button>`)}
+    <div class="group">${rows}</div>`);
+}
+
+// ---- Help (main window) ----
+function help() {
+  return page(`
+    ${ph(t("help.title"), t("help.subtitle"))}
+    <section class="sec">
+      <div class="sh">${t("help.missing")}</div>
+      <div class="card pad stack">
+        <div class="crumb"><span>System Settings</span><i>›</i><span>Keyboard</span><i>›</i><span>Input Sources</span><i>›</i><span>Edit…</span><i>›</i><span>＋</span><i>›</i><span>Mongolian</span><i>›</i><span>Buuz</span></div>
+        <div class="btnrow"><button class="btn primary">${t("enable.button")}</button><button class="btn secondary">${t("enable.manual.button")}</button></div>
+      </div>
+    </section>
+    <div class="group">
+      <div class="srow"><div class="t"><b>${t("settings.feedback.title")}</b><span>${t("settings.feedback.body")}</span></div><button class="btn secondary">${t("settings.feedback.button")}</button></div>
+      <div class="srow"><div class="t"><b>${t("general.tutorial")}</b><span>${t("general.tutorial.hint")}</span></div><button class="btn secondary">${t("settings.shortcuts.rerunTutorial")}</button></div>
+    </div>`);
+}
+
+// ---- Settings sheet ----
+function sheet(active, inner) {
+  const items = [["general", "sliders", "settings.general.title"], ["typing", "typing", "nav.typing"], ["shortcuts", "command", "nav.shortcuts"], ["privacy", "lock", "nav.privacy"], ["about", "info", "nav.about"]];
+  return `<div class="scrim" data-go="home"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="${t("nav.settings")}">
+    <nav class="snav nav"><span class="eyebrow">${t("nav.settings")}</span>
+      ${items.map(([id, ic, key]) => `<a class="${active === id ? "on" : ""}" data-go="${id}">${I(ic)}${t(key)}</a>`).join("")}
+      <span class="ver">${t("settings.about.version", { version: "2.0.0" })}</span></nav>
+    <div class="sbody"><button class="ibtn close" data-go="home" aria-label="${t("common.close")}" title="${t("common.close")}">${I("x")}</button>${page(inner)}</div>
+  </div>`;
+}
+
+function general() {
+  return `${ph(t("settings.general.title"))}
+    <div class="group">
+      <div class="srow"><div class="t"><b>${t("settings.general.language")}</b></div><div class="seg2"><button class="${LANG === "mn" ? "on" : ""}">${t("settings.general.language.mn")}</button><button class="${LANG === "en" ? "on" : ""}">${t("settings.general.language.en")}</button></div></div>
+      <div class="srow"><div class="t"><b>${t("settings.general.theme")}</b></div><div class="seg2"><button class="${THEME === "light" ? "on" : ""}">${noEmoji(t("settings.general.theme.light"))}</button><button class="${THEME === "dark" ? "on" : ""}">${noEmoji(t("settings.general.theme.dark"))}</button><button>${t("general.theme.system")}</button></div></div>
+    </div>
+    <div class="group">
+      <div class="srow"><div class="t"><b>${t("settings.general.openAtLogin")}</b></div>${sw(true)}</div>
+      <div class="srow"><div class="t"><b>${t("settings.general.checkUpdates")}</b><span>${t("general.updates.hint")}</span></div><button class="btn secondary">${t("settings.general.checkUpdates")}</button></div>
+      <div class="srow"><div class="t"><b>${t("general.tutorial")}</b><span>${t("general.tutorial.hint")}</span></div><button class="btn secondary">${t("settings.shortcuts.rerunTutorial")}</button></div>
+    </div>`;
+}
+
+function typing(state) {
+  const classic = state === "classic";
+  const row = (key, on) => `<div class="srow"><div class="t"><b>${t(key)}</b><span>${t(key + ".hint")}</span></div>${sw(on && !classic, classic)}</div>`;
+  const soon = key => `<div class="srow soon"><div class="t"><b>${noEmoji(t(key))}</b><span>${t(key + ".hint")}</span></div><span class="pill">${t("common.comingSoon")}</span></div>`;
+  const prev = [["gertoo", "гэртөө", "гэртоо"], ["svv", "сүү", "свв"], ["tsai", "цай", "тсай"], ["bn", "байна", "бн"], ["zoom ⎋", "zoom", "зоом"]]
+    .map(([l, smart, cl]) => `<div class="prow"><span class="mono">${l}</span><b>${classic ? cl : smart}</b></div>`).join("");
+  const sec = (title, body) => `<section class="sec"><div class="sh">${title}</div><div class="group">${body}</div></section>`;
+  return `${ph(t("settings.typing.title"), t("typing.subtitle"))}
+    <div class="sec">
+      <div class="group"><div class="srow"><div class="t"><b>${t("typing.mode")}</b><span>${t("typing.mode.hint")}</span></div>
+        <div class="seg2"><button class="${classic ? "" : "on"}">${t("typing.mode.smart")}</button><button class="${classic ? "on" : ""}">${t("typing.mode.classic")}</button></div></div></div>
+      ${classic ? `<div class="banner info">${I("info")}<span class="bt">${t("typing.classicNote")}</span></div>` : ""}
+    </div>
+    ${sec(t("typing.group.vowels"), row("typing.smartVowels", true) + row("typing.autocorrect", false))}
+    ${sec(t("typing.group.keys"), row("typing.doubleV", true) + row("typing.habitKeys", true) + row("typing.abbreviations", true))}
+    ${sec(t("typing.group.latin"), row("typing.keepLatin", true) + row("typing.autoLatin", true))}
+    <section class="sec"><div class="sh">${t("typing.preview")}</div><p class="hint">${t("typing.preview.hint")}</p><div class="group">${prev}</div></section>
+    ${sec(t("typing.group.soon"), soon("settings.typing.autoCapitals") + soon("settings.typing.customKeys") + soon("settings.typing.perApp"))}`;
+}
+
+// ---- Hotkey options (shared by the Shortcuts page and tutorial step 4) ----
+function hotkeyOptions(state) {
+  const custom = ["recording", "conflict", "saved", "custom"].includes(state);
+  const opt = (on, title, note, keys, pill) => `<div class="opt ${on ? "on" : ""}" role="radio" aria-checked="${on}"><span class="radio"></span><div class="t"><b>${title}${pill || ""}</b><span class="n">${note}</span></div><span class="keys">${keys}</span></div>`;
+  let rec = "";
+  if (custom) {
+    if (state === "recording") rec = `<div class="recorder rec"><span class="recdot"></span><span class="t">${t("hotkey.recording")}</span>${k("⌃", "big lit")}${k("⇧", "big lit")}<button class="btn ghost">${t("hotkey.clear")}</button></div><p class="hint">${t("hotkey.needsModifier")}</p>`;
+    if (state === "conflict") rec = `<div class="banner warn">${I("warn")}<div class="bt"><b>${t("hotkey.conflict.title", { keys: "⌃ Space" })}</b>${t("hotkey.conflict.body", { action: t("hotkey.action.prevSource") })}
+        <div class="acts"><button class="btn primary">${t("hotkey.conflict.another")}</button><button class="btn secondary">${t("hotkey.conflict.useAnyway")}</button></div></div></div>`;
+    if (state === "saved" || state === "custom") rec = `<div class="recorder set">${k("⌃", "big")}${k("⇧", "big")}${k("Space", "big")}<span class="t">${I("check")} ${t("hotkey.saved")}</span><button class="btn ghost">${t("hotkey.clear")}</button></div>`;
+  } else {
+    rec = `<div class="banner neutral">${I("info")}<div class="bt">${t("hotkey.system")}<div class="acts"><button class="btn secondary">${t("shortcut.manual.button")}</button></div></div></div>`;
+  }
+  const customKeys = custom && state !== "recording" ? (state === "conflict" ? k("⌃") + k("Space") : k("⌃") + k("⇧") + k("Space")) : "";
+  return `<div class="opts" role="radiogroup" aria-label="${t("settings.shortcuts.switchKey")}">
+    ${opt(!custom, t("hotkey.fn"), t("hotkey.fn.note"), FN(), ` <span class="pill blue">${t("common.recommended")}</span>`)}
+    ${opt(false, "Control + Space", t("hotkey.controlSpace.note"), k("⌃") + k("Space"))}
+    ${opt(false, "Caps Lock", t("hotkey.capsLock.note"), k("⇪ caps"))}
+    ${opt(custom, t("hotkey.custom"), custom ? t("hotkey.custom.note") : t("hotkey.record"), customKeys)}
+  </div>${rec}`;
+}
+
+function shortcuts(state) {
+  const keyLabel = ["recording", "conflict", "custom"].includes(state) ? "⌃⇧Space" : "🌐 fn";
+  return `${ph(t("settings.shortcuts.title"), t("shortcuts.switchKey.hint"))}
+    <section class="sec"><div class="sh">${t("settings.shortcuts.switchKey")}</div>${hotkeyOptions(state)}</section>
+    <div class="group"><div class="srow"><div class="t"><b>${t("shortcuts.test.title")}</b><span>${t("shortcuts.test.body", { key: keyLabel })}</span><span class="ok">${noEmoji(t("shortcut.works"))}</span></div>
+      <span class="swapchips">${chip(false)}${I("swap")}${chip(true)}</span></div></div>
+    <section class="sec"><div class="sh">${t("shortcuts.typingKeys")}</div>
+      <div class="group">
+        <div class="srow"><div class="t"><b>${t("shortcuts.key.commit")}</b></div><span class="keys">${k("Space")}${k("⏎")}${k(".")}</span></div>
+        <div class="srow"><div class="t"><b>${t("shortcuts.key.esc")}</b></div><span class="keys">${k("esc")}</span></div>
+        <div class="srow"><div class="t"><b>${t("shortcuts.key.backspace")}</b></div><span class="keys">${k("⌫")}</span></div>
+      </div></section>`;
+}
+
+function privacy() {
+  const rows = ["offline", "noLogging", "noAccount", "passwords"].map(c => `<div class="srow"><div class="t"><b>${noEmoji(t("privacy.card." + c + ".title"))}</b><span>${t("privacy.card." + c + ".body")}</span></div></div>`).join("");
+  return `${ph(t("settings.privacy.title"), t("privacy.subtitle"))}
+    <div class="banner ok">${I("network")}<div class="bt"><b>${t("settings.privacy.noNetwork")}</b><a class="link">${t("settings.privacy.source")} →</a></div></div>
+    <section class="sec"><div class="sh">${t("settings.privacy.promises")}</div><div class="group">${rows}</div></section>
+    <section class="sec"><div class="sh">${t("privacy.keeps.title")}</div>
+      <div class="group">
+        <div class="srow"><div class="t"><b>${t("privacy.keeps.config")}</b><span class="mono path">~/Library/Application Support/Buuz/config.toml</span></div><button class="btn secondary">${t("privacy.keeps.reveal")}</button></div>
+        <div class="srow"><div class="t"><b>${t("privacy.keeps.prefs")}</b></div></div>
+        <div class="srow"><div class="t"><b>${t("privacy.keeps.never")}</b></div></div>
+      </div></section>`;
+}
+
+function about() {
+  return `<div class="abouthead"><img class="w" src="../../brand/export/${THEME === "dark" ? "buuz-wordmark-light" : "buuz-wordmark"}.png" alt="Buuz 2.0"><span>${t("settings.about.version", { version: "2.0.0" })}</span></div>
+    <div class="group">
+      <div class="srow"><div class="t"><b>${t("settings.about.credit")}</b></div><button class="btn secondary">${t("settings.about.original")}</button></div>
+      <div class="srow"><div class="t"><b>${t("about.website")}</b><span>${t("settings.about.website")}</span></div></div>
+      <div class="srow"><div class="t"><b>${t("settings.about.license")}</b><span>${t("settings.about.licenseCore")}</span></div></div>
+      <div class="srow"><div class="t"><b>${t("settings.feedback.title")}</b><span>${t("settings.feedback.body")}</span></div><button class="btn secondary">${t("settings.feedback.button")}</button></div>
+    </div>`;
+}
+
+// ---- Tutorial ----
+function foot(opts) {
+  const o = Object.assign({ back: true, skip: true, primary: t("common.next"), disabled: false, n: null }, opts);
+  return `<div class="foot">
+    ${o.back ? `<button class="btn ghost">← ${t("common.back")}</button>` : ""}
+    <span class="sp"></span>
+    ${o.n ? `<span class="steps">${o.n}</span>` : ""}
+    ${o.skip ? `<button class="btn ghost">${t("tour.skipStep")}</button>` : ""}
+    <button class="btn primary" ${o.disabled ? "disabled" : ""}>${o.primary}</button>
+  </div>`;
+}
+const head = (eyebrow, title, sub) => `<div class="th"><div class="eyebrow">${eyebrow}</div><h1 class="round">${title}</h1>${sub ? `<p>${sub}</p>` : ""}</div>`;
+const stepEyebrow = n => t("tour.eyebrow", { n, total: 5 });
+const tour = (inner, f, cls) => `<div class="tour"><div class="body"><div class="inner ${cls || ""}">${inner}</div></div>${f}</div>`;
+
+function tWelcome() {
+  return tour(`
+    <img src="${BUDDY}" alt="">
+    <h1 class="round">${t("welcome.title")}</h1>
+    <p>${t("welcome.subtitle")}</p>
+    <div class="demo"><span class="latin">sain baina uu</span><span style="color:var(--text-3)">→</span><span class="out round">сайн байна уу</span></div>
+    <p style="font-size:12.5px;color:var(--text-3)">${t("tour.welcome.time")}</p>`, foot({ back: false, primary: t("welcome.button") + " →" }), "center welcome");
+}
+function tPrivacy() {
+  const rows = ["offline", "noLogging", "noAccount", "passwords"].map(c => `<div class="srow"><div class="t"><b>${noEmoji(t("privacy.card." + c + ".title"))}</b><span>${t("privacy.card." + c + ".body")}</span></div></div>`).join("");
+  return tour(`
+    ${head(stepEyebrow(2), t("privacy.title"), t("privacy.subtitle"))}
+    <div class="group">${rows}</div>
+    <div class="banner ok">${I("network")}<div class="bt"><b>${t("settings.privacy.noNetwork")}</b><a class="link">${t("privacy.githubPill")} →</a></div></div>`, foot({ primary: t("privacy.button") }));
+}
+function tAdd(state) {
+  const added = state === "added", failed = state === "failed";
+  return tour(`
+    ${head(stepEyebrow(3), added ? t("enable.success") : t("enable.title"), t("enable.subtitle"))}
+    <div class="group"><div class="srow"><img class="statusimg" src="${BUDDY_S}" alt=""><div class="t"><b>${t("enable.status.name")}</b><span>${t("enable.status.kind")} · ${t("tour.add.live")}</span></div>
+      <span class="pill ${added ? "green" : "warn"}">${added ? t("enable.status.added") : t("enable.status.waiting")}</span>
+      ${added ? "" : `<button class="btn primary">${t("enable.button")}</button>`}</div></div>
+    ${added ? `<div class="tick">${I("check")}</div>` : `
+      ${failed ? `<div class="banner danger">${I("warn")}<span class="bt">${t("enable.error")}</span></div>` : `<p class="hint" style="text-align:center">${t("enable.note")}</p>`}
+      <div class="card pad stack">
+        <span class="eyebrow">${t("enable.manual.title")}</span>
+        <div class="crumb"><span>System Settings</span><i>›</i><span>Keyboard</span><i>›</i><span>Input Sources</span><i>›</i><span>Edit…</span><i>›</i><span>＋</span><i>›</i><span>Mongolian</span><i>›</i><span>Buuz</span></div>
+        <button class="btn secondary">${t("enable.manual.button")}</button>
+      </div>`}`, foot({ disabled: !added }));
+}
+function tKey(state) {
+  return tour(`${head(stepEyebrow(4), t("tour.key.title"), t("shortcut.subtitle"))}${hotkeyOptions(state)}`, foot({ disabled: state === "recording" || state === "conflict" }));
+}
+function tSwitch(state) {
+  const buuz = state !== "other", done = state === "done";
+  const sub = state === "buuz" ? t("tour.switch.backHint", { key: "🌐 fn", name: "ABC" }) : t("tour.switch.subtitle", { key: "🌐 fn" });
+  return tour(`
+    ${head(stepEyebrow(5), done ? t("tour.switch.done") : t("tour.switch.title"), sub)}
+    <div class="card switchviz">
+      <div class="kbtile ${buuz ? "" : "on"}">${buuz ? "" : `<span class="now">${t("tour.switch.now").toUpperCase()}</span>`}<span class="g">A</span>ABC</div>
+      <div class="swarrow">${I("swap")}${FN()}</div>
+      <div class="kbtile buuz ${buuz ? "on" : ""}">${buuz ? `<span class="now">${t("tour.switch.now").toUpperCase()}</span>` : ""}<span class="g">Б</span>Buuz</div>
+    </div>
+    <div class="checks">
+      <div class="checkrow ${buuz ? "done" : "wait"}"><span class="c">${buuz ? I("check") : ""}</span>${t("tour.switch.toBuuz")}</div>
+      <div class="checkrow ${done ? "done" : state === "buuz" ? "wait" : ""}"><span class="c">${done ? I("check") : ""}</span>${t("tour.switch.back", { name: "ABC" })}</div>
+    </div>
+    ${state === "other" ? `<div class="banner neutral">${I("info")}<span class="bt">${t("tour.switch.menu")}</span><span class="act"><span class="menubar">🔋 <span class="b">Б</span> 9:41</span></span></div>` : ""}`, foot({ disabled: !done }));
+}
+function tLesson(n, state) {
+  const L = LESSONS[n - 1];
+  const keyHtml = L.keys.map(x => /^[⏎␣⌫]|^esc$/.test(x) ? k(x) : `<span class="latin">${x}</span>`).join("");
+  let field, banner, fcls = "focus", chipOn = true;
+  const phd = `<span class="ph2">${t("lesson.field")}…</span>`;
+  if (state === "waiting") {
+    field = L.typed[0] + (L.typed[1] ? `<u class="pre">${L.typed[1]}</u>` : "") + caret;
+    if (n === 1) field = phd + caret;
+    banner = `<div class="banner neutral">${I("info")}<span class="bt">${t("lesson.waiting")}</span></div>`;
+  } else if (state === "wrong") {
+    chipOn = false; fcls = "warn";
+    field = `<span class="mono" style="font-size:22px">${L.latin.slice(0, Math.max(3, L.latin.length - 3))}</span>${caret}`;
+    banner = `<div class="banner warn">${I("warn")}<span class="bt"><b>${t("lesson.wrong.title", { name: "ABC" })}</b>${t("lesson.wrong.body", { key: "🌐 fn" })}</span><span class="act">${FN()}</span></div>`;
+  } else if (state === "latin") {
+    fcls = "warn";
+    field = `<span class="mono" style="font-size:22px">${L.latin}</span>${caret}`;
+    banner = `<div class="banner info">${I("info")}<span class="bt"><b>${t("lesson.latin.title")}</b>${t("lesson.latin.body")}</span></div>`;
+  } else if (state === "close") {
+    if (L.closeOwn) {
+      field = L.closeField[0] + (L.closeField[1] ? `<u class="pre">${L.closeField[1]}</u>` : "") + caret;
+      banner = `<div class="banner info">${I("bulb")}<span class="bt"><b>${t("lesson.close.title")}</b>${t(L.closeOwn)}</span></div>`;
+    } else {
+      field = `<span class="diff">${L.close}</span>${caret}`;
+      banner = `<div class="banner info">${I("bulb")}<span class="bt"><b>${t("lesson.close.title")}</b>${t("lesson.close.body", { got: L.closeTxt })}</span></div>`;
+    }
+  } else if (state === "success") {
+    fcls = "ok";
+    field = L.out + (n === 5 ? "" : caret);
+    banner = `<div class="banner ok">${I("check", 'style="stroke-width:2.6"')}<span class="bt"><b>${t("lesson.success")}</b>${t("lesson" + n + ".success")}</span><span class="act"><img class="hop" src="${BUDDY_S}" alt=""></span></div>`;
+  } else if (state === "off") {
+    field = phd; fcls = "";
+    banner = `<div class="banner warn">${I("warn")}<span class="bt">${t("lesson8.off")}</span><span class="act"><button class="btn secondary">${t("lesson8.turnOn")}</button></span></div>`;
+  }
+  let steps = "";
+  if (L.steps) {
+    const s1 = state === "success" || state === "close", s2 = state === "success";
+    steps = L.steps.map((s, i) => { const d = i === 0 ? s1 : s2; return `<span class="subcheck ${d ? "done" : ""}"><span class="c">${d ? I("check") : ""}</span>${t(s)}</span>`; }).join("");
+  }
+  return tour(`
+    ${head(t("tour.lessonEyebrow", { n, total: 8 }), t("lesson" + n + ".title"), t("lesson" + n + ".body"))}
+    <div class="task" aria-label="${t("lesson.type")}"><span class="keys">${keyHtml}</span><span class="arrow">${I("arrow")}</span><span class="out">${L.out}</span></div>
+    <p class="why">${t("lesson" + n + ".why")}</p>
+    <div class="field ${fcls}" role="textbox" aria-label="${t("lesson.field")}">${field}</div>
+    <div class="ftools">${chip(chipOn)}${steps}<span class="sp"></span><button class="btn ghost">${t("lesson.clear")}</button></div>
+    ${banner}`, foot({ primary: n === 8 ? t("lesson.finish") : t("lesson.next") + " →", disabled: state !== "success", n: t("tour.lessonEyebrow", { n, total: 8 }) }));
+}
+function tDone() {
+  const colors = ["#FF6A3D", "#FFB648", "#2E6BFF", "#FF8E8E", "#43D196", "#7A5AF8"];
+  let conf = "";
+  for (let i = 0; i < 46; i++) conf += `<i style="left:${(i * 37) % 100}%;background:${colors[i % 6]};animation-delay:${-(i * 0.29) % 3.4}s;animation-duration:${2.8 + (i % 5) * 0.35}s;transform:rotate(${i * 23}deg)"></i>`;
+  return `<div class="tour"><div class="confetti">${conf}</div><div class="body"><div class="inner">
+    <div class="th welcome"><img src="${BUDDY}" alt="" style="width:96px"><h1 class="round">${t("done.title")}</h1><p>${t("done.subtitle")}</p></div>
+    <div class="group">
+      <div class="srow"><div class="t"><b>${t("tour.step.key")}</b><span>Buuz ⇄ ABC</span></div>${FN()}</div>
+      <div class="srow"><div class="t"><b>${t("tour.done.tricks")}</b><span>${t("cheat.esc")}</span></div><span class="keys">${k("q")}${k("w")}${k("'")}${k("esc")}</span></div>
+      <div class="srow"><div class="t"><b>${t("tour.lessons")}</b><span>${t("tour.done.replay")}</span></div><b class="round" style="font-size:17px">8/8</b></div>
+    </div>
+    <div class="loginrow" style="align-self:center">${sw(true)} ${t("done.login")}</div>
+  </div></div>${foot({ skip: false, primary: t("done.button") })}</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Router
+// ---------------------------------------------------------------------------
+let THEME = "light";
+const win = document.getElementById("win");
+const screenSel = document.getElementById("screen"), stateSel = document.getElementById("state");
+let groups = {};
+SCREENS.forEach(s => (groups[s.group] = groups[s.group] || []).push(s));
+screenSel.innerHTML = Object.entries(groups).map(([g, list]) => `<optgroup label="${g}">${list.map(s => `<option value="${s.id}">${s.label}</option>`).join("")}</optgroup>`).join("");
+
+function parse() {
+  const [id, st] = location.hash.slice(1).split("/");
+  const scr = SCREENS.find(s => s.id === id) || SCREENS[0];
+  return { scr, st: scr.states.includes(st) ? st : scr.states[0] };
+}
+function render() {
+  const { scr, st } = parse();
+  screenSel.value = scr.id;
+  stateSel.innerHTML = scr.states.map(s => `<option ${s === st ? "selected" : ""}>${s}</option>`).join("");
+  stateSel.disabled = scr.states.length < 2;
+  document.documentElement.lang = LANG;
+  win.className = "win " + THEME;
+  document.body.className = THEME;
+  let side, main, over = "";
+  if (scr.id.startsWith("t-")) {
+    side = tourRail(scr.id);
+    const m = scr.id.match(/^t-l(\d)$/);
+    main = m ? tLesson(+m[1], st) : { "t-welcome": tWelcome, "t-privacy": tPrivacy, "t-add": tAdd, "t-key": tKey, "t-switch": tSwitch, "t-done": tDone }[scr.id](st);
+  } else if (SHEET.includes(scr.id)) {
+    side = appSidebar("settings", false);
+    main = home("setup");
+    over = sheet(scr.id, { general, typing, shortcuts, privacy, about }[scr.id](st));
+  } else {
+    side = appSidebar(scr.id, scr.id === "home" && st === "done");
+    main = { home, lessons, help }[scr.id](st);
+  }
+  win.innerHTML = `
+    <div class="lights"><i></i><i></i><i></i></div>
+    <button class="ibtn sidebtn" title="Sidebar">${I("sidebar")}</button>
+    <div class="topicons">
+      <button class="ibtn" data-act="theme" title="${t("top.theme")}">${I(THEME === "dark" ? "moon" : "sun")}</button>
+      <button class="ibtn" title="${t("top.whatsNew")}">${I("bell")}<span class="badge"></span></button>
+      <button class="ibtn lang" data-act="lang" title="${t("top.language")}"><span>${LANG === "mn" ? "МН" : "EN"}</span></button>
+    </div>
+    ${side}
+    <main class="panel">${main}</main>
+    ${over}`;
+  [...document.querySelectorAll("#themeSeg button")].forEach(b => b.classList.toggle("on", b.dataset.v === THEME));
+  [...document.querySelectorAll("#langSeg button")].forEach(b => b.classList.toggle("on", b.dataset.v === LANG));
+}
+function go(id, st) { location.hash = id + (st ? "/" + st : ""); }
+screenSel.onchange = () => go(screenSel.value);
+stateSel.onchange = () => go(screenSel.value, stateSel.value);
+document.getElementById("themeSeg").onclick = e => { if (e.target.dataset.v) { THEME = e.target.dataset.v; save(); render(); } };
+document.getElementById("langSeg").onclick = e => { if (e.target.dataset.v) { LANG = e.target.dataset.v; save(); render(); } };
+document.getElementById("sizeSeg").onclick = e => { const v = e.target.dataset.v; if (!v) return; const [w, h] = v.split("x"); win.style.width = w + "px"; win.style.height = h + "px"; };
+win.addEventListener("click", e => {
+  const a = e.target.closest("[data-act]");
+  if (a) {
+    if (a.dataset.act === "theme") THEME = THEME === "dark" ? "light" : "dark";
+    if (a.dataset.act === "lang") LANG = LANG === "mn" ? "en" : "mn";
+    if (a.dataset.act === "setup") SETUP_OPEN = !SETUP_OPEN;
+    save(); return render();
+  }
+  const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go);
+});
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "SELECT") return;
+  if (e.key === "Escape" && SHEET.includes(parse().scr.id)) return go("home");
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const flat = []; SCREENS.forEach(s => s.states.forEach(st => flat.push([s.id, st])));
+  const { scr, st } = parse();
+  let i = flat.findIndex(([a, b]) => a === scr.id && b === st);
+  i = (i + (e.key === "ArrowRight" ? 1 : -1) + flat.length) % flat.length;
+  go(flat[i][0], flat[i][1]);
+});
+function save() { try { localStorage.setItem("buuz-mock", JSON.stringify({ THEME, LANG })); } catch (e) {} }
+try { const s = JSON.parse(localStorage.getItem("buuz-mock") || "{}"); THEME = s.THEME || THEME; LANG = s.LANG || LANG; } catch (e) {}
+const q = new URLSearchParams(location.search);
+if (q.get("theme")) THEME = q.get("theme");
+if (q.get("lang")) LANG = q.get("lang");
+if (q.get("size")) { const [w, h] = q.get("size").split("x"); win.style.width = w + "px"; win.style.height = h + "px"; }
+if (q.get("shot")) document.documentElement.classList.add("shot");
+window.addEventListener("hashchange", render);
+render();
+</script>
+<script>
+// Layout check: open mockup.html?qa=1 (spec.md §4.2).
+if (new URLSearchParams(location.search).get("qa")) (function(){
+const out=[]; window.__H="home"; parse=function(){const [id,st]=window.__H.split("/"); const scr=SCREENS.find(s=>s.id===id)||SCREENS[0]; return {scr, st: scr.states.includes(st)?st:scr.states[0]};}; const sizes=[[1000,680],[880,600]]; const langs=["mn","en"];
+const flat=[]; SCREENS.forEach(s=>s.states.forEach(st=>flat.push([s.id,st])));
+const r=e=>e.getBoundingClientRect();
+const skipAbs=e=>{const p=getComputedStyle(e).position; return p==="absolute"||p==="fixed";};
+for(const [W,H] of sizes) for(const L of langs){
+  LANG=L; win.style.width=W+"px"; win.style.height=H+"px";
+  for(const [id,st] of flat){
+    window.__H=id+"/"+st; try{render();}catch(err){out.push(`ERR ${W} ${L} ${id}/${st}: ${err.message}`);continue;} if(!win.querySelector(id.startsWith("t-")?".tour":".scroll")) out.push("NOSCREEN "+id);
+    const tag=`${W}x${H} ${L} ${id}/${st}`;
+    // sidebar must not clip
+    const side=win.querySelector(".side"); if(side.scrollHeight>side.clientHeight+1) out.push(`${tag}: SIDEBAR clipped by ${side.scrollHeight-side.clientHeight}px`);
+    // containers
+    const conts=[...win.querySelectorAll(".panel,.sheet")].filter(c=>!(c.classList.contains("panel")&&win.querySelector(".sheet")));
+    for(const c of conts){
+      const cr=r(c);
+      for(const e of c.querySelectorAll("*")){
+        if(e.closest("svg")&&e.tagName!=="svg") continue;
+        if(e.closest(".confetti")||e.closest(".hero")&&e.tagName==="IMG") continue;
+        const er=r(e); if(er.width===0||er.height===0) continue;
+        if(er.right>cr.right+0.5||er.left<cr.left-0.5) out.push(`${tag}: BLEED ${e.tagName}.${e.className} by ${Math.round(Math.max(er.right-cr.right,cr.left-er.left))}px`);
+        const cs=getComputedStyle(e);
+        if(e.scrollWidth>e.clientWidth+1 && cs.overflowX!=="visible" && cs.textOverflow!=="ellipsis" && !e.classList.contains("scroll") && !e.classList.contains("body") && e.tagName!=="svg") out.push(`${tag}: HCLIP ${e.tagName}.${e.className} ${e.scrollWidth}>${e.clientWidth}`);
+        if(cs.textOverflow==="ellipsis" && e.scrollWidth>e.clientWidth+1) out.push(`${tag}: ELLIPSIS ${e.className} "${e.textContent.slice(0,40)}"`);
+        // sibling overlap
+        if(!skipAbs(e)){
+          let s=e.nextElementSibling;
+          while(s){ if(!skipAbs(s)&&s.tagName!=="svg"&&e.tagName!=="svg"){const sr=r(s); if(sr.width&&sr.height){const ix=Math.min(er.right,sr.right)-Math.max(er.left,sr.left), iy=Math.min(er.bottom,sr.bottom)-Math.max(er.top,sr.top); if(ix>2&&iy>2) out.push(`${tag}: OVERLAP ${e.tagName}.${e.className} x ${s.tagName}.${s.className}`);}} s=s.nextElementSibling;}
+        }
+        // narrow wrap: text blocks under 180px wide with 3+ lines
+        if((e.tagName==="B"||e.tagName==="SPAN"||e.tagName==="P")&&e.children.length===0&&er.width<180){const lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.45; if(er.height>lh*2.5) out.push(`${tag}: NARROWWRAP "${e.textContent.slice(0,40)}" w=${Math.round(er.width)}`);}
+      }
+    }
+    // tour body: report if it needs scroll
+    const body=win.querySelector(".tour .body"); if(body&&body.scrollHeight>body.clientHeight+1) out.push(`${tag}: TOURSCROLL ${body.scrollHeight-body.clientHeight}px`);
+    const ss=win.querySelector(".sheet"); if(ss){const sr=r(ss), wr=r(win); if(sr.left<wr.left||sr.right>wr.right||sr.top<wr.top||sr.bottom>wr.bottom) out.push(`${tag}: SHEET outside window`);}
+  }
+}
+const pre=document.createElement("pre"); pre.id="qa"; pre.textContent="QA-BEGIN\n"+out.join("\n")+"\nQA-END"; document.body.appendChild(pre);
+})();
+</script>
+</body>
+</html>

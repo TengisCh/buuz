@@ -75,3 +75,11 @@ when a new concept appears; rename here first when a name changes.
 | --- | --- | --- |
 | Scheme | A table that turns Latin keys into the Cyrillic of one language other than Mongolian. Matched longest first, with no word list. Ids: `ru`, `ru-gost`, `ru-volapuk`, `uk`, `uk-kmu`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`, `mn-mns`. See ADR 0007 | `Scheme`, `core/src/scheme.rs` |
 | Draft scheme | A scheme that no native speaker has checked yet. The page marks it | `Scheme::is_draft` |
+
+## Desktop app
+
+| Term | Meaning | In code |
+| --- | --- | --- |
+| Switch key | The key that changes between Buuz and the last other keyboard. It is Globe, Control+Space, Caps Lock (set in macOS) or a key that Buuz registers itself. The default own key is Control+Option+Return on macOS | `SwitchKey`, `Hotkey`, `HotkeyStore` |
+| Lesson | One short exercise of the tutorial. The user types in a lesson field. It passes when the field holds the expected Cyrillic text. A lesson can need a typing option | `LessonChecker`, `LessonRequirement` |
+| Tutorial | The guided flow of setup steps, eight lessons and a Done step in the desktop app. It saves the step. The user can run it again | `TourStep`, `TourFlow` |
