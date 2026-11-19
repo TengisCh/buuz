@@ -106,6 +106,7 @@ pub struct ConfigReport {
     autocorrect: bool,
     double_v: bool,
     habit_keys: bool,
+    word_choice: bool,
 }
 
 #[wasm_bindgen]
@@ -157,6 +158,12 @@ impl ConfigReport {
     pub fn habit_keys(&self) -> bool {
         self.habit_keys
     }
+
+    /// Word choice (о/ө and у/ү by the word list) is on after the preset and overrides.
+    #[wasm_bindgen(getter)]
+    pub fn word_choice(&self) -> bool {
+        self.word_choice
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -181,6 +188,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         autocorrect: o.autocorrect,
         double_v: o.double_v,
         habit_keys: o.habit_keys,
+        word_choice: o.word_choice,
     })
 }
 
@@ -197,7 +205,7 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v` or `habit_keys` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys` or `word_choice` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -217,6 +225,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         "autocorrect" => config.set_autocorrect((value != base.autocorrect).then_some(value)),
         "double_v" => config.set_double_v((value != base.double_v).then_some(value)),
         "habit_keys" => config.set_habit_keys((value != base.habit_keys).then_some(value)),
+        "word_choice" => config.set_word_choice((value != base.word_choice).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -912,6 +921,17 @@ mod tests {
         assert!(!super::config_normalize(&classic).unwrap().double_v());
         let classic_on = super::config_set_option(&classic, "double_v", true).unwrap();
         assert!(super::config_normalize(&classic_on).unwrap().double_v());
+    }
+
+    #[test]
+    fn word_choice_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().word_choice());
+        let off = super::config_set_option(&cfg, "word_choice", false).unwrap();
+        assert!(off.contains("word_choice = false"));
+        assert!(!super::config_normalize(&off).unwrap().word_choice());
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic).unwrap().word_choice());
     }
 
     #[test]

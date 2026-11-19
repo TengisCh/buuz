@@ -646,6 +646,32 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
   0.4 to 0.8 milliseconds on the development machine. A usual word takes
   about 50 microseconds.
 
+### 13.1 Word choice (issue #64)
+
+Word choice is a smart feature that works like autocorrect, but it makes
+fewer kinds of edit. It is on in smart mode and off in classic mode.
+
+- **Switch.** `Options::word_choice` (config `[options] word_choice`). It needs
+  `Options::words`. Without a list, nothing changes.
+- **When it runs.** Once per word, at Space or punctuation, with the same skip
+  rules as autocorrect. Backspace right after a Space undoes it, and the word
+  is not changed again.
+- **Candidates.** Each `о` may be `ө`. Each `у` or `ү` may be `у`, `ү` or
+  `ө`. It checks every combination for at most 5 such letters. A word with
+  more of them stays as typed.
+- **Extra edits.** For a word with at most 3 such letters, each combination
+  also gets one more edit: `э` to `е` (`wed` gives `үед`), a doubled vowel
+  (`terer` gives `тэрээр`), `и` to `ь` (`huuli` gives `хууль`), or an added
+  `ь` (`surguul` gives `сургууль`). No edit changes the last letter's vowel
+  length, and `э` to `е` skips the last letter.
+- **Choice.** All candidates share one tally. The winner has a count of at least 50, at least 3 times the
+  next candidate's, and at least 50 times the count of the word as typed
+  (0 if it is not listed). The last rule keeps `уурын` (642) against
+  `өөрийн` (7898), and still changes `мон` (114) to `мөн` (20067).
+- **Limit.** `уруу` (399) and `өрөө` (333) are both common. The list cannot
+  choose, so `uruu` stays `уруу`.
+- **Autocorrect.** When both are on, word choice runs first.
+
 ## 14. Personal dictionary
 
 The personal dictionary (issue #12) holds the words Buuz learned from the

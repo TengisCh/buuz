@@ -110,6 +110,153 @@ pub(crate) fn correct(
     Some(out)
 }
 
+/// A listed variant must be this many times more frequent than the word as
+/// typed when that word is listed too (`мөн` 20067 against `мон` 114; but
+/// `өөрийн` is only 12 times `уурын`, so `uuriin` stays).
+const PLAIN_FACTOR: u32 = 50;
+
+/// The most letters in a word that `choose` varies. Each `у` or `ү` has 3
+/// choices, each `о` has 2, so 5 letters give at most 243 lookups.
+const MAX_VARIED: usize = 5;
+
+/// A word with more varied letters than this gets no extra edits (ye, long
+/// vowel, ь), so the lookups stay under about 1500.
+const MAX_VARIED_EXTRA: usize = 3;
+
+/// Word choice (issue #64): the word list picks between о/ө and у/ү/ө.
+/// It runs once per word, like [`correct`]. A variant wins when it is listed
+/// with the minimum count, is `CLEAR_FACTOR` times more frequent than the
+/// next variant, and is `PLAIN_FACTOR` times more frequent than the word as
+/// typed (which counts 0 when unlisted).
+pub(crate) fn choose(
+    words: &WordList,
+    comp: &[char],
+    rejected: &HashSet<String>,
+    user: Option<&UserSnapshot>,
+    s: &mut Scratch,
+) -> Option<String> {
+    let n = comp.len();
+    if !(MIN_LETTERS..=MAX_LETTERS).contains(&n) || comp[1..].iter().any(|c| c.is_uppercase()) {
+        return None;
+    }
+    s.word.clear();
+    s.word.extend(comp.iter().map(|&c| to_lower(c)));
+    // Positions that vary, and how many choices each has.
+    let mut pos = [0usize; MAX_VARIED];
+    let mut k = 0;
+    for (i, &c) in s.word.iter().enumerate() {
+        if matches!(c, 'о' | 'у' | 'ү') {
+            if k == MAX_VARIED {
+                return None;
+            }
+            pos[k] = i;
+            k += 1;
+        }
+    }
+    s.text.clear();
+    s.text.extend(s.word.iter());
+    if rejected.contains(s.text.as_str())
+        || user.is_some_and(|u| u.is_added(&s.text) || u.is_rejected(&s.text))
+    {
+        return None;
+    }
+    let plain = words.count(&s.text).unwrap_or(0);
+
+    let Scratch {
+        word,
+        level,
+        best,
+        text,
+    } = s;
+    let [cand, extra] = level;
+    let choices = |c: char| -> &'static [char] {
+        if c == 'о' {
+            &['о', 'ө']
+        } else {
+            &['у', 'ү', 'ө']
+        }
+    };
+    // Each ө/ү variant is a candidate. For a word with few ambiguous letters
+    // each variant also gets one more edit (ye, a long vowel, ь), so the work
+    // stays small. All candidates share one tally: `зүн` has the clear
+    // winner `зүүн`, not `зун`.
+    let extras = k <= MAX_VARIED_EXTRA;
+    let mut idx = [0usize; MAX_VARIED];
+    best.clear();
+    let mut tally = Tally { top: 0, second: 0 };
+    loop {
+        cand.clear();
+        cand.extend_from_slice(word);
+        for d in 0..k {
+            cand[pos[d]] = choices(word[pos[d]])[idx[d]];
+        }
+        // Skip the combination that rebuilds the word as typed.
+        if cand.as_slice() != word.as_slice() {
+            visit(words, cand, text, best, &mut tally);
+        }
+        if extras {
+            extra_edits(cand, extra, &mut |c| {
+                visit(words, c, text, best, &mut tally)
+            });
+        }
+        // Next combination: a counter with one digit for each position.
+        let mut d = 0;
+        while d < k {
+            idx[d] += 1;
+            if idx[d] < choices(word[pos[d]]).len() {
+                break;
+            }
+            idx[d] = 0;
+            d += 1;
+        }
+        if d == k {
+            break;
+        }
+    }
+    let clear = tally.top >= MIN_COUNT
+        && u64::from(tally.top) >= u64::from(CLEAR_FACTOR) * u64::from(tally.second)
+        && u64::from(tally.top) >= u64::from(PLAIN_FACTOR) * u64::from(plain);
+    if !clear {
+        return None;
+    }
+    let mut out = String::with_capacity(best.len() * 2);
+    for (i, &c) in best.iter().enumerate() {
+        if i == 0 && comp[0].is_uppercase() {
+            out.extend(c.to_uppercase());
+        } else {
+            out.push(c);
+        }
+    }
+    Some(out)
+}
+
+/// Call `f` with each single extra edit of `cur`, built in `out`: `э` to `е`
+/// (not at the end), a doubled vowel (not at the end), `и` to `ь`, and an
+/// added `ь` after the first letter at the earliest.
+fn extra_edits(cur: &[char], out: &mut Vec<char>, f: &mut dyn FnMut(&[char])) {
+    let n = cur.len();
+    for i in 0..n {
+        let c = cur[i];
+        let last = i + 1 == n;
+        if c == 'э' && !last {
+            fill(out, &cur[..i], &['е'], &cur[i + 1..]);
+            f(out);
+        }
+        if c == 'и' && i > 0 {
+            fill(out, &cur[..i], &['ь'], &cur[i + 1..]);
+            f(out);
+        }
+        if is_vowel(c) && !last && (i == 0 || cur[i - 1] != c) && cur[i + 1] != c {
+            fill(out, &cur[..=i], &[c], &cur[i + 1..]);
+            f(out);
+        }
+    }
+    for i in 1..=n {
+        fill(out, &cur[..i], &['ь'], &cur[i..]);
+        f(out);
+    }
+}
+
 /// Look `cand` up and keep the best two distinct candidates.
 fn visit(words: &WordList, cand: &[char], text: &mut String, best: &mut Vec<char>, t: &mut Tally) {
     text.clear();
