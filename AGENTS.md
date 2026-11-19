@@ -13,6 +13,7 @@ A phonetic Latin to Mongolian Cyrillic input method (`geree` becomes
 | Path | What | Language |
 | --- | --- | --- |
 | `core/` | Transliteration rules and composition engine. Apache-2.0, ported from the original Buuz | Rust |
+| `ffi/` | C ABI around `core/` for the Windows and macOS shells (`include/buuz.h`) | Rust, C |
 | `web/wasm/` | WebAssembly wrapper around `core/` | Rust |
 | `web/site/` | Website and converter at buuz.thetengis.com (Vite, Vercel) | TypeScript |
 | `docs/` | Architecture, typing rules, decisions (ADRs) | Markdown |
@@ -63,6 +64,9 @@ Run the checks for what you touched before you say a change is done.
 ```sh
 # core/ (also run when web/wasm changes)
 cd core && cargo fmt && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked
+
+# ffi/ (also run when core/src changes)
+cd ffi && cargo fmt && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked
 
 # web/site/ (builds core to wasm first; needs Rust + wasm32 target)
 cd web/site && npm ci && npm run build && npm test
