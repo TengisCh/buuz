@@ -18,6 +18,7 @@ Russian speakers use three kinds of scheme.
 | --- | --- | --- | --- |
 | Everyday translit | Chat, SMS, people without a Cyrillic keyboard | `privet` gives привет | `ru` |
 | Standard romanisation | Official documents, libraries, street signs | GOST 7.79, ISO 9, the passport table | `ru-gost` (system B only) |
+| Volapük (look-alike) | Chat without a Cyrillic keyboard, and to avoid word filters | `npuBeT` gives привет, `4to` gives что | `ru-volapuk` |
 | Phonetic keyboard | People who type Russian on a Latin keyboard layout | `q` gives я | Not in Buuz |
 
 ### Everyday translit (`ru`)
@@ -64,6 +65,26 @@ table is from the [GOST 7.79 article][gost].
 
 The apostrophe `'` works for the grave accent. System A (ISO 9) needs
 letters with marks (š, ž, č). It is not in Buuz yet.
+
+### Volapük (`ru-volapuk`)
+
+Volapük writes Cyrillic with Latin letters and digits that look the same.
+It is the reverse of everyday translit: `p` is р, not п.
+
+| Look-alike | Cyrillic |
+| --- | --- |
+| `a` `c` `e` `k` `m` `o` `t` `x` | а с е к м о т х |
+| `b` `h` `p` `y` | в н р у |
+| `n` `u` `r` `w` | п и я ш |
+| `3` `4` `6` `9` `0` | з ч б я о |
+| `bl` `10` `lli` `iii` | ы ю щ ш |
+| `>\|<` | ж |
+
+- A digit gives a letter only next to a letter. `2026` stays a number.
+- A capital inside a word is a look-alike, not a capital letter. `npuBeT`
+  gives привет. Only the first letter of a word keeps its case.
+- `b` is always в. Write `'` for ь.
+- Letters with no look-alike use their sound (`d` д, `f` ф, `z` з).
 
 ## Other languages
 

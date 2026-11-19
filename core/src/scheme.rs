@@ -37,13 +37,16 @@ enum Cond {
     WordStart,
     /// The last output character is a letter.
     AfterLetter,
+    /// The last output character is a letter, or a letter follows.
+    /// Digits use it, so a number (`2026`) stays a number.
+    TouchesLetter,
 }
 
 /// One row: a lower-case Latin pattern, its Cyrillic output (lower case) and
 /// the condition. The first rule wins among rules of the same length.
 type Rule = (&'static str, &'static str, Cond);
 
-use Cond::{AfterLetter, AfterVowel, Any, WordStart};
+use Cond::{AfterLetter, AfterVowel, Any, TouchesLetter, WordStart};
 
 const RU_VOWELS: &str = "аеёиоуыэюя";
 const UK_VOWELS: &str = "аеєиіїоуюя";
@@ -84,6 +87,24 @@ const RU_GOST: &[Rule] = &[
     ("l", "л", Any), ("m", "м", Any), ("n", "н", Any), ("o", "о", Any), ("p", "п", Any),
     ("r", "р", Any), ("s", "с", Any), ("t", "т", Any), ("u", "у", Any), ("f", "ф", Any),
     ("x", "х", Any), ("c", "ц", Any), ("y", "ы", Any),
+];
+
+/// Russian "Volapük": Latin letters and digits that look like Cyrillic
+/// letters (`npuBeT` is привет, `4to` is что). A digit gives a letter only
+/// next to a letter. Letters with no look-alike use their sound.
+#[rustfmt::skip]
+const RU_VOLAPUK: &[Rule] = &[
+    ("lli", "щ", Any), ("iii", "ш", Any), (">|<", "ж", Any), ("}|{", "ж", Any),
+    ("bl", "ы", Any), ("10", "ю", TouchesLetter),
+    ("e'", "э", Any), ("€", "э", Any), ("ë", "ё", Any),
+    ("a", "а", Any), ("b", "в", Any), ("c", "с", Any), ("d", "д", Any), ("e", "е", Any),
+    ("f", "ф", Any), ("g", "г", Any), ("h", "н", Any), ("i", "и", Any), ("j", "й", Any),
+    ("k", "к", Any), ("l", "л", Any), ("m", "м", Any), ("n", "п", Any), ("o", "о", Any),
+    ("p", "р", Any), ("r", "я", Any), ("s", "с", Any), ("t", "т", Any), ("u", "и", Any),
+    ("v", "в", Any), ("w", "ш", Any), ("x", "х", Any), ("y", "у", Any), ("z", "з", Any),
+    ("3", "з", TouchesLetter), ("4", "ч", TouchesLetter), ("6", "б", TouchesLetter),
+    ("9", "я", TouchesLetter), ("0", "о", TouchesLetter),
+    ("''", "ъ", AfterLetter), ("'", "ь", AfterLetter),
 ];
 
 /// Everyday Ukrainian translit. `h` is г and `g` is ґ, as in the 2010
@@ -218,6 +239,8 @@ pub enum Scheme {
     Russian,
     /// Russian, GOST 7.79 system B read backwards.
     RussianGost,
+    /// Russian, look-alike letters and digits (`4to` gives `что`).
+    RussianVolapuk,
     /// Ukrainian, everyday translit.
     Ukrainian,
     /// Belarusian, everyday translit.
@@ -248,9 +271,10 @@ impl std::error::Error for UnknownScheme {}
 
 impl Scheme {
     /// Every scheme, in the order a settings list shows them.
-    pub const ALL: [Scheme; 9] = [
+    pub const ALL: [Scheme; 10] = [
         Scheme::Russian,
         Scheme::RussianGost,
+        Scheme::RussianVolapuk,
         Scheme::Ukrainian,
         Scheme::Belarusian,
         Scheme::Bulgarian,
@@ -261,11 +285,12 @@ impl Scheme {
     ];
 
     /// The short id used in settings and in the portable config: `ru`,
-    /// `ru-gost`, `uk`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`.
+    /// `ru-gost`, `ru-volapuk`, `uk`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`.
     pub fn id(self) -> &'static str {
         match self {
             Scheme::Russian => "ru",
             Scheme::RussianGost => "ru-gost",
+            Scheme::RussianVolapuk => "ru-volapuk",
             Scheme::Ukrainian => "uk",
             Scheme::Belarusian => "be",
             Scheme::Bulgarian => "bg",
@@ -287,7 +312,7 @@ impl Scheme {
     /// The ISO 639-1 code of the language: `ru`, `uk`, `be`, ...
     pub fn language(self) -> &'static str {
         match self {
-            Scheme::RussianGost => "ru",
+            Scheme::RussianGost | Scheme::RussianVolapuk => "ru",
             other => other.id(),
         }
     }
@@ -306,6 +331,7 @@ impl Scheme {
         match self {
             Scheme::Russian => (RU, RU_VOWELS),
             Scheme::RussianGost => (RU_GOST, RU_VOWELS),
+            Scheme::RussianVolapuk => (RU_VOLAPUK, ""),
             Scheme::Ukrainian => (UK, UK_VOWELS),
             Scheme::Belarusian => (BE, BE_VOWELS),
             Scheme::Bulgarian => (BG, BG_VOWELS),
@@ -325,7 +351,16 @@ impl Scheme {
     /// ```
     pub fn convert(self, input: &str) -> String {
         let (rules, vowels) = self.table();
-        let chars: Vec<char> = input.chars().collect();
+        let mut chars: Vec<char> = input.chars().collect();
+        if self == Scheme::RussianVolapuk {
+            // A capital inside a word is a look-alike (the B of npuBeT), not a
+            // capital letter. Only the first letter of a word keeps its case.
+            for i in 1..chars.len() {
+                if chars[i - 1].is_alphabetic() {
+                    chars[i] = lower(chars[i]);
+                }
+            }
+        }
         let lower: Vec<char> = chars.iter().map(|c| lower(*c)).collect();
         let mut out = String::with_capacity(input.len());
         let mut last: Option<char> = None; // last output char, lower case
@@ -346,6 +381,10 @@ impl Scheme {
                     Cond::AfterVowel => last.is_some_and(|c| vowels.contains(c)),
                     Cond::WordStart => word_start,
                     Cond::AfterLetter => last.is_some_and(char::is_alphabetic),
+                    Cond::TouchesLetter => {
+                        last.is_some_and(char::is_alphabetic)
+                            || chars.get(i + n).is_some_and(|c| c.is_alphabetic())
+                    }
                 };
                 if ok {
                     best = Some((n, to));

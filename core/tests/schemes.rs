@@ -194,3 +194,19 @@ fn kyrgyz_draft() {
         ],
     );
 }
+
+#[test]
+fn russian_volapuk() {
+    check(
+        Scheme::RussianVolapuk,
+        &[
+            ("npuBeT", "привет"),
+            ("4to", "что"),
+            ("kak dela", "как дела"),
+            ("6e3", "без"),
+            ("mo10", "мою"),
+            ("2026", "2026"),
+            ("4 mom 10", "4 мом 10"),
+        ],
+    );
+}
