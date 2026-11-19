@@ -3,7 +3,7 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, key_table, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
+import init, { config_keys, config_remove_key, config_set_classic, config_set_option, convert_scheme, convert_with_config, key_table, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
 import { TYPING_LANGS, formatOf, formatsOf, groupKeys, sampleKeys, type KeyOf } from "./mapping";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
@@ -193,6 +193,31 @@ function renderMaps(): void {
       }),
     );
   for (const id of ["keys-cheat", "keys-rules", "keys-typing"]) document.getElementById(id)?.replaceChildren(list());
+  renderMyKeys();
+}
+
+/** The user's own keys (the config's [keys], for example from calibration), each with a remove button. */
+function renderMyKeys(): void {
+  const box = document.getElementById("my-keys") as HTMLElement;
+  const ul = document.getElementById("my-keys-list") as HTMLUListElement;
+  let lines: string[] = [];
+  try {
+    lines = config ? config_keys(config).split("\n").filter(Boolean) : [];
+  } catch {
+    lines = [];
+  }
+  box.hidden = lines.length === 0;
+  ul.replaceChildren(
+    ...lines.map((line) => {
+      const [key, value] = line.split("\t");
+      const rm = el("button", { type: "button", className: "linkish my-key-x", textContent: "✕", ariaLabel: fmt("myKeyRemove", { key }) });
+      rm.addEventListener("click", () => {
+        setConfig(config_remove_key(config, key));
+        cfgSay([t("myKeyRemoved")]);
+      });
+      return el("li", {}, el("span", { className: "in" }, el("kbd", { lang: "en", textContent: key })), el("span", { className: "out", textContent: value || "∅" }), rm);
+    }),
+  );
 }
 document.addEventListener("buuz:lang", () => ready && renderMaps());
 
@@ -278,6 +303,7 @@ function setConfig(text: string, save = true): void {
   config = text;
   if (save) saveConfig(store, text);
   applyConfig();
+  renderMyKeys();
   render();
 }
 
@@ -631,7 +657,10 @@ function calShowResult(): void {
   const o = outcome;
   const none = o.suggestions.length === 0;
   const nothing = o.usable === 0; // nothing typed matched: "already fine" would be wrong
-  calLead.textContent = t(nothing ? "calNothing" : none ? "calNone" : "calSuggestLead");
+  // Nothing to save because a key was used for more than one letter: say so,
+  // not "already fine" (word choice picks ө/ү for such a key).
+  const ambiguous = none && o.conflicts.length > 0;
+  calLead.textContent = t(nothing ? "calNothing" : ambiguous ? "calAmbiguous" : none ? "calNone" : "calSuggestLead");
   calSaveBtn.hidden = none;
   calRetry.hidden = !nothing;
   o.suggestions.forEach((s, i) => {

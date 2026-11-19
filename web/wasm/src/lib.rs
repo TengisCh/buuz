@@ -270,6 +270,29 @@ pub fn config_set_classic(text: &str, classic: bool) -> Result<String, String> {
     Ok(config.to_text())
 }
 
+/// The user's own key mappings (the `[keys]` section, for example from
+/// calibration) as `latin<TAB>cyrillic` lines, in file order. An empty value
+/// removes a built-in key. No keys give an empty string.
+#[wasm_bindgen]
+pub fn config_keys(text: &str) -> Result<String, String> {
+    let config = parse_config(text)?.config;
+    Ok(config
+        .keys()
+        .iter()
+        .map(|(k, v)| format!("{k}\t{v}"))
+        .collect::<Vec<_>>()
+        .join("\n"))
+}
+
+/// Remove one user key mapping and return the new canonical text. The other
+/// settings stay. A key that is not there changes nothing.
+#[wasm_bindgen]
+pub fn config_remove_key(text: &str, key: &str) -> Result<String, String> {
+    let mut config = parse_config(text)?.config;
+    config.remove_key(key);
+    Ok(config.to_text())
+}
+
 /// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys` or `word_choice` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
@@ -893,6 +916,18 @@ pub fn calibrate_apply(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn user_keys_are_listed_and_removable() {
+        let cfg = "buuz_config = 1\npreset = \"smart\"\n[keys]\nv = \"ү\"\nh = \"ц\"\n";
+        assert_eq!(super::config_keys(cfg).unwrap(), "v\tү\nh\tц");
+        let less = super::config_remove_key(cfg, "H").unwrap();
+        assert_eq!(super::config_keys(&less).unwrap(), "v\tү");
+        assert_eq!(
+            super::config_keys(&super::default_config_text()).unwrap(),
+            ""
+        );
+    }
+
     const LIST: &str = "# test\nгэрлэх\t100\nгэрлэлт\t10\nбайна\t500\n";
 
     #[test]

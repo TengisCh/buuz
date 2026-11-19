@@ -250,6 +250,11 @@
 
         <div id="pane-rules" class="set-pane" role="tabpanel" aria-labelledby="tab-rules" hidden>
           <p class="map-format"><button type="button" class="typing-chip" aria-haspopup="dialog" aria-controls="typing"></button></p>
+          <section id="my-keys" class="my-keys mn-only" hidden>
+            <h3 class="rules-h"><span aria-hidden="true">🎯 </span><span data-i18n="myKeys">Таны товчлуур</span></h3>
+            <ul class="map" id="my-keys-list"></ul>
+            <p class="hint" data-i18n="myKeysHint">Бичих хэвээ заахад хадгалсан товчлуур. Эдгээр нь үндсэн товчлуурыг орлоно.</p>
+          </section>
           <div id="keys-rules" class="keys keys-rules"></div>
           <p class="hint map-legend mn-only"><span aria-hidden="true">✨ </span><span data-i18n="mapSmart">ухаалаг горимд</span> · <span aria-hidden="true">🎵 </span><span data-i18n="mapHarmony">эгшиг зохицлоор о/ө, у/ү</span></p>
           <div class="mn-only">
@@ -284,9 +289,10 @@
             <button id="cfg-open" type="button" class="ghost" data-i18n="importFile">Файл нээх</button>
             <input id="cfg-file" type="file" hidden />
           </div>
-          <div id="cfg-msg" class="cfg-msg" role="status"></div>
-          <div id="cfg-err" class="cfg-msg err" role="alert"></div>
         </section>
+        <!-- Outside the hidden section: calibration and key messages show here. -->
+        <div id="cfg-msg" class="cfg-msg" role="status"></div>
+        <div id="cfg-err" class="cfg-msg err" role="alert"></div>
       </dialog>
       <dialog id="typing" class="settings typing-dlg" aria-labelledby="typing-title">
         <div class="fb-head">

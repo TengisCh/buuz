@@ -202,3 +202,14 @@ test("habit keys are a switch: on in smart, off in classic, and they type ts as 
   const classicOn = config_set_option(classic, "habit_keys", true);
   assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
+
+test("the user's own keys: listed from the config, and one can be removed", async () => {
+  const { config_keys, config_remove_key } = await import("../src/wasm/buuz.js");
+  const cfg = 'buuz_config = 1\npreset = "smart"\n[options]\nautocorrect = true\n[keys]\nv = "ү"\nh = "ц"\n';
+  assert.equal(config_keys(cfg), "v\tү\nh\tц");
+  assert.equal(config_keys(default_config_text()), "");
+  const less = config_remove_key(cfg, "h");
+  assert.equal(config_keys(less), "v\tү");
+  // The other settings stay.
+  assert.match(less, /autocorrect = true/);
+});
