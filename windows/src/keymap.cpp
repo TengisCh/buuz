@@ -17,7 +17,13 @@ constexpr Oem kOem[] = {
     {0xBA, ';', ':'}, {0xBB, '=', '+'}, {0xBC, ',', '<'}, {0xBD, '-', '_'},
     {0xBE, '.', '>'}, {0xBF, '/', '?'}, {0xC0, '`', '~'}, {0xDB, '[', '{'},
     {0xDC, '\\', '|'}, {0xDD, ']', '}'}, {0xDE, '\'', '"'},
+    // The extra key on ISO keyboards. macOS has no fixed character for it
+    // (it follows the layout), so use '<' and '>' as a US-ISO layout does.
+    {0xE2, '<', '>'},
 };
+// Numpad operators: VK_MULTIPLY, VK_ADD, (VK_SEPARATOR 0x6C gives nothing),
+// VK_SUBTRACT, VK_DECIMAL, VK_DIVIDE. Shift does not change them.
+constexpr char kNumpadOps[] = {'*', '+', 0, '-', '.', '/'};
 constexpr char kShiftedDigits[] = ")!@#$%^&*(";
 
 }  // namespace
@@ -30,6 +36,10 @@ uint32_t translate_us(uint32_t vk, bool shift, bool caps) {
     if (vk >= '0' && vk <= '9') {
         return shift ? static_cast<uint32_t>(kShiftedDigits[vk - '0']) : vk;
     }
+    // Numpad keys. With NumLock off Windows sends VK_HOME, VK_END and so on
+    // instead of VK_NUMPAD*, so NumLock needs no special handling here.
+    if (vk >= 0x60 && vk <= 0x69) return '0' + (vk - 0x60);
+    if (vk >= 0x6A && vk <= 0x6F) return static_cast<uint32_t>(kNumpadOps[vk - 0x6A]);
     for (const Oem& k : kOem) {
         if (k.vk == vk) return static_cast<uint32_t>(shift ? k.shifted : k.plain);
     }

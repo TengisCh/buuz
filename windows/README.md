@@ -22,7 +22,8 @@ preedit. CI builds x64 and ARM64. There is no installer, settings app or onboard
 ## How a key moves
 
 1. TSF calls `OnKeyDown`. The shell reads the modifiers and maps the key
-   as US QWERTY, whatever layout is installed.
+   as US QWERTY, whatever layout is installed. Numpad digits and operators
+   and the ISO extra key (`<` and `>`) reach the core as symbols.
 2. `Engine::process` calls `buuz_process_key` and reads the commit, the
    preedit and the cursor. It converts them to UTF-16.
 3. If the text field must change, the shell runs one synchronous edit

@@ -43,6 +43,23 @@ static void test_translate() {
     CHECK(translate_us(0xBE, false, false) == '.');
     CHECK(translate_us(0xBF, true, false) == '?');
     CHECK(translate_us(0x70, false, false) == 0);  // F1
+    for (uint32_t i = 0; i < 10; ++i) {
+        CHECK(translate_us(0x60 + i, false, false) == '0' + i);
+        CHECK(translate_us(0x60 + i, true, false) == '0' + i);
+    }
+    CHECK(translate_us(0x6A, false, false) == '*');
+    CHECK(translate_us(0x6B, false, false) == '+');
+    CHECK(translate_us(0x6D, false, false) == '-');
+    CHECK(translate_us(0x6E, false, false) == '.');
+    CHECK(translate_us(0x6F, false, false) == '/');
+    CHECK(translate_us(0x6C, false, false) == 0);  // VK_SEPARATOR
+    CHECK(translate_us(0xE2, false, false) == '<');
+    CHECK(translate_us(0xE2, true, false) == '>');
+    CHECK(classify(0x60, Modifiers{}).kind == 10 && classify(0x60, Modifiers{}).ch == '0');
+    CHECK(classify(0x69, Modifiers{}).kind == 10 && classify(0x69, Modifiers{}).ch == '9');
+    CHECK(classify(0x6B, Modifiers{}).kind == 10 && classify(0x6B, Modifiers{}).ch == '+');
+    CHECK(classify(0xE2, Modifiers{}).kind == 10 && classify(0xE2, Modifiers{}).ch == '<');
+    CHECK(is_typing_key(0x61, Modifiers{}));
 }
 
 static void test_classify() {
