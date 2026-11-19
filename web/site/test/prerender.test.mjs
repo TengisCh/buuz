@@ -48,10 +48,11 @@ test("the FAQ data of each language is valid and in that language", () => {
   assert.ok(render(html, "ru").includes(`"inLanguage": "ru"`));
 });
 
-test("each page marks its language in the picker and uses its own preview image", () => {
-  assert.match(render(html, "en"), /<option value="en" selected lang="en">/);
-  assert.match(render(html, "uk"), /<option value="uk" selected lang="uk">/);
-  assert.doesNotMatch(render(html, "uk"), /<option value="mn"[^>]* selected/);
+test("each page marks its language in the menu and uses its own preview image", () => {
+  const uk = render(html, "uk");
+  assert.match(uk, /<li [^>]*data-lang="uk"[^>]*aria-selected="true"/);
+  assert.doesNotMatch(uk, /<li [^>]*data-lang="mn"[^>]*aria-selected/);
+  assert.match(uk, /<span class="langcur"><svg class="flag"[^>]*><use href="#f-uk"\/><\/svg><span>Українська<\/span><\/span>/);
   assert.match(render(html, "uk"), /og:image" content="https:\/\/buuz\.thetengis\.com\/og\/uk\.png"/);
   assert.match(render(html, "ru"), /twitter:image" content="[^"]*\/og\/ru\.png"/);
 });
