@@ -17,8 +17,8 @@ struct SwitchKeyPicker: View {
                     .fn, title: m.t("hotkey.fn"),
                     note: m.globe.works ? m.t("hotkey.fn.note") : m.t("globe.fn.note"),
                     pill: m.globe.works ? m.t("common.recommended") : nil)
-                option(.controlSpace, title: "Control + Space", note: m.t("hotkey.controlSpace.note"))
-                option(.capsLock, title: "Caps Lock", note: m.t("hotkey.capsLock.note"))
+                option(.controlSpace, title: noEmoji(m.t("shortcut.controlSpace.title")), note: m.t("hotkey.controlSpace.note"))
+                option(.capsLock, title: noEmoji(m.t("shortcut.capsLock.title")), note: m.t("hotkey.capsLock.note"))
                 option(
                     .custom, title: m.t("hotkey.custom"),
                     note: m.selectedKey == .custom ? m.t("hotkey.custom.note") : m.t("hotkey.record"),
@@ -138,7 +138,7 @@ struct HotkeyRecorder: View {
                     Text(m.t("hotkey.recording")).font(.system(size: 13.5, weight: .semibold)).foregroundColor(Tok.text)
                     Spacer(minLength: 8)
                     Keycaps(keys: heldCaps(held), lit: true, large: true)
-                    Button(m.t("hotkey.clear")) { m.cancelRecording() }.buttonStyle(GhostButtonStyle())
+                    Button(m.t("common.cancel")) { m.cancelRecording() }.buttonStyle(GhostButtonStyle())
                 }
                 .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 56)
                 .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Tok.accentSoft))

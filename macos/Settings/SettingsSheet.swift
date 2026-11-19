@@ -91,7 +91,10 @@ struct GeneralPage: View {
         }
         SettingsGroup {
             if AppModel.loginAvailable {
-                SettingsRow(m.t("settings.general.openAtLogin")) {
+                SettingsRow(
+                    m.t("settings.general.openAtLogin"),
+                    hint: m.loginHint ? m.t("settings.general.loginHint") : nil
+                ) {
                     BuuzSwitch(isOn: Binding(get: { m.launchAtLogin }, set: { m.setLaunchAtLogin($0) }))
                 }
             }

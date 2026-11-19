@@ -22,6 +22,9 @@ enum SwitchKeyState {
         if saved == nil, !storeHasChoice, let h = resolved { return (.custom, h) }
         return (saved, custom)
     }
+
+    /// After the user clears the key, nothing is selected and no custom key stays.
+    static func afterClear() -> (key: SwitchKey?, hotkey: Hotkey?) { (nil, nil) }
 }
 
 enum RecordOutcome: Equatable {

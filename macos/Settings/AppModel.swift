@@ -88,6 +88,8 @@ final class AppModel: ObservableObject {
     // General
     @Published var update: UpdateState = .idle
     @Published var launchAtLogin = false
+    /// True when macOS did not turn on open at login, or waits for approval.
+    @Published var loginHint = false
     /// The "ready when my computer starts" switch on the Done step.
     @Published var loginAtFinish = true
 
@@ -130,6 +132,7 @@ final class AppModel: ObservableObject {
                 self?.refreshKeyboard()
                 self?.refreshConfig()
                 self?.refreshHotkeyStatus()
+                self?.launchAtLogin = AppModel.loginEnabled
             })
         observers.append(
             DistributedNotificationCenter.default().addObserver(
@@ -484,11 +487,14 @@ final class AppModel: ObservableObject {
 
     func clearHotkey() {
         removeMonitor()
-        customHotkey = nil
+        let cleared = SwitchKeyState.afterClear()
+        selectedKey = cleared.key
+        customHotkey = cleared.hotkey
         prefs.customHotkey = nil
         prefs.switchKey = nil
         recorder = .idle
         _ = hotkeyStore.save(nil)
+        refreshHotkeyStatus()
         postHotkeyChanged()
     }
 
@@ -547,6 +553,11 @@ final class AppModel: ObservableObject {
 
     // MARK: General
 
+    static var loginNeedsApproval: Bool {
+        if #available(macOS 13.0, *) { return SMAppService.mainApp.status == .requiresApproval }
+        return false
+    }
+
     static var loginEnabled: Bool {
         if #available(macOS 13.0, *) { return SMAppService.mainApp.status == .enabled }
         return false
@@ -561,9 +572,14 @@ final class AppModel: ObservableObject {
         if #available(macOS 13.0, *) {
             do {
                 if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-            } catch { NSLog("Buuz: could not change open at login") }
+                loginHint = false
+            } catch {
+                NSLog("Buuz: could not change open at login")
+                loginHint = true
+            }
         }
         launchAtLogin = AppModel.loginEnabled
+        if on && AppModel.loginNeedsApproval { loginHint = true }
     }
 
     /// Asks GitHub for the newest release, only when the user clicks. It sends

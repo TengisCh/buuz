@@ -35,6 +35,7 @@ struct HeroCard: View {
     var warn = false
     var onClose: (() -> Void)?
     let action: () -> Void
+    @EnvironmentObject var m: AppModel
     @Environment(\.columnWidth) private var columnWidth
 
     var body: some View {
@@ -67,7 +68,9 @@ struct HeroCard: View {
                 Button(action: close) {
                     Image(systemName: "xmark").font(.system(size: 10, weight: .bold)).foregroundColor(.white)
                         .frame(width: 24, height: 24).background(Circle().fill(Color.white.opacity(0.14)))
-                }.buttonStyle(.plain).padding(12)
+                }
+                .buttonStyle(.plain).padding(12)
+                .accessibilityLabel(m.t("common.close")).help(m.t("common.close"))
             }
         }
         .frame(height: 152)
@@ -162,9 +165,12 @@ struct HomeView: View {
 
     @ViewBuilder private var hero: some View {
         if !m.enabled {
-            HeroCard(
-                title: m.t("home.hero.off.title"), message: m.t("home.hero.off.body"),
-                button: m.t("enable.button"), warn: true, onClose: nil) { m.addBuuz() }
+            VStack(spacing: 12) {
+                HeroCard(
+                    title: m.t("home.hero.off.title"), message: m.t("home.hero.off.body"),
+                    button: m.t("enable.button"), warn: true, onClose: nil) { m.addBuuz() }
+                if m.addFailed { StatusBanner(.danger, m.t("enable.error")) }
+            }
         } else if !m.heroHidden {
             if m.nextLesson != nil {
                 HeroCard(
@@ -273,7 +279,7 @@ struct LessonRow: View {
                 ZStack {
                     Circle().fill(done ? Tok.success : Tok.fill2)
                     if done {
-                        Image(systemName: "checkmark").font(.system(size: 11, weight: .heavy)).foregroundColor(.white)
+                        Image(systemName: "checkmark").font(.system(size: 11, weight: .heavy)).foregroundColor(Tok.onSuccess)
                     } else {
                         Text("\(info.number)").font(.system(size: 12, weight: .bold)).foregroundColor(Tok.text2)
                     }
@@ -303,10 +309,10 @@ struct LessonRow: View {
 
 /// The System Settings path to add Buuz by hand.
 struct Crumbs: View {
-    private let parts = ["System Settings", "Keyboard", "Input Sources", "Edit…", "＋", "Mongolian", "Buuz"]
+    @EnvironmentObject var m: AppModel
     var body: some View {
         // Wraps to a new line when the column is narrow.
-        Text(parts.joined(separator: "  ›  ")).font(.system(size: 12.5, weight: .medium))
+        Text(m.t("enable.manual.path")).font(.system(size: 12.5, weight: .medium))
             .foregroundColor(Tok.text2).fixedSize(horizontal: false, vertical: true)
     }
 }
@@ -317,6 +323,7 @@ struct HelpView: View {
         PageColumn {
             PageHeader(m.t("help.title"), m.t("help.subtitle"))
             TitledSection(m.t("help.missing")) {
+                if m.addFailed && !m.enabled { StatusBanner(.danger, m.t("enable.error")) }
                 Card {
                     VStack(alignment: .leading, spacing: 14) {
                         Crumbs()

@@ -37,7 +37,9 @@ enum Tok {
     static let accentSoft = dyn(hex(0xEAF0FF), hex(0x4D82FF, 0.15))
     static let ember = same(0xFF6A3D)
     static let amber = same(0xFFB648)
-    static let success = dyn(hex(0x17915F), hex(0x43D196))
+    static let success = dyn(hex(0x12805A), hex(0x43D196))
+    /// The checkmark on a `success` disc. At least 4.5:1 in both themes.
+    static let onSuccess = dyn(hex(0xFFFFFF), hex(0x1B1825))
     static let successBg = dyn(hex(0xE5F6EE), hex(0x43D196, 0.12))
     static let warn = dyn(hex(0xA85400), hex(0xFFC266))
     static let warnBg = dyn(hex(0xFFF2DF), hex(0xFFB648, 0.11))

@@ -15,8 +15,9 @@ struct Buddy: View {
             Image(nsImage: image).resizable().interpolation(.high)
                 .frame(width: size, height: size)
                 .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+                .accessibilityHidden(true)
         } else {
-            Text("🥟").font(.system(size: size * 0.7))
+            Text("🥟").font(.system(size: size * 0.7)).accessibilityHidden(true)
         }
     }
 }
