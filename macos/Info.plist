@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>mn</string>
+	<key>CFBundleExecutable</key>
+	<string>Buuz</string>
+	<key>CFBundleIconFile</key>
+	<string>Buuz</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.thetengis.inputmethod.Buuz</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Buuz</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>2.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>12.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>MIT OR Apache-2.0. Continuation of Buuz by Odbayar Nyamtseren (Apache-2.0).</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>InputMethodConnectionName</key>
+	<string>com.thetengis.inputmethod.Buuz_Connection</string>
+	<key>InputMethodServerControllerClass</key>
+	<string>BuuzController</string>
+	<key>tsInputMethodIconFileKey</key>
+	<string>Buuz.icns</string>
+	<key>tsInputMethodCharacterRepertoireKey</key>
+	<array>
+		<string>Cyrl</string>
+	</array>
+	<key>ComponentInputModeDict</key>
+	<dict>
+		<key>tsInputModeListKey</key>
+		<dict>
+			<key>com.thetengis.inputmethod.Buuz.Mongolian</key>
+			<dict>
+				<key>TISInputSourceID</key>
+				<string>com.thetengis.inputmethod.Buuz.Mongolian</string>
+				<key>TISIntendedLanguage</key>
+				<string>mn</string>
+				<key>tsInputModeScriptKey</key>
+				<string>smCyrillic</string>
+				<key>tsInputModeMenuIconFileKey</key>
+				<string>Buuz-menu.png</string>
+				<key>tsInputModePaletteIconFileKey</key>
+				<string>Buuz-menu.png</string>
+				<key>tsInputModeIsVisibleKey</key>
+				<true/>
+				<key>tsInputModePrimaryInputModeKey</key>
+				<true/>
+				<key>tsInputModeDefaultStateKey</key>
+				<true/>
+			</dict>
+		</dict>
+		<key>tsVisibleInputModeOrderedArrayKey</key>
+		<array>
+			<string>com.thetengis.inputmethod.Buuz.Mongolian</string>
+		</array>
+	</dict>
+</dict>
+</plist>

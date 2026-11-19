@@ -13,6 +13,7 @@ A phonetic Latin to Mongolian Cyrillic input method (`geree` becomes
 | Path | What | Language |
 | --- | --- | --- |
 | `core/` | Transliteration rules and composition engine. Apache-2.0, ported from the original Buuz | Rust |
+| `macos/` | macOS input method: thin Swift InputMethodKit shell over `ffi/` | Swift |
 | `ffi/` | C ABI around `core/` for the Windows and macOS shells (`include/buuz.h`) | Rust, C |
 | `web/wasm/` | WebAssembly wrapper around `core/` | Rust |
 | `web/site/` | Website and converter at buuz.thetengis.com (Vite, Vercel) | TypeScript |
@@ -67,6 +68,9 @@ cd core && cargo fmt && cargo clippy --all-targets --locked -- -D warnings && ca
 
 # ffi/ (also run when core/src changes)
 cd ffi && cargo fmt && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked
+
+# macos/ (needs a Mac with Xcode command line tools; also run when ffi/ changes)
+macos/build.sh test && macos/build.sh
 
 # web/site/ (builds core to wasm first; needs Rust + wasm32 target)
 cd web/site && npm ci && npm run build && npm test

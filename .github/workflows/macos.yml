@@ -1,0 +1,45 @@
+name: macos
+
+# The macOS input method. One macOS runner, and only when macos/, the FFI,
+# the core sources or the word list change.
+on:
+  push:
+    branches: [main]
+    paths: ["macos/**", "ffi/**", "core/src/**", "core/Cargo.toml", "data/wordlist/mn.txt", ".github/workflows/macos.yml"]
+  pull_request:
+    paths: ["macos/**", "ffi/**", "core/src/**", "core/Cargo.toml", "data/wordlist/mn.txt", ".github/workflows/macos.yml"]
+  workflow_dispatch:
+
+# Read-only token. Actions are pinned to full commit SHAs (Dependabot bumps them).
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: ffi
+      - name: Swift tests (real FFI, fake text field)
+        run: macos/build.sh test
+      - name: Build the universal Buuz.app
+        run: macos/build.sh
+      - name: Check the bundle
+        run: |
+          plutil -lint macos/build/Buuz.app/Contents/Info.plist
+          lipo -archs macos/build/Buuz.app/Contents/MacOS/Buuz | grep -q arm64
+          lipo -archs macos/build/Buuz.app/Contents/MacOS/Buuz | grep -q x86_64
+          test -s macos/build/Buuz.app/Contents/Resources/mn.txt
