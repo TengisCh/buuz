@@ -1,0 +1,20 @@
+[package]
+name = "buuz-ffi"
+version = "0.1.0"
+edition = "2021"
+description = "Stable C ABI around buuz-core for the Windows and macOS input methods"
+license = "MIT OR Apache-2.0"
+publish = false
+rust-version = "1.70"
+
+[lib]
+name = "buuz_ffi"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+buuz-core = { path = "../core" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
