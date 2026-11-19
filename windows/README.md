@@ -67,9 +67,13 @@ The `windows` workflow runs it after `regsvr32` on two free GitHub
 runners: x64 (`windows-latest`) and ARM64 (`windows-11-arm`). It runs on every
 PR that changes `windows/`, `ffi/` or the core. This replaces manual testing
 for typing; a human check of the real feel is still worth doing before a release. It
-needs the runner's interactive desktop and `ctfmon.exe`. A failure on x64 blocks the PR. ARM64 does not block yet: its first run
-loaded the DLL but typed no text, so the test now logs the focus state to
-find out why.
+needs the runner's interactive desktop and `ctfmon.exe`. A failure on x64 blocks the PR. The ARM64 run does not block: on the
+`windows-11-arm` runner the test window never becomes the foreground window,
+so the keys go to another window and the control stays empty. The DLL
+builds, registers and loads on ARM64 there, and the shell logic tests pass.
+Typing on ARM64 is checked by hand in a Windows 11 ARM VM (steps below and
+issue #84). The ARM64 step shows as passed in the job list, but its log
+says `FAIL`. Read the log until this works.
 
 ## Test on a Mac (Windows 11 ARM in a VM)
 
