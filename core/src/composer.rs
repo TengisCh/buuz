@@ -1183,6 +1183,27 @@ impl Composer {
         )
     }
 
+    /// Word choice for a word that the whole-text converter ends without a
+    /// Space or punctuation: at a new line or at the end of the text. Only
+    /// word choice runs here, not autocorrect, so a word that is still being
+    /// typed is not spelled again. On a choice the buffer is cleared.
+    fn choose_at_end(&mut self) -> Option<String> {
+        let words = self.opts.words.as_ref().filter(|_| self.opts.word_choice)?;
+        if self.no_correct || self.latin || self.run_latin || self.reseeded || self.comp.is_empty()
+        {
+            return None;
+        }
+        let chosen = autocorrect::choose(
+            words,
+            &self.comp,
+            &self.rejected,
+            self.opts.user.as_deref(),
+            &mut self.fix,
+        )?;
+        self.clear_buffer();
+        Some(chosen)
+    }
+
     /// The word in `comp` in lower case.
     fn lower_comp(&self) -> String {
         self.comp.iter().map(|&c| to_lower(c)).collect()
@@ -1533,6 +1554,11 @@ pub fn convert_with(input: &str, opts: &Options) -> String {
         } else {
             Key::Symbol(ch)
         };
+        if ch == '\n' {
+            if let Some(s) = c.choose_at_end() {
+                out.push_str(&s);
+            }
+        }
         let r = c.process_key(key);
         for _ in 0..r.delete_before {
             out.pop();
@@ -1552,7 +1578,7 @@ pub fn convert_with(input: &str, opts: &Options) -> String {
         }
         out.push_str(&raw);
     }
-    if let Some(s) = c.commit() {
+    if let Some(s) = c.choose_at_end().or_else(|| c.commit()) {
         out.push_str(&s);
     }
     out

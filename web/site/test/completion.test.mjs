@@ -103,7 +103,10 @@ test("autocorrect: the converter corrects a finished word once the list is loade
   load_word_list("# t\nдэлгүүр\t100\n");
   // After the load, the same input converts again with the correction.
   assert.equal(convert_with_config("delgur ", on), "дэлгүүр ");
-  assert.equal(convert_with_config("delgur\n", on), "дэлгүр\n");
+  // A newline does not correct. Word choice is off here, so only autocorrect could.
+  const acOnly = config_set_option(on, "word_choice", false);
+  assert.equal(convert_with_config("delgur\n", acOnly), "дэлгүр\n");
+  assert.equal(convert_with_config("delgur", acOnly), "дэлгүр");
   // Word choice (on by default) also finds it: у may be ү, and a vowel may be long.
   assert.equal(convert_with_config("delgur ", cfg), "дэлгүүр ");
   const neither = config_set_option(cfg, "word_choice", false);
@@ -117,8 +120,9 @@ test("word choice: the converter picks ө or ү with the list, and the switch tu
   assert.equal(switchesOf(cfg).wordChoice, true);
   load_word_list("# t\nтөв\t100\n");
   assert.equal(convert_with_config("tov ", cfg), "төв ");
-  // A newline does not end the word for word choice, as for autocorrect.
-  assert.equal(convert_with_config("tov\n", cfg), "тов\n");
+  // Word choice also runs before a newline and on the last word of the text.
+  assert.equal(convert_with_config("tov\n", cfg), "төв\n");
+  assert.equal(convert_with_config("tov", cfg), "төв");
   const off = config_set_option(cfg, "word_choice", false);
   assert.equal(switchesOf(off).wordChoice, false);
   assert.equal(convert_with_config("tov ", off), "тов ");

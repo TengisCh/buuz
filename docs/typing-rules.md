@@ -686,7 +686,7 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
 - **Web.** The converter turns the whole Latin box into Cyrillic in one call
   (`convert_with_config`). With the switch on and the word list loaded, it
   corrects each word that a Space or punctuation ends, as the core does. A
-  newline or the end of the text does not correct. The switch is in the
+  newline or the end of the text does not correct (word choice does, see 13.1). The switch is in the
   settings dialog, off by default. The page loads the word list when the
   switch is on, then converts again. The converter has no Backspace undo.
   It shows the corrected text. To stop corrections, turn the switch off.
@@ -722,6 +722,13 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
 - **Limit.** `уруу` (399) and `өрөө` (333) are both common. The list cannot
   choose, so `uruu` stays `уруу`.
 - **Autocorrect.** When both are on, word choice runs first.
+- **Whole-text converters.** `convert_with` and the website also choose the
+  word before a new line and the last word of the text. Autocorrect does
+  not run there. So `uvul` alone gives `өвөл`, but `delgur` stays `дэлгүр`
+  until a Space follows.
+- **Capitals.** A word with only its first letter in capitals keeps that
+  form: `Udur` gives `Өдөр`. A word in all capitals stays in all capitals:
+  `UVUL` gives `ӨВӨЛ`. Other mixed case stays as typed.
 
 ## 14. Personal dictionary
 

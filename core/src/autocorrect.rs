@@ -136,7 +136,11 @@ pub(crate) fn choose(
     s: &mut Scratch,
 ) -> Option<String> {
     let n = comp.len();
-    if !(MIN_LETTERS..=MAX_LETTERS).contains(&n) || comp[1..].iter().any(|c| c.is_uppercase()) {
+    // A word in all capitals (UVUL) is chosen too; other mixed case stays.
+    let caps = n > 1 && comp.iter().all(|c| !c.is_lowercase());
+    if !(MIN_LETTERS..=MAX_LETTERS).contains(&n)
+        || (!caps && comp[1..].iter().any(|c| c.is_uppercase()))
+    {
         return None;
     }
     s.word.clear();
@@ -221,7 +225,7 @@ pub(crate) fn choose(
     }
     let mut out = String::with_capacity(best.len() * 2);
     for (i, &c) in best.iter().enumerate() {
-        if i == 0 && comp[0].is_uppercase() {
+        if caps || (i == 0 && comp[0].is_uppercase()) {
             out.extend(c.to_uppercase());
         } else {
             out.push(c);
