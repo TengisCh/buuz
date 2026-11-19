@@ -1155,6 +1155,9 @@ impl Composer {
     /// false for a word that will not stay Cyrillic (the end of a domain).
     /// Runs once per word.
     fn autocorrected(&mut self, may_correct: bool) -> Option<String> {
+        if let Some(text) = self.short_particle(may_correct) {
+            return Some(text);
+        }
         let words = match &self.opts.words {
             Some(w) if self.opts.autocorrect || self.opts.word_choice => w,
             _ => return None,
@@ -1181,6 +1184,25 @@ impl Composer {
             self.opts.user.as_deref(),
             &mut self.fix,
         )
+    }
+
+    /// The particle typed short: in smart mode a lone `u` right after a word
+    /// is committed as уу or үү. A lone у or ү is never a word. The preedit
+    /// keeps one letter, so typing `uu` shows no jump.
+    fn short_particle(&self, may_correct: bool) -> Option<String> {
+        if !may_correct
+            || !self.opts.smart_vowels
+            || self.prev_gender.is_none()
+            || self.latin
+            || self.reseeded
+            || !matches!(self.read[..], ['u' | 'U'])
+        {
+            return None;
+        }
+        match self.comp[..] {
+            [c @ ('у' | 'ү' | 'У' | 'Ү')] => Some([c, to_lower(c)].iter().collect()),
+            _ => None,
+        }
     }
 
     /// Word choice for a word that the whole-text converter ends without a

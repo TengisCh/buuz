@@ -221,6 +221,12 @@ composed is consumed by the composer and does not forget it. Front ends send
 the space as `Key::Space`; `Composer::commit()` (focus loss) and
 `Composer::clear_context()` forget it on demand.
 
+In smart mode a single `u` in that place is the particle typed short. The
+preedit shows one letter, and a space or punctuation commits the long
+particle: `boloh u?` → болох уу?, `uzsen u` → үзсэн үү. A lone у or ү is
+never a word. Backspace right after the space undoes it, like a correction.
+Without a word before it, `u` stays у.
+
 ### 4.4 The negation suffix -гүй
 
 The suffix -гүй is always гүй, also after a back vowel stem: ажлахгүй,
@@ -328,7 +334,11 @@ particle нь; `ни` is not in the word list (issue #45).
 | `bhgui`, `bhgwi` | байхгүй | `sn` | сайн |
 | `ym` | юм | `zgr` | зүгээр |
 | `mdku` | мэдэхгүй | `tgd` | тэгээд |
-| `ni` | нь | | |
+| `ni` | нь | `bna` | байна |
+| `snu`, `sainu` | сайн уу | `yu` | юу |
+| `mar` | маргааш | `uzi` | үзье |
+| `yri` | ярья | `baiy` | байя |
+| `shde` | ш дээ | | |
 
 - **Case** follows the keys: `Bn` → Байна, `BN` → БАЙНА.
 - **Particle:** the expansion hands its gender to a following `uu`

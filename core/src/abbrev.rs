@@ -63,6 +63,16 @@ const BUILTIN: &[(&str, &str)] = &[
     ("sn", "сайн"),
     ("sbnu", "сайн байна уу"),
     ("tgd", "тэгээд"),
+    // Chat shortcuts from real typing samples (2026-11-19).
+    ("bna", "байна"),
+    ("snu", "сайн уу"),
+    ("sainu", "сайн уу"),
+    ("yu", "юу"),
+    ("mar", "маргааш"),
+    ("uzi", "үзье"),
+    ("yri", "ярья"),
+    ("baiy", "байя"),
+    ("shde", "ш дээ"),
     // The particle нь. `ни` is not in the word list, so `ni` never hides a word.
     ("ni", "нь"),
 ];
