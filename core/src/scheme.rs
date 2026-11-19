@@ -94,9 +94,19 @@ const RU_GOST: &[Rule] = &[
 /// next to a letter. Letters with no look-alike use their sound.
 #[rustfmt::skip]
 const RU_VOLAPUK: &[Rule] = &[
-    ("lli", "щ", Any), ("iii", "ш", Any), (">|<", "ж", Any), ("}|{", "ж", Any),
-    ("bl", "ы", Any), ("10", "ю", TouchesLetter),
-    ("e'", "э", Any), ("€", "э", Any), ("ë", "ё", Any),
+    ("lli_", "щ", Any), ("iii_", "щ", Any), ("lli", "ш", Any), ("iii", "ш", Any),
+    (">|<", "ж", Any), ("}|{", "ж", Any), ("*", "ж", TouchesLetter),
+    ("bl", "ы", Any), ("b|", "ы", Any), ("b!", "ы", Any), ("b1", "ы", Any), ("61", "ы", TouchesLetter),
+    ("10", "ю", TouchesLetter), ("|0", "ю", TouchesLetter), ("|o", "ю", Any),
+    ("i-0", "ю", Any), ("i-o", "ю", Any), ("|-0", "ю", Any), ("|-o", "ю", Any),
+    ("e'", "э", Any), ("~)", "э", Any), ("€", "э", Any),
+    ("e\"", "ё", Any), ("e~", "ё", Any), ("ë", "ё", Any),
+    ("j|", "л", Any), ("jl", "л", Any), ("/\\", "л", Any),
+    ("(|)", "ф", Any), ("u_", "ц", Any),
+    ("u~", "й", Any), ("u'", "й", Any),
+    ("~b", "ъ", Any), ("`b", "ъ", Any),
+    ("9|", "я", Any), ("91", "я", TouchesLetter),
+    ("q", "я", Any),
     ("a", "а", Any), ("b", "в", Any), ("c", "с", Any), ("d", "д", Any), ("e", "е", Any),
     ("f", "ф", Any), ("g", "г", Any), ("h", "н", Any), ("i", "и", Any), ("j", "й", Any),
     ("k", "к", Any), ("l", "л", Any), ("m", "м", Any), ("n", "п", Any), ("o", "о", Any),
