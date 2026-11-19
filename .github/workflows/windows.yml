@@ -86,6 +86,37 @@ jobs:
           $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
           $p = Start-Process regsvr32 -ArgumentList "/s", "/u", "`"$dll`"" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "unregister failed: $($p.ExitCode)" }
+      # ARM64X (ARM64 only): one buuz_tsf.dll that ARM64 and emulated x64 apps
+      # both load. It forwards to the ARM64 DLL or to an x64 DLL built here.
+      # Not blocking until it has passed on CI once.
+      - name: Build the x64 DLL (ARM64X)
+        id: x64dll
+        if: matrix.arch == 'arm64'
+        continue-on-error: true
+        shell: pwsh
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          cargo build --release --locked --target x86_64-pc-windows-msvc --manifest-path ffi/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { throw "cargo failed" }
+          $lib = (Resolve-Path "ffi/target/x86_64-pc-windows-msvc/release/buuz_ffi.lib").Path
+          cmake -S windows -B windows/build-x64 -A x64 "-DBUUZ_FFI_LIB=$lib" -DBUUZ_DLL_SUFFIX=_x64
+          if ($LASTEXITCODE -ne 0) { throw "cmake configure failed" }
+          cmake --build windows/build-x64 --config Release --target buuz_tsf
+          if ($LASTEXITCODE -ne 0) { throw "cmake build failed" }
+      - name: Build the ARM64X forwarder
+        id: arm64x
+        if: matrix.arch == 'arm64' && steps.x64dll.outcome == 'success'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          pwsh windows/arm64x/build.ps1 `
+            -Arm64Dll windows/build/Release/buuz_tsf.dll `
+            -X64Dll windows/build-x64/Release/buuz_tsf_x64.dll `
+            -Settings windows/build/Release/buuz_settings.exe `
+            -Out windows/dist-arm64x
+          if ($LASTEXITCODE -ne 0) { throw "forwarder failed" }
       # The installer needs Inno Setup. The runner image may carry it; if not,
       # install a pinned version from the Chocolatey package. This is a build
       # tool only: nothing from it goes into the DLL or the app.
@@ -107,7 +138,13 @@ jobs:
           }
           if (-not $iscc) { throw "ISCC.exe not found" }
           $src = (Resolve-Path "windows/build/Release").Path
-          & $iscc /Q "/DArch=${{ matrix.arch }}" "/DSourceDir=$src" windows/installer/buuz.iss
+          $extra = @()
+          if ("${{ steps.arm64x.outcome }}" -eq "success") {
+            # The ARM64 installer carries the forwarder and both DLLs.
+            $src = (Resolve-Path "windows/dist-arm64x").Path
+            $extra = @("/DArm64x=1")
+          }
+          & $iscc /Q "/DArch=${{ matrix.arch }}" "/DSourceDir=$src" @extra windows/installer/buuz.iss
           if ($LASTEXITCODE -ne 0) { throw "ISCC failed: $LASTEXITCODE" }
           Get-ChildItem windows/installer/output
       # Silent install, check the registration, silent uninstall, check again.
@@ -122,6 +159,8 @@ jobs:
           if ($p.ExitCode -ne 0) { Get-Content install.log -Tail 40; throw "install failed: $($p.ExitCode)" }
           if (-not (Test-Path $key)) { throw "CLSID not registered after install" }
           $dir = Join-Path $env:ProgramFiles "Buuz"
+          $registered = (Get-Item $key).GetValue("")
+          if ($registered -ne (Join-Path $dir "buuz_tsf.dll")) { throw "registered path is $registered" }
           foreach ($f in "buuz_tsf.dll", "buuz_settings.exe", "unins000.exe") {
             if (-not (Test-Path (Join-Path $dir $f))) { throw "$f missing after install" }
           }

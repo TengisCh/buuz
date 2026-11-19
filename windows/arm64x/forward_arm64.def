@@ -1,0 +1,7 @@
+; ARM64X forwarder, ARM64 half: send each export to the native DLL.
+LIBRARY buuz_tsf
+EXPORTS
+    DllGetClassObject   = buuz_tsf_arm64.DllGetClassObject   PRIVATE
+    DllCanUnloadNow     = buuz_tsf_arm64.DllCanUnloadNow     PRIVATE
+    DllRegisterServer   = buuz_tsf_arm64.DllRegisterServer   PRIVATE
+    DllUnregisterServer = buuz_tsf_arm64.DllUnregisterServer PRIVATE
