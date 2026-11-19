@@ -4,7 +4,7 @@
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
 import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, key_table, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
-import { groupKeys, type KeyOf } from "./mapping";
+import { TYPING_LANGS, formatOf, formatsOf, groupKeys, sampleKeys, type KeyOf } from "./mapping";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
 import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
@@ -94,55 +94,105 @@ function applyScheme(): void {
   renderMaps();
 }
 
-// Key tables ("How to type" and the Rules tab): built from the core rules of
-// the active scheme, so they always match what the converter does. Each has a
-// copy of the scheme picker, so people can switch the format right there.
-const mirrors = document.querySelectorAll<HTMLSelectElement>(".scheme-mirror");
-for (const m of mirrors) m.addEventListener("change", () => ready && setScheme(m.value));
+// Typing language and format. The chip under the Latin field (and the copies
+// in "How to type" and the Rules tab) opens one dialog: the language, its
+// formats and the full key table. The page language in the header changes
+// only the page text; the typing language follows it at first (schemeAfterLang).
+// The tables are built from the core rules, so they match the converter.
+const typingDlg = document.getElementById("typing") as HTMLDialogElement;
+typingDlg.querySelector(".fb-close")?.addEventListener("click", () => typingDlg.close());
+typingDlg.addEventListener("click", (e) => e.target === typingDlg && typingDlg.close());
+const openTyping = () => {
+  if (settings.open) settings.close();
+  typingDlg.showModal();
+};
+for (const chip of document.querySelectorAll<HTMLButtonElement>(".typing-chip")) chip.addEventListener("click", openTyping);
 const NOTE: Partial<Record<KeyOf["when"], Key>> = { after_vowel: "mapAfterVowel", word_start: "mapWordStart" };
+const FORMAT_EMOJI = { chat: "💬", official: "🏛️", lookalike: "🔢" } as const;
+const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...kids: (Node | string)[]) => {
+  const e = Object.assign(document.createElement(tag), props);
+  e.append(...kids);
+  return e;
+};
+function flag(lang: string): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "flag");
+  svg.setAttribute("viewBox", "0 0 24 16");
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  // Only a known language code goes into the href.
+  const code = TYPING_LANGS.find(([l]) => l === lang)?.[0] ?? "mn";
+  use.setAttribute("href", `#f-${code}`);
+  svg.append(use);
+  return svg;
+}
+function formatName(id: string): string {
+  const f = formatOf(id);
+  return f.name ?? t(f.kind === "lookalike" ? "fmtLookalike" : "fmtChat");
+}
+function formatSub(id: string): string {
+  const kind = formatOf(id).kind;
+  return kind === "official" ? t("fmtOfficialSub") : kind === "lookalike" ? "4to → что" : t("fmtChatSub");
+}
 function renderMaps(): void {
-  for (const m of mirrors) {
-    m.innerHTML = schemeSelect.innerHTML; // option text is already in the page language
-    m.value = scheme;
+  const { lang: typeLang } = formatOf(scheme);
+  const langName = TYPING_LANGS.find(([l]) => l === typeLang)?.[1] ?? typeLang;
+  const ids = scheme_ids().split(",");
+  for (const chip of document.querySelectorAll<HTMLButtonElement>(".typing-chip")) {
+    chip.replaceChildren(
+      el("span", { ariaHidden: "true", textContent: "⌨️" }),
+      flag(typeLang),
+      el("span", { lang: typeLang, textContent: langName }),
+      el("span", { className: "fmt", textContent: `· ${FORMAT_EMOJI[formatOf(scheme).kind]} ${formatName(scheme)}` }),
+      el("span", { className: "chev", ariaHidden: "true", textContent: "▾" }),
+    );
+    chip.setAttribute("aria-label", `${t("typingTitle")}: ${langName}, ${formatName(scheme)}`);
   }
-  const rows = groupKeys(key_table(scheme), scheme.split("-")[0]);
-  const list = () => {
-    const ul = document.createElement("ul");
-    ul.className = "map";
-    ul.lang = scheme.split("-")[0];
-    for (const r of rows) {
-      const li = document.createElement("li");
-      const keys = document.createElement("span");
-      keys.className = "in";
-      for (const k of r.keys) {
-        const kbd = document.createElement("kbd");
-        kbd.textContent = k.latin;
-        kbd.lang = "en";
-        if (k.when === "smart") {
-          kbd.className = "smart";
-          kbd.title = t("mapSmart");
+  // The dialog: languages, then the formats of the chosen language.
+  document.getElementById("typing-langs")?.replaceChildren(
+    ...TYPING_LANGS.map(([l, name]) => {
+      const b = el("button", { type: "button", lang: l }, flag(l), el("span", { textContent: name }));
+      b.setAttribute("aria-pressed", String(l === typeLang));
+      b.addEventListener("click", () => ready && setScheme(formatsOf(l, ids)[0]));
+      return b;
+    }),
+  );
+  document.getElementById("typing-formats")?.replaceChildren(
+    ...formatsOf(typeLang, ids).map((id) => {
+      const b = el("button", { type: "button" }, el("b", { textContent: `${FORMAT_EMOJI[formatOf(id).kind]} ${formatName(id)}` }), el("small", { textContent: formatSub(id) }));
+      b.setAttribute("aria-pressed", String(id === scheme));
+      b.addEventListener("click", () => ready && setScheme(id));
+      return b;
+    }),
+  );
+  const rows = groupKeys(key_table(scheme), typeLang);
+  // The line under the output: a few keys of the active format, and a link to all.
+  const strip = document.getElementById("rule-strip");
+  if (strip) {
+    const more = el("button", { type: "button", className: "linkish" }, el("span", { ariaHidden: "true", textContent: "📖 " }), t("allRules"));
+    more.addEventListener("click", openTyping);
+    strip.replaceChildren(...sampleKeys(rows).flatMap((k) => [el("span", { className: "pair", lang: typeLang }, el("kbd", { lang: "en", textContent: k.latin }), ` ${k.out}`)]), more);
+  }
+  const list = () =>
+    el(
+      "ul",
+      { className: "map", lang: typeLang },
+      ...rows.map((r) => {
+        const keys = el("span", { className: "in" });
+        for (const k of r.keys) {
+          keys.append(el("kbd", { lang: "en", textContent: k.latin, className: k.when === "smart" ? "smart" : "", title: k.when === "smart" ? t("mapSmart") : "" }));
+          const note = NOTE[k.when];
+          if (note) keys.append(el("small", { textContent: t(note) }));
         }
-        keys.append(kbd);
-        const note = NOTE[k.when];
-        if (note) {
-          const small = document.createElement("small");
-          small.textContent = t(note);
-          keys.append(small);
+        const out = el("span", { className: "out", textContent: r.out });
+        if (r.keys.some((k) => k.when === "harmony")) {
+          out.title = t("mapHarmony");
+          out.append(el("span", { ariaHidden: "true", textContent: " 🎵" }));
         }
-      }
-      const out = document.createElement("span");
-      out.className = "out";
-      out.textContent = r.out;
-      if (r.keys.some((k) => k.when === "harmony")) {
-        out.title = t("mapHarmony");
-        out.append(Object.assign(document.createElement("span"), { textContent: " 🎵", ariaHidden: "true" }));
-      }
-      li.append(keys, out);
-      ul.append(li);
-    }
-    return ul;
-  };
-  for (const id of ["keys-cheat", "keys-rules"]) document.getElementById(id)?.replaceChildren(list());
+        return el("li", {}, keys, out);
+      }),
+    );
+  for (const id of ["keys-cheat", "keys-rules", "keys-typing"]) document.getElementById(id)?.replaceChildren(list());
 }
 document.addEventListener("buuz:lang", () => ready && renderMaps());
 

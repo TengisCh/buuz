@@ -40,3 +40,26 @@ test("every scheme has rows, and capitals are left out", () => {
 test("an empty table gives no rows", () => {
   assert.deepEqual(groupKeys("", "mn"), []);
 });
+
+import { formatOf, formatsOf, sampleKeys } from "../src/mapping.ts";
+
+test("each scheme has a language and a kind of format", () => {
+  assert.deepEqual(formatOf("mn"), { lang: "mn", kind: "chat", name: "Buuz" });
+  assert.deepEqual(formatOf("mn-mns"), { lang: "mn", kind: "official", name: "MNS 5217" });
+  assert.deepEqual(formatOf("ru-gost"), { lang: "ru", kind: "official", name: "ГОСТ 7.79" });
+  assert.equal(formatOf("ru-volapuk").kind, "lookalike");
+  assert.deepEqual(formatOf("kk"), { lang: "kk", kind: "chat", name: null });
+});
+
+test("formats of a language put the chat format first", () => {
+  const ids = scheme_ids().split(",");
+  assert.deepEqual(formatsOf("ru", ids), ["ru", "ru-gost", "ru-volapuk"]);
+  assert.deepEqual(formatsOf("mn", ids), ["mn", "mn-mns"]);
+  assert.deepEqual(formatsOf("kk", ids), ["kk"]);
+});
+
+test("sample keys are short multi-letter keys", () => {
+  const s = sampleKeys(groupKeys(key_table("ru"), "ru"));
+  assert.equal(s.length, 6);
+  assert.ok(s.some((k) => k.latin === "zh" && k.out === "ж"));
+});
