@@ -120,7 +120,9 @@ function flag(lang: string): SVGSVGElement {
   svg.setAttribute("viewBox", "0 0 24 16");
   svg.setAttribute("aria-hidden", "true");
   const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  use.setAttribute("href", `#f-${lang}`);
+  // Only a known language code goes into the href.
+  const code = TYPING_LANGS.find(([l]) => l === lang)?.[0] ?? "mn";
+  use.setAttribute("href", `#f-${code}`);
   svg.append(use);
   return svg;
 }
