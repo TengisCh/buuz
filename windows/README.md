@@ -63,7 +63,10 @@ cmake --build windows/build && ctest --test-dir windows/build
 turns the text service on for it. It sends the real keys `sain baina` with
 `SendInput`. Then it reads the text from the control and expects `сайн байна`.
 
-The `windows` workflow runs it on the Windows runner after `regsvr32`. It
+The `windows` workflow runs it after `regsvr32` on two free GitHub
+runners: x64 (`windows-latest`) and ARM64 (`windows-11-arm`). It runs on every
+PR that changes `windows/`, `ffi/` or the core. This replaces manual testing
+for typing; a human check of the real feel is still worth doing before a release. It
 needs the runner's interactive desktop and `ctfmon.exe`. The step has
 `continue-on-error: true` until it has passed on several runs. Then remove
 that line, so a failure blocks the PR.
@@ -78,8 +81,8 @@ need a Windows PC.
 2. Make a Windows 11 ARM VM and sign in to Windows.
 3. Open the latest run of the `windows` workflow on GitHub, in the Actions
    tab of `TengisCh/buuz`.
-4. Download the artifact `buuz-windows-test-build`. Unzip it on the Mac.
-5. Copy the folder `arm64` into the VM (drag and drop, or a shared folder).
+4. Download the artifact `buuz-windows-arm64`. Unzip it on the Mac.
+5. Copy the unzipped files into the VM (drag and drop, or a shared folder).
 6. In the VM, open `Terminal (Admin)` and go to the folder.
 7. Run `regsvr32 buuz_tsf.dll`. A message says the registration succeeded.
 8. Open Settings, Time and language, Language and region. Make sure
@@ -100,8 +103,8 @@ If something fails, write down the step number and what the screen shows.
 
 ## Test on a Windows PC
 
-Use the `x64` folder from the same artifact, and the same steps. The
-`e2e_typing.exe` file in that folder repeats the automatic test on your PC.
+Use the artifact `buuz-windows-x64`, and the same steps. The
+`e2e_typing.exe` file in it repeats the automatic test on your PC.
 
 ## Not done yet
 
