@@ -1,41 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// The order of the onboarding screens, and what the app remembers
-// (docs/desktop-onboarding.md section 3).
+// What the app remembers (docs/desktop-onboarding.md section 3). The order of
+// the tutorial steps is in Tutorial.swift.
 
 import Foundation
-
-enum Step: Int, CaseIterable {
-    case welcome, privacy, enable, shortcut, tryIt, tip, done
-
-    /// Screens 2 to 6 show progress dots. Welcome and Done do not.
-    var showsProgress: Bool { self != .welcome && self != .done }
-}
-
-/// Moves between screens. The "Add Buuz" screen is skipped when Buuz is
-/// already in the keyboards (Detect, don't ask).
-struct OnboardingFlow: Equatable {
-    var step: Step = .welcome
-
-    func next(enabled: Bool) -> Step {
-        guard let n = Step(rawValue: step.rawValue + 1) else { return step }
-        return (n == .enable && enabled) ? .shortcut : n
-    }
-
-    func back(enabled: Bool) -> Step {
-        guard let p = Step(rawValue: step.rawValue - 1) else { return step }
-        return (p == .enable && enabled) ? .privacy : p
-    }
-
-    mutating func goNext(enabled: Bool) { step = next(enabled: enabled) }
-    mutating func goBack(enabled: Bool) { step = back(enabled: enabled) }
-
-    /// "Step n of total" over the screens that show progress.
-    var progress: (index: Int, total: Int)? {
-        guard step.showsProgress else { return nil }
-        let shown = Step.allCases.filter { $0.showsProgress }
-        return (step.rawValue, shown.count)
-    }
-}
 
 /// Where the app keeps its small settings. `UserDefaults` in the app, a
 /// dictionary in the tests.
@@ -59,8 +26,8 @@ final class DefaultsStore: KeyValueStore {
     }
 }
 
-/// Language, theme and the onboarding position. Mongolian and the light theme
-/// are the defaults. The app does not follow the system language or theme.
+/// Language, theme and the onboarding position. Mongolian is the default
+/// language. The theme follows the system by default.
 final class Prefs {
     private let store: KeyValueStore
     init(_ store: KeyValueStore) { self.store = store }
@@ -70,15 +37,52 @@ final class Prefs {
         set { store.set(newValue.rawValue, for: "language") }
     }
 
-    var dark: Bool {
-        get { store.string("theme") == "dark" }
-        set { store.set(newValue ? "dark" : "light", for: "theme") }
+    /// Follows the system by default. The old values "light" and "dark" still work.
+    var theme: Theme {
+        get { store.string("theme").flatMap(Theme.init(rawValue:)) ?? .system }
+        set { store.set(newValue.rawValue, for: "theme") }
     }
 
-    /// The screen to open on. Quitting in the middle resumes here.
-    var step: Step {
-        get { store.string("onboarding.step").flatMap(Int.init).flatMap(Step.init(rawValue:)) ?? .welcome }
-        set { store.set(String(newValue.rawValue), for: "onboarding.step") }
+    /// The tutorial step to open on. Quitting in the middle resumes here.
+    var tourStep: TourStep {
+        get { store.string("tour.step").flatMap(TourStep.init(rawValue:)) ?? .welcome }
+        set { store.set(newValue.rawValue, for: "tour.step") }
+    }
+
+    /// The lessons (1 to 8) that the user passed.
+    var passedLessons: Set<Int> {
+        get {
+            let list = (store.string("tour.passed") ?? "").split(separator: ",").compactMap { Int($0) }
+            return Set(list.filter { (1...8).contains($0) })
+        }
+        set {
+            let text = newValue.sorted().map(String.init).joined(separator: ",")
+            store.set(text.isEmpty ? nil : text, for: "tour.passed")
+        }
+    }
+
+    /// `SwitchKey.rawValue` of the chosen switch key. Nil until the user chooses.
+    var switchKey: String? {
+        get { store.string("switchKey") }
+        set { store.set(newValue, for: "switchKey") }
+    }
+
+    /// The recorded own shortcut, kept when the user picks another option.
+    var customHotkey: Hotkey? {
+        get { store.string("switchKey.custom").flatMap(Hotkey.decode) }
+        set { store.set(newValue?.encoded, for: "switchKey.custom") }
+    }
+
+    /// True after the current keyboard was Buuz once.
+    var switchedOnce: Bool {
+        get { store.string("switched.once") == "1" }
+        set { store.set(newValue ? "1" : nil, for: "switched.once") }
+    }
+
+    /// True when the user folded the setup card in the sidebar.
+    var setupFolded: Bool {
+        get { store.string("setup.folded") == "1" }
+        set { store.set(newValue ? "1" : nil, for: "setup.folded") }
     }
 
     var onboardingDone: Bool {

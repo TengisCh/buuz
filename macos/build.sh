@@ -64,6 +64,8 @@ lipo -create "${slices[@]}" -output "$APP/Contents/MacOS/Buuz"
 cp Info.plist "$APP/Contents/Info.plist"
 cp Resources/*.png "$APP/Contents/Resources/"
 cp "$ROOT/data/wordlist/mn.txt" "$APP/Contents/Resources/mn.txt"
+# The Apache-2.0 NOTICE must ship with the app.
+cp "$ROOT/NOTICE" "$APP/Contents/Resources/NOTICE"
 
 # The app icon: Buuz Buddy, from the exported PNGs in brand/export.
 iconset=$OUT/Buuz.iconset
@@ -82,7 +84,7 @@ cp "$b-512.png" "$iconset/icon_512x512.png"
 cp "$b-1024.png" "$iconset/icon_512x512@2x.png"
 iconutil -c icns "$iconset" -o "$APP/Contents/Resources/Buuz.icns"
 
-# The Buuz app: welcome steps and settings (SwiftUI). It shares the Core
+# The Buuz app: tutorial, lessons and settings (SwiftUI). It shares the Core
 # Swift files. The input method process does the typing.
 SET=$OUT/Settings.app
 rm -rf "$SET" "$OUT/settings-slices"
@@ -99,6 +101,9 @@ lipo -create "${set_slices[@]}" -output "$SET/Contents/MacOS/BuuzSettings"
 cp Settings/Info.plist "$SET/Contents/Info.plist"
 cp -R App/Strings "$SET/Contents/Resources/Strings"
 cp "$b-256.png" "$SET/Contents/Resources/buuz-buddy-256.png"
+cp "$ROOT/brand/export/buuz-wordmark.png" "$ROOT/brand/export/buuz-wordmark-light.png" "$SET/Contents/Resources/"
+cp "$ROOT/data/wordlist/mn.txt" "$SET/Contents/Resources/mn.txt"
+cp "$ROOT/NOTICE" "$SET/Contents/Resources/NOTICE"
 cp "$APP/Contents/Resources/Buuz.icns" "$SET/Contents/Resources/Buuz.icns"
 codesign --force --sign - "$SET"
 
