@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2026 the Buuz contributors. Licensed under the Apache License,
+// Version 2.0.
+
+//! Real chat typing from the maintainer: shortcuts and the short particle `u`.
+//! Each case is a word that the maintainer typed for an everyday sentence.
+
+use std::sync::Arc;
+
+use buuz_core::{convert_with, Options, WordList};
+
+const REAL: &str = include_str!("../../data/wordlist/mn.txt");
+
+/// The web defaults: smart mode with the word list.
+fn web() -> Options {
+    Options {
+        words: Some(Arc::new(WordList::parse(REAL).unwrap())),
+        ..Options::smart()
+    }
+}
+
+fn eq(input: &str, want: &str) {
+    assert_eq!(convert_with(input, &web()), want, "input {input:?}");
+}
+
+#[test]
+fn chat_shortcuts_expand() {
+    eq("snu yu bn?", "сайн уу юу байна?");
+    eq("sainu yu bn ", "сайн уу юу байна ");
+    eq("ih huiten bna, ", "их хүйтэн байна, ");
+    eq("mar heden ", "маргааш хэдэн ");
+    eq("bodood uzi ", "бодоод үзье ");
+    eq("daraa yri ", "дараа ярья ");
+    eq("huleej baiy ", "хүлээж байя ");
+    eq("mungu baihgui shde ", "мөнгө байхгүй ш дээ ");
+}
+
+#[test]
+fn shortcut_case_follows_the_keys() {
+    eq("Snu ", "Сайн уу ");
+    eq("Yu ", "Юу ");
+}
+
+#[test]
+fn a_short_particle_u_is_doubled_after_a_word() {
+    eq("boloh u?", "болох уу?");
+    eq("uusan u?", "уусан уу?");
+    eq("uzsen u ", "үзсэн үү ");
+    eq("Boloh U?", "Болох Уу?");
+}
+
+#[test]
+fn a_lone_u_without_a_word_before_stays() {
+    eq("u", "у");
+    eq("u ", "у ");
+}
+
+#[test]
+fn classic_mode_is_unchanged() {
+    assert_eq!(
+        convert_with("boloh u? snu ", &Options::classic()),
+        "болох у? сну "
+    );
+}
