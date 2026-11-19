@@ -19,12 +19,15 @@ sleep 2
 pgrep -lf "Buuz" || echo "e2e: Buuz is not running after open"
 
 status=0
-"$OUT/e2e" || status=$?
+"$OUT/e2e" 2>&1 | tee "$OUT/e2e.out" || true
+status=${PIPESTATUS[0]}
 
 if [ "$status" -ne 0 ]; then
   echo "--- e2e failed with status $status. Diagnostics:"
   pgrep -lf Buuz || echo "no Buuz process is running"
   ls -la "$HOME/Library/Input Methods" || true
-  log show --last 3m --style compact --predicate '(process == "Buuz" OR process == "imklaunchagent" OR process == "TextInputMenuAgent" OR process == "e2e" OR eventMessage CONTAINS "inputmethod.Buuz") AND NOT subsystem == "com.apple.networkextension"' 2>/dev/null | tail -60 || true
+  log show --last 3m --style compact --predicate '(process == "Buuz" OR process == "imklaunchagent" OR process == "TextInputMenuAgent" OR process == "e2e" OR eventMessage CONTAINS "inputmethod.Buuz") AND NOT subsystem == "com.apple.networkextension"' 2>/dev/null | grep -v -E "TextInputUI|inputAnalytics|CoreAnalytics|xpc:connection" | tail -40 || true
 fi
+echo "--- e2e result lines:"
+grep '^e2e:' "$OUT/e2e.out" || true
 exit "$status"
