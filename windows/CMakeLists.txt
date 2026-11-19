@@ -65,6 +65,12 @@ if(WIN32)
     src/text_service.cpp src/registration.cpp src/display_attributes.cpp src/guids.cpp buuz_tsf.def)
   target_compile_definitions(buuz_tsf PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
   target_link_libraries(buuz_tsf PRIVATE buuz_shell ole32 oleaut32 uuid advapi32 user32)
+  # ARM64X: the ARM64 and x64 builds get a suffix (_arm64, _x64). A small
+  # forwarder named buuz_tsf.dll loads the right one (windows/arm64x).
+  set(BUUZ_DLL_SUFFIX "" CACHE STRING "Suffix for the DLL name, e.g. _x64")
+  if(BUUZ_DLL_SUFFIX)
+    set_property(TARGET buuz_tsf PROPERTY OUTPUT_NAME "buuz_tsf${BUUZ_DLL_SUFFIX}")
+  endif()
   if(MSVC)
     # Static C runtime: nothing else to install, small load time.
     set_property(TARGET buuz_tsf buuz_shell engine_test buuz_app_logic app_test PROPERTY

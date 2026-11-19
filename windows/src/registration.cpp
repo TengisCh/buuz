@@ -89,9 +89,25 @@ HRESULT create_class_factory(REFIID riid, void** ppv) {
     return hr;
 }
 
+// On ARM64 Windows, `buuz_tsf.dll` is a small ARM64X forwarder that sends
+// each call to `buuz_tsf_arm64.dll` or `buuz_tsf_x64.dll`. Both real DLLs
+// register the forwarder, so ARM64 and emulated x64 apps load the same path.
+std::wstring registered_path(const wchar_t* module_path) {
+    std::wstring path = module_path;
+    for (const wchar_t* suffix : {L"_arm64.dll", L"_x64.dll"}) {
+        const size_t n = wcslen(suffix);
+        if (path.size() > n && _wcsicmp(path.c_str() + path.size() - n, suffix) == 0) {
+            return path.substr(0, path.size() - n) + L".dll";
+        }
+    }
+    return path;
+}
+
 HRESULT register_server(HMODULE module) {
-    wchar_t path[MAX_PATH];
-    if (GetModuleFileNameW(module, path, MAX_PATH) == 0) return HRESULT_FROM_WIN32(GetLastError());
+    wchar_t module_path[MAX_PATH];
+    if (GetModuleFileNameW(module, module_path, MAX_PATH) == 0) return HRESULT_FROM_WIN32(GetLastError());
+    const std::wstring registered = registered_path(module_path);
+    const wchar_t* path = registered.c_str();
 
     // 1. COM class: HKLM\SOFTWARE\Classes\CLSID\{...}\InprocServer32
     const std::wstring clsid = guid_string(CLSID_BuuzTextService);

@@ -1,4 +1,3 @@
-LIBRARY buuz_tsf
 EXPORTS
     DllGetClassObject   PRIVATE
     DllCanUnloadNow     PRIVATE

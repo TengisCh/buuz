@@ -97,6 +97,23 @@ To build it yourself, install Inno Setup 6, then run:
 ISCC /DArch=x64 /DSourceDir=windows\build\Release windows\installer\buuz.iss
 ```
 
+## ARM64X (ARM64 and emulated x64 apps)
+
+On Windows ARM64, an ARM64 DLL loads only into ARM64 apps. Many apps still run as x64 under emulation. They need an x64 DLL.
+The ARM64 installer therefore carries three DLLs:
+
+| File | What |
+| --- | --- |
+| `buuz_tsf.dll` | ARM64X forwarder, no code. This is the registered path. |
+| `buuz_tsf_arm64.dll` | The text service for ARM64 apps |
+| `buuz_tsf_x64.dll` | The text service for x64 apps |
+
+- `windows/arm64x/build.ps1` links the forwarder with `link /machine:arm64x` and two `.def` files (`forward_arm64.def`, `forward_x64.def`).
+- The ARM64 CI job builds the x64 DLL too (Rust target `x86_64-pc-windows-msvc`, CMake `-A x64`, `-DBUUZ_DLL_SUFFIX=_x64`).
+- The suffixed DLLs register the forwarder path, not their own (`registered_path` in `src/registration.cpp`).
+- If a step fails, CI builds the plain ARM64 installer, and the ARM64X steps show red but do not block.
+- Check by hand on a Windows 11 ARM VM: type in an ARM64 app (Notepad) and in an x64 app (for example an x64 build of Notepad++).
+
 ## Automated end-to-end test
 
 `tests/e2e_typing.cpp` makes a real window with a Rich Edit control and
@@ -153,7 +170,7 @@ Use the artifact `buuz-windows-x64`, and the same steps. The
 ## Not done yet
 
 - Code signing (SignPath or Microsoft Store) and winget. The installer is unsigned, so SmartScreen warns.
-- ARM64X (one DLL for ARM64 and emulated x64 apps) and x86 builds.
+- x86 (32-bit) build.
 - Settings app: import and export, abbreviation and key editors, per-app
   memory, update check, dark theme polish. Mongolian text needs a native
   check by T.
