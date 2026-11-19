@@ -70,6 +70,7 @@ jobs:
       # It passed on x64 on its first run, so x64 blocks the build. ARM64 does
       # not block until it has passed too (see README).
       - name: End-to-end typing test
+        timeout-minutes: 4
         continue-on-error: ${{ matrix.arch == 'arm64' }}
         shell: pwsh
         run: |

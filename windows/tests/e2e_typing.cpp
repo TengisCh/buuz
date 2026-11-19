@@ -61,21 +61,19 @@ void type(const char* keys) {
 }
 
 // Bring the window to the front and put the keyboard focus in the control.
-// Windows refuses SetForegroundWindow from a background process, so press a
-// harmless Alt key first and click into the control as a real user would.
+// Windows refuses SetForegroundWindow from a background process. Sharing
+// the input queue of the current foreground thread makes it work.
 void take_focus(HWND top) {
-    keybd_event(VK_MENU, 0, 0, 0);
-    keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
+    const DWORD me = GetCurrentThreadId();
+    const HWND fg = GetForegroundWindow();
+    const DWORD fg_thread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
+    const bool attached = fg_thread != 0 && fg_thread != me && AttachThreadInput(me, fg_thread, TRUE);
     ShowWindow(top, SW_SHOW);
     BringWindowToTop(top);
+    SwitchToThisWindow(top, TRUE);
     SetForegroundWindow(top);
     SetFocus(g_edit);
-    pump(200);
-    RECT r = {};
-    GetWindowRect(g_edit, &r);
-    SetCursorPos((r.left + r.right) / 2, (r.top + r.bottom) / 2);
-    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+    if (attached) AttachThreadInput(me, fg_thread, FALSE);
     pump(300);
 }
 
@@ -95,7 +93,16 @@ void print_hex(const wchar_t* label, const std::wstring& s) {
 
 }  // namespace
 
+// If anything blocks, end the test instead of hanging the CI job.
+DWORD WINAPI watchdog(LPVOID) {
+    Sleep(90000);
+    std::printf("FAIL: the test took more than 90 seconds\n");
+    std::fflush(stdout);
+    ExitProcess(3);
+}
+
 int main() {
+    CreateThread(nullptr, 0, watchdog, nullptr, 0, nullptr);
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) return 2;
     LoadLibraryW(L"Msftedit.dll");
 
