@@ -45,3 +45,10 @@ jobs:
           test -s macos/build/Buuz.app/Contents/Resources/mn.txt
           plutil -lint macos/build/Settings.app/Contents/Info.plist
           test -s macos/build/Settings.app/Contents/Resources/Strings/strings.mn.json
+      # End to end: install the app, turn it on, send keys through macOS to the
+      # real input method, and read what a Cocoa text view shows. No permission
+      # prompts are needed. (docs: macos/README.md, "End-to-end test")
+      - name: Install Buuz and run the end-to-end test
+        run: |
+          macos/install.sh
+          macos/e2e/run.sh
