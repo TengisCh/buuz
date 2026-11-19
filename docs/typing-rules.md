@@ -736,6 +736,14 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
   `өөрийн` (7898), and still changes `мон` (114) to `мөн` (20067).
 - **Limit.** `уруу` (399) and `өрөө` (333) are both common. The list cannot
   choose, so `uruu` stays `уруу`.
+- **Tie and own uses.** When no candidate wins by the rules above, the
+  personal dictionary (section 14) can break the tie. A candidate wins only
+  when the user used it 3 times or more (the same minimum as completion),
+  more than the word as typed, and the list ranks it within 3 times of the
+  word as typed. It never beats a clear winner. With `өрөө` used 5 times,
+  `uruu` gives `өрөө`. With 2 uses, `uruu` stays `уруу`. `uuriin` stays
+  `уурын`, because `өөрийн` is far ahead of it. The check adds no
+  allocation and runs only when no candidate won.
 - **Chat words.** The word list comes from Wikipedia, so everyday chat
   words are rare in it. `WordList::with_chat_words` gives about 60 of them
   (`core/src/chat_words.rs`) a count of at least 10,000. The web converter

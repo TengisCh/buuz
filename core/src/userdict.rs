@@ -480,6 +480,18 @@ impl UserSnapshot {
         self.rejected.contains(word)
     }
 
+    /// How often the user used `word` (lower case), counted only from
+    /// `MIN_USES_FOR_COMPLETION` uses: otherwise 0. Allocation-free.
+    pub(crate) fn uses(&self, word: &str) -> u32 {
+        if self.words.is_empty() {
+            return 0;
+        }
+        match self.words.binary_search_by(|w| w.as_str().cmp(word)) {
+            Ok(i) if self.ranks[i].0 >= MIN_USES_FOR_COMPLETION => self.ranks[i].0,
+            _ => 0,
+        }
+    }
+
     /// How many completion candidates start with `prefix`: the size of the
     /// range that [`UserSnapshot`] scans for a key.
     pub fn candidates(&self, prefix: &str) -> usize {
