@@ -28,6 +28,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
         with:
           toolchain: stable
+          targets: aarch64-pc-windows-msvc
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: ffi
@@ -42,13 +43,13 @@ jobs:
         run: cmake --build windows/build --config Release
       - name: Run the shell logic tests
         run: ctest --test-dir windows/build -C Release --output-on-failure
-      - name: Check the DLL exports
+      - name: Check the DLL
         shell: pwsh
         run: |
           $dll = "windows/build/Release/buuz_tsf.dll"
           if (-not (Test-Path $dll)) { throw "buuz_tsf.dll missing" }
           "{0:N0} KB" -f ((Get-Item $dll).Length / 1KB)
-      - name: Register, check and unregister the text service
+      - name: Register the text service
         shell: pwsh
         run: |
           $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
@@ -56,5 +57,43 @@ jobs:
           $p = Start-Process regsvr32 -ArgumentList "/s", "`"$dll`"" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "regsvr32 failed: $($p.ExitCode)" }
           if (-not (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{5E0B7A2C-9D41-4C7E-8B1A-3F6D2A9C4E10}\InprocServer32")) { throw "CLSID not registered" }
+      # Types `sain baina` with real key events into a real Rich Edit control
+      # and reads the text back. It runs on the runner's interactive desktop.
+      # It does not block the build until it has proved stable (see README).
+      - name: End-to-end typing test
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          Start-Process ctfmon.exe
+          Start-Sleep -Seconds 3
+          & windows/build/Release/e2e_typing.exe
+          exit $LASTEXITCODE
+      - name: Unregister the text service
+        if: always()
+        shell: pwsh
+        run: |
+          $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
           $p = Start-Process regsvr32 -ArgumentList "/s", "/u", "`"$dll`"" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "unregister failed: $($p.ExitCode)" }
+      # ARM64 for Windows 11 on ARM (a VM on an Apple silicon Mac). It cannot
+      # run on this x64 runner, so CI only builds it.
+      - name: Build buuz-ffi for ARM64
+        working-directory: ffi
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked --target aarch64-pc-windows-msvc
+      - name: Build the ARM64 DLL
+        run: |
+          cmake -S windows -B windows/build-arm64 -A ARM64 "-DBUUZ_FFI_LIB=$PWD/ffi/target/aarch64-pc-windows-msvc/release/buuz_ffi.lib"
+          cmake --build windows/build-arm64 --config Release --target buuz_tsf
+      - name: Collect the test files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows/dist/x64, windows/dist/arm64 | Out-Null
+          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/e2e_typing.exe windows/dist/x64/
+          Copy-Item windows/build-arm64/Release/buuz_tsf.dll windows/dist/arm64/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: buuz-windows-test-build
+          path: windows/dist
+          retention-days: 14

@@ -6,7 +6,7 @@ in C++17 that Windows loads into each app. The typing rules come from the
 Rust core, through the C library in [`../ffi`](../ffi).
 
 Status: first version, see issue #76. It types and shows the underlined
-preedit. There is no installer, settings app or onboarding yet.
+preedit. CI builds x64 and ARM64. There is no installer, settings app or onboarding yet.
 
 ## Layout
 
@@ -57,26 +57,56 @@ cmake -S windows -B windows/build -DBUUZ_FFI_LIB=$PWD/ffi/target/debug/libbuuz_f
 cmake --build windows/build && ctest --test-dir windows/build
 ```
 
-## Try it
+## Automated end-to-end test
 
-Run these in an administrator terminal, in a test machine or VM:
+`tests/e2e_typing.cpp` makes a real window with a Rich Edit control and
+turns the text service on for it. It sends the real keys `sain baina` with
+`SendInput`. Then it reads the text from the control and expects `сайн байна`.
 
-```sh
-regsvr32 windows\build\Release\buuz_tsf.dll
-```
+The `windows` workflow runs it on the Windows runner after `regsvr32`. It
+needs the runner's interactive desktop and `ctfmon.exe`. The step has
+`continue-on-error: true` until it has passed on several runs. Then remove
+that line, so a failure blocks the PR.
 
-Then open Settings, Time and language, Language and region, Mongolian,
-Options, and check that the keyboard "Buuz 2.0" is there. Switch to it
-with Win+Space and type `sain baina uu`. To remove it:
+## Test on a Mac (Windows 11 ARM in a VM)
 
-```sh
-regsvr32 /u windows\build\Release\buuz_tsf.dll
-```
+An Apple silicon Mac runs Windows 11 ARM in a virtual machine. You do not
+need a Windows PC.
+
+1. Install a VM app. Use Parallels Desktop (it downloads Windows 11 for you)
+   or UTM (free; you need a Windows 11 ARM ISO).
+2. Make a Windows 11 ARM VM and sign in to Windows.
+3. Open the latest run of the `windows` workflow on GitHub, in the Actions
+   tab of `TengisCh/buuz`.
+4. Download the artifact `buuz-windows-test-build`. Unzip it on the Mac.
+5. Copy the folder `arm64` into the VM (drag and drop, or a shared folder).
+6. In the VM, open `Terminal (Admin)` and go to the folder.
+7. Run `regsvr32 buuz_tsf.dll`. A message says the registration succeeded.
+8. Open Settings, Time and language, Language and region. Make sure
+   Mongolian has the keyboard "Buuz 2.0". Add Mongolian first if it is not
+   in the list.
+9. Open Notepad. Press Win+Space until "Buuz 2.0" is active.
+10. Type `sain baina uu`. The text must become `сайн байна уу`, with an
+    underline under the word you are still typing.
+
+To remove it, run `regsvr32 /u buuz_tsf.dll`.
+
+Use the `arm64` DLL in this VM. Windows loads it into ARM64 apps only
+(Notepad, Edge, Terminal and most Windows apps). An x64 app running under
+emulation does not load it. One DLL for both kinds of app needs ARM64X,
+which is a later step.
+
+If something fails, write down the step number and what the screen shows.
+
+## Test on a Windows PC
+
+Use the `x64` folder from the same artifact, and the same steps. The
+`e2e_typing.exe` file in that folder repeats the automatic test on your PC.
 
 ## Not done yet
 
 - Installer, signing (SignPath or Microsoft Store), winget.
-- ARM64, ARM64X and x86 builds.
+- ARM64X (one DLL for ARM64 and emulated x64 apps) and x86 builds.
 - Settings app and onboarding (`docs/desktop-onboarding.md`), in Mongolian
   and English. Mongolian text needs a native check by T.
 - Ctrl+Space Buuz on/off key, per-app memory, password fields.

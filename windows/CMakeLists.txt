@@ -55,4 +55,13 @@ if(WIN32)
       MSVC_RUNTIME_LIBRARY "MultiThreaded")
     target_link_options(buuz_tsf PRIVATE /DEBUG /OPT:REF /OPT:ICF)
   endif()
+
+  # End-to-end typing test. It needs the DLL registered (regsvr32) and an
+  # interactive desktop, so it does not run under plain `ctest`.
+  add_executable(e2e_typing tests/e2e_typing.cpp src/guids.cpp)
+  target_compile_definitions(e2e_typing PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
+  target_link_libraries(e2e_typing PRIVATE ole32 oleaut32 uuid user32)
+  if(MSVC)
+    set_property(TARGET e2e_typing PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+  endif()
 endif()
