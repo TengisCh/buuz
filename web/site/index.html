@@ -188,9 +188,7 @@
         </div>
 
         <div id="pane-typing" class="set-pane" role="tabpanel" aria-labelledby="tab-typing">
-          <section class="scheme" aria-labelledby="scheme-label">
-            <label id="scheme-label" for="scheme"><span aria-hidden="true">🌐</span> <span data-i18n="schemeLabel">Бичих хэл</span></label>
-            <select id="scheme">
+          <select id="scheme" hidden aria-hidden="true" tabindex="-1">
               <option value="mn" data-i18n="schemeMn">Монгол (үндсэн)</option>
               <option value="mn-mns" lang="mn">Монгол (MNS 5217:2012)</option>
               <option value="ru" lang="ru">Русский</option>
@@ -205,9 +203,6 @@
               <option value="kk" lang="kk">Қазақша</option>
               <option value="ky" lang="ky">Кыргызча</option>
             </select>
-            <p id="scheme-tip" class="hint other-only" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно. Жишээ нь privet гэвэл привет болно. Нэг апостроф (') бичвэл ь, хоёр апостроф бичвэл ъ болно.</p>
-            <p id="scheme-draft" class="hint other-only" data-i18n="schemeDraft" hidden>Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.</p>
-          </section>
           <fieldset class="mode seg mn-only">
             <legend class="sr-only" data-i18n="mode">Горим</legend>
             <label><input type="radio" name="mode" value="smart" checked /><span><span aria-hidden="true">✨ </span><span data-i18n="modeSmart">Ухаалаг</span></span></label>
@@ -254,7 +249,7 @@
         </div>
 
         <div id="pane-rules" class="set-pane" role="tabpanel" aria-labelledby="tab-rules" hidden>
-          <p class="map-format"><label for="scheme-rules"><span aria-hidden="true">📋 </span><span data-i18n="mapFormat">Формат</span></label> <select id="scheme-rules" class="scheme-mirror"></select></p>
+          <p class="map-format"><button type="button" class="typing-chip" aria-haspopup="dialog" aria-controls="typing"></button></p>
           <div id="keys-rules" class="keys keys-rules"></div>
           <p class="hint map-legend mn-only"><span aria-hidden="true">✨ </span><span data-i18n="mapSmart">ухаалаг горимд</span> · <span aria-hidden="true">🎵 </span><span data-i18n="mapHarmony">эгшиг зохицлоор о/ө, у/ү</span></p>
           <div class="mn-only">
@@ -292,6 +287,19 @@
           <div id="cfg-msg" class="cfg-msg" role="status"></div>
           <div id="cfg-err" class="cfg-msg err" role="alert"></div>
         </section>
+      </dialog>
+      <dialog id="typing" class="settings typing-dlg" aria-labelledby="typing-title">
+        <div class="fb-head">
+          <h2 id="typing-title"><span aria-hidden="true">⌨️ </span><span data-i18n="typingTitle">Бичих хэл</span></h2>
+          <button type="button" class="fb-close" data-i18n-aria="close" aria-label="Хаах" title="Хаах"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+        </div>
+        <div id="typing-langs" class="t-langs" role="group" data-i18n-aria="typingTitle" aria-label="Бичих хэл"></div>
+        <h3 class="rules-h"><span aria-hidden="true">📋 </span><span data-i18n="mapFormat">Формат</span></h3>
+        <div id="typing-formats" class="t-formats" role="group" data-i18n-aria="mapFormat" aria-label="Формат"></div>
+        <p id="scheme-draft" class="hint" data-i18n="schemeDraft" hidden>Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.</p>
+        <div id="keys-typing" class="keys keys-typing"></div>
+        <p class="hint map-legend mn-only"><span aria-hidden="true">✨ </span><span data-i18n="mapSmart">ухаалаг горимд</span> · <span aria-hidden="true">🎵 </span><span data-i18n="mapHarmony">эгшиг зохицлоор о/ө, у/ү</span></p>
+        <p class="hint"><span aria-hidden="true">🌐 </span><span data-i18n="typingNote">Хуудасны хэл зөвхөн бичвэрийг солино. Бичих хэл анх түүнийг дагана.</span></p>
       </dialog>
 
       <dialog id="calibrate" class="settings calibrate" aria-labelledby="cal-title">
@@ -342,6 +350,7 @@
           ></textarea>
           <p id="completion-hint" class="completion-hint" hidden></p>
           <button id="clear-x" type="button" class="in-btn clear-x" data-i18n-aria="clear" aria-label="Цэвэрлэх" title="Цэвэрлэх" hidden><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+          <div class="typing-bar"><button type="button" class="typing-chip" aria-haspopup="dialog" aria-controls="typing"></button></div>
           <div class="actions">
             <button id="clear" type="button" class="ghost" data-i18n="clear">Цэвэрлэх</button>
           </div>
@@ -353,6 +362,7 @@
             <textarea id="cyr" lang="mn" rows="7" readonly aria-live="polite"></textarea>
             <button id="copy-x" type="button" class="in-btn copy-x" data-i18n-aria="copy" aria-label="Хуулах" title="Хуулах"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M16 5.5A2.5 2.5 0 0 0 13.5 3h-7A2.5 2.5 0 0 0 4 5.5v7A2.5 2.5 0 0 0 6.5 15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>
           </div>
+          <p id="rule-strip" class="rule-strip"></p>
           <div class="actions">
             <p id="status" class="status" role="status"></p>
             <button id="copy" type="button" class="primary" data-i18n="copy">Хуулах</button>
@@ -365,7 +375,7 @@
 
       <details class="cheat">
         <summary><span aria-hidden="true">⌨️ </span><span data-i18n="howTo">Яаж бичих вэ?</span></summary>
-        <p class="map-format"><label for="scheme-cheat"><span aria-hidden="true">📋 </span><span data-i18n="mapFormat">Формат</span></label> <select id="scheme-cheat" class="scheme-mirror"></select></p>
+        <p class="map-format"><button type="button" class="typing-chip" aria-haspopup="dialog" aria-controls="typing"></button></p>
         <div class="keys" id="keys-cheat">
           <div class="col">
             <h3 data-i18n="vowels">Эгшиг</h3>
