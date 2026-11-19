@@ -48,10 +48,12 @@ test("the FAQ data of each language is valid and in that language", () => {
   assert.ok(render(html, "ru").includes(`"inLanguage": "ru"`));
 });
 
-test("the language button of each page names the next language", () => {
-  assert.match(render(html, "en"), /id="lang"[^>]*>РУ</);
-  assert.match(render(html, "ru"), /id="lang"[^>]*>МН</);
-  assert.match(render(html, "uk"), /id="lang"[^>]*>МН</);
+test("each page marks its language in the picker and uses its own preview image", () => {
+  assert.match(render(html, "en"), /<option value="en" selected lang="en">/);
+  assert.match(render(html, "uk"), /<option value="uk" selected lang="uk">/);
+  assert.doesNotMatch(render(html, "uk"), /<option value="mn"[^>]* selected/);
+  assert.match(render(html, "uk"), /og:image" content="https:\/\/buuz\.thetengis\.com\/og\/uk\.png"/);
+  assert.match(render(html, "ru"), /twitter:image" content="[^"]*\/og\/ru\.png"/);
 });
 
 test("the footer lists every language and marks the current one", () => {

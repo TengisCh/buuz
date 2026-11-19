@@ -69,6 +69,7 @@ const mn = {
   credit:
     'Buuz 2.0 бол Нямцэрэнгийн Одбаярын бүтээсэн <span class="nw"><a href="https://github.com/odbayar/buuz">Buuz</a>-ийн</span> үргэлжлэл.',
   skip: "Хөрвүүлэгч рүү очих",
+  langLabel: "Хэл",
   close: "Хаах",
   settings: "Тохиргоо",
   footProduct: "Бүтээгдэхүүн",
@@ -85,8 +86,6 @@ const mn = {
   fbCollab: "Хамтран ажиллах",
   contactBody: "Хувийн асуулт, хамтын ажиллагаа, хэвлэлийн хүсэлт байвал шууд имэйлээр бичээрэй. Энэ нь нийтэд харагдахгүй.",
   fbIssue: "Явцыг нь эндээс хараарай →",
-  switchTo: "EN",
-  switchLabel: "EN: Switch to English",
   vowels: "Эгшиг",
   yVowels: "Й-тэй эгшиг",
   consonants: "Гийгүүлэгч",
@@ -286,6 +285,7 @@ const en: Record<Key, string> = {
   github: "Open source on GitHub",
   credit: 'Buuz 2.0 continues <a href="https://github.com/odbayar/buuz">Buuz</a> by Odbayar Nyamtseren.',
   skip: "Skip to the converter",
+  langLabel: "Language",
   close: "Close",
   settings: "Settings",
   footProduct: "Product",
@@ -302,8 +302,6 @@ const en: Record<Key, string> = {
   fbCollab: "Collaborate",
   contactBody: "Private questions, collaboration or press? Email us directly. This isn't public.",
   fbIssue: "Follow it here →",
-  switchTo: "РУ",
-  switchLabel: "РУ: Переключить на русский",
   vowels: "Vowels",
   yVowels: "Y-vowels",
   consonants: "Consonants",
@@ -490,6 +488,7 @@ const ru: Record<Key, string> = {
   github: "Открытый код на GitHub",
   credit: 'Buuz 2.0 продолжает <a href="https://github.com/odbayar/buuz">Buuz</a> Odbayar Nyamtseren.',
   skip: "Перейти к конвертеру",
+  langLabel: "Язык",
   close: "Закрыть",
   settings: "Настройки",
   footProduct: "Продукт",
@@ -506,8 +505,6 @@ const ru: Record<Key, string> = {
   fbCollab: "Сотрудничество",
   contactBody: "Личный вопрос, сотрудничество или пресса? Напишите нам напрямую. Это не публикуется.",
   fbIssue: "Следить здесь →",
-  switchTo: "МН",
-  switchLabel: "МН: Монгол хэл рүү шилжих",
   vowels: "Гласные",
   yVowels: "Йотированные",
   consonants: "Согласные",
@@ -696,12 +693,6 @@ export function lang(): Lang {
   return current;
 }
 
-/** The language the button shows next. A language outside the cycle goes to Mongolian. */
-export function nextLang(l: Lang): Lang {
-  const i = ORDER.indexOf(l);
-  return i < 0 ? "mn" : ORDER[(i + 1) % ORDER.length];
-}
-
 export function t(key: Key): string {
   return strings[current][key] ?? en[key];
 }
@@ -761,13 +752,8 @@ export function apply(lang: Lang): void {
     if (a.hreflang === lang) a.setAttribute("aria-current", "true");
     else a.removeAttribute("aria-current");
   }
-  const btn = document.getElementById("lang") as HTMLButtonElement | null;
-  if (btn) {
-    btn.textContent = t("switchTo");
-    btn.setAttribute("aria-label", t("switchLabel"));
-    btn.title = t("switchLabel");
-    btn.lang = nextLang(lang);
-  }
+  const sel = document.getElementById("lang");
+  if (sel instanceof HTMLSelectElement) sel.value = lang;
   document.dispatchEvent(new Event("buuz:lang"));
 }
 
@@ -777,8 +763,9 @@ export function setupLang(): void {
   else current = "mn";
   // A saved choice or ?lang= on the root page moves to that language's own URL.
   if (langOfPath(location.pathname) === "mn" && lang !== "mn") history.replaceState(null, "", PATHS[lang]);
-  document.getElementById("lang")?.addEventListener("click", () => {
-    const next = nextLang(current);
+  document.getElementById("lang")?.addEventListener("change", (e) => {
+    const next = (e.target as HTMLSelectElement).value;
+    if (!isLang(next) || next === current) return;
     save(next);
     apply(next);
     history.pushState(null, "", PATHS[next]);

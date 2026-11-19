@@ -12,7 +12,7 @@
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { ALL_LANGS, PATHS as LANG_PATHS, nextLang, strings } from "../src/i18n.ts";
+import { ALL_LANGS, PATHS as LANG_PATHS, strings } from "../src/i18n.ts";
 
 export const ORIGIN = "https://buuz.thetengis.com";
 export const PATHS = LANG_PATHS;
@@ -113,14 +113,11 @@ export function render(html, lang) {
   out = out.replace(/<[a-z0-9]+\b[^>]*\sdata-i18n-ph="(\w+)"[^>]*>/g, (tag, key) => (key in s ? setAttr(tag, "placeholder", s[key]) : tag));
   out = out.replace(/<[a-z0-9]+\b[^>]*\sdata-i18n-aria="(\w+)"[^>]*>/g, (tag, key) => (key in s ? setAttr(setAttr(tag, "aria-label", s[key]), "title", s[key]) : tag));
 
-  // The language button names the next language, as the page script does.
-  out = out.replace(/<button id="lang"[^>]*>[\s\S]*?<\/button>/, (tag) => {
-    const next = nextLang(lang);
-    let t = tag.replace(/>[\s\S]*<\/button>$/, `>${esc(s.switchTo)}</button>`);
-    t = setAttr(t, "lang", next);
-    t = setAttr(t, "title", s.switchLabel);
-    return setAttr(t, "aria-label", s.switchLabel);
-  });
+  // The language list shows this language.
+  out = out.replace(/(<select id="lang"[\s\S]*?<\/select>)/, (sel) =>
+    sel.replace(/ selected(="")?/g, "").replace(new RegExp(`<option value="${lang}"`), `<option value="${lang}" selected`));
+  // The link-preview image is the one of this language.
+  out = out.split("/og/mn.png").join(`/og/${lang}.png`);
   // The footer list of languages marks this one.
   out = out.replace(/(<nav aria-label="Language" id="langs">[\s\S]*?<\/nav>)/, (nav) =>
     nav.replace(/ aria-current="true"/g, "").replace(new RegExp(`(<a href="${PATHS[lang]}" hreflang="${lang}" lang="${lang}")`), '$1 aria-current="true"'));
