@@ -71,6 +71,35 @@ pub fn scheme_is_draft(id: &str) -> bool {
     buuz_core::Scheme::from_id(id).is_ok_and(|s| s.is_draft())
 }
 
+/// The key table of a scheme for people, one row per line:
+/// `latin<TAB>cyrillic<TAB>when`. `when` is `always`, `after_vowel`,
+/// `word_start`, `harmony` or `smart`. The id `mn` gives the Buuz typing
+/// rules. An unknown id gives an empty string.
+#[wasm_bindgen]
+pub fn key_table(id: &str) -> String {
+    let rows = if id == "mn" {
+        buuz_core::typing_key_table()
+    } else {
+        match buuz_core::Scheme::from_id(id) {
+            Ok(scheme) => scheme.key_table(),
+            Err(_) => return String::new(),
+        }
+    };
+    rows.iter()
+        .map(|r| {
+            let when = match r.when {
+                buuz_core::KeyWhen::Always => "always",
+                buuz_core::KeyWhen::AfterVowel => "after_vowel",
+                buuz_core::KeyWhen::WordStart => "word_start",
+                buuz_core::KeyWhen::Harmony => "harmony",
+                buuz_core::KeyWhen::Smart => "smart",
+            };
+            format!("{}\t{}\t{}", r.latin, r.cyrillic, when)
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// The built-in abbreviation list as text, one `abbreviation = expansion` per line.
 #[wasm_bindgen]
 pub fn abbreviation_list() -> String {

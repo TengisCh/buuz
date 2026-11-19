@@ -3,7 +3,8 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, key_table, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
+import { groupKeys, type KeyOf } from "./mapping";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
 import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
@@ -88,6 +89,85 @@ function applyScheme(): void {
   schemeSelect.value = scheme;
   document.body.dataset.scheme = scheme;
   (document.getElementById("scheme-draft") as HTMLElement).hidden = typesMongolian() || !scheme_is_draft(scheme);
+  // The Words tab is for Mongolian only; leave it when another scheme is picked.
+  if (!typesMongolian() && document.getElementById("tab-words")?.getAttribute("aria-selected") === "true") selectSetTab("tab-typing");
+  renderMaps();
+}
+
+// Key tables ("How to type" and the Rules tab): built from the core rules of
+// the active scheme, so they always match what the converter does. Each has a
+// copy of the scheme picker, so people can switch the format right there.
+const mirrors = document.querySelectorAll<HTMLSelectElement>(".scheme-mirror");
+for (const m of mirrors) m.addEventListener("change", () => ready && setScheme(m.value));
+const NOTE: Partial<Record<KeyOf["when"], Key>> = { after_vowel: "mapAfterVowel", word_start: "mapWordStart" };
+function renderMaps(): void {
+  for (const m of mirrors) {
+    m.innerHTML = schemeSelect.innerHTML; // option text is already in the page language
+    m.value = scheme;
+  }
+  const rows = groupKeys(key_table(scheme), scheme.split("-")[0]);
+  const list = () => {
+    const ul = document.createElement("ul");
+    ul.className = "map";
+    ul.lang = scheme.split("-")[0];
+    for (const r of rows) {
+      const li = document.createElement("li");
+      const keys = document.createElement("span");
+      keys.className = "in";
+      for (const k of r.keys) {
+        const kbd = document.createElement("kbd");
+        kbd.textContent = k.latin;
+        kbd.lang = "en";
+        if (k.when === "smart") {
+          kbd.className = "smart";
+          kbd.title = t("mapSmart");
+        }
+        keys.append(kbd);
+        const note = NOTE[k.when];
+        if (note) {
+          const small = document.createElement("small");
+          small.textContent = t(note);
+          keys.append(small);
+        }
+      }
+      const out = document.createElement("span");
+      out.className = "out";
+      out.textContent = r.out;
+      if (r.keys.some((k) => k.when === "harmony")) {
+        out.title = t("mapHarmony");
+        out.append(Object.assign(document.createElement("span"), { textContent: " 🎵", ariaHidden: "true" }));
+      }
+      li.append(keys, out);
+      ul.append(li);
+    }
+    return ul;
+  };
+  for (const id of ["keys-cheat", "keys-rules"]) document.getElementById(id)?.replaceChildren(list());
+}
+document.addEventListener("buuz:lang", () => ready && renderMaps());
+
+// Settings tabs (Typing, Words, Rules): one panel shows at a time. Arrow keys
+// move between the visible tabs, as in the WAI-ARIA tabs pattern.
+const setTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.set-tabs [role="tab"]'));
+function selectSetTab(id: string, focus = false): void {
+  for (const tab of setTabs) {
+    const on = tab.id === id;
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    (document.getElementById(tab.getAttribute("aria-controls") ?? "") as HTMLElement).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+}
+for (const tab of setTabs) {
+  tab.addEventListener("click", () => selectSetTab(tab.id));
+  tab.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const shown = setTabs.filter((t) => t.offsetParent !== null);
+    const i = shown.indexOf(tab);
+    const next = shown[(i + (e.key === "ArrowRight" ? 1 : shown.length - 1)) % shown.length];
+    e.preventDefault();
+    selectSetTab(next.id, true);
+  });
 }
 
 function setScheme(id: string): void {
@@ -359,6 +439,7 @@ const KIND_KEY = { add: "udKindAdd", use: "udKindUse", reject: "udKindReject" } 
 function showUserDict(): void {
   const entries = entriesOf(userText).reverse(); // the newest first
   udEmpty.hidden = entries.length > 0;
+  (document.getElementById("ud-count") as HTMLElement).textContent = entries.length > 0 ? String(entries.length) : "";
   udList.hidden = entries.length === 0;
   document.getElementById("ud-clear")?.toggleAttribute("disabled", entries.length === 0);
   document.getElementById("ud-export")?.toggleAttribute("disabled", entries.length === 0);
