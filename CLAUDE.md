@@ -13,6 +13,10 @@
   (Sonnet), `scout` (Haiku). Skills `grill` (Opus) and `triage-issue`
   (Haiku) do the same. Override for yourself with `/model` or
   `settings.local.json`.
+- Model routing lives in `.claude/model-routing.json`. A `PreToolUse` hook on
+  the `Agent` tool (`.claude/hooks/enforce-routing.sh`) refuses calls that
+  break it: a changed model on a pinned agent, language work off Opus, an
+  untyped agent without a model, or a translation that skips English.
 - Project skills are in `.claude/skills/`: `plan-issue`, `grill`, `tdd`,
   `verify`, `fix-typing-bug`, `triage-issue`, `add-dependency`,
   `new-skill`. Use them instead of improvising those flows.
