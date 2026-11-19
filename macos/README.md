@@ -8,6 +8,10 @@ Status: first version. The input method is issue #77. The Buuz app (tutorial,
 lessons and settings) follows `docs/desktop-onboarding.md` and
 `design/macos-app/spec.md`.
 
+**Not released.** Do not publish, sign, notarize or link a download of this app
+until the manual test in issue #84 is done and the issue is closed. No
+workflow publishes this app.
+
 ## Layout
 
 | Path | What |
