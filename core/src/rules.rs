@@ -152,6 +152,10 @@ pub(crate) const KEEP_II: &[char] = &['ж', 'ч', 'ш', 'щ', 'ь', 'ъ', 'г', 
 /// the suffix keeps ий (салхийг, таксийг, компанийг).
 pub(crate) const II_FINAL_STEMS: &[&str] = &["салх", "такс", "компан"];
 
+/// Stems before г that keep гуй without a word list (smart `ui`): дугуй,
+/// шугуй, бугуй, агуй, огторгуй. A stem that ends in н keeps it too.
+pub(crate) const GUI_STEMS: &[&str] = &["ду", "шу", "бу", "а", "огтор"];
+
 /// One expanded conversion rule.
 #[derive(Debug, Clone)]
 pub(crate) struct Rule {

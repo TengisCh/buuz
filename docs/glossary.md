@@ -26,6 +26,7 @@ when a new concept appears; rename here first when a name changes.
 | Gender | Vowel harmony class of a word: masculine (а, о, у) or feminine (э, ө, ү). Decides which Cyrillic vowel a Latin `o` or `u` becomes |
 | Deciding vowel | The first vowel in a word that fixes its gender |
 | Particle | The question word уу/үү, which takes the gender of the previous word |
+| Negation suffix | The suffix -гүй. It always has ү, also after a back vowel stem (ажлахгүй). Smart mode types `ui` as үй after г when the guard allows it. See `docs/typing-rules.md` section 4.4 |
 | Long vowel | A doubled vowel (оо, уу, ээ, өө, үү) |
 | Word list | The most frequent Mongolian words (up to 50,000) with their counts, by rank, built from Mongolian Wikipedia (CC BY-SA 4.0). Loaded on demand, never on the per-key path. In code: `WordList`, `data/wordlist/mn.txt` |
 

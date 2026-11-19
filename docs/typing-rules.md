@@ -170,6 +170,7 @@ before it follow it. A word with no deciding vowel is masculine.
 | `huuhed` | хүүхэд |
 | `ovqq` | өвөө |
 | `hun` | хун (no deciding vowel: masculine, type `w` for хүн) |
+| `ajlahgui` | ажлахгүй (the suffix -гүй, see 4.4) |
 
 On screen, earlier letters can change when a later vowel arrives (`у` → `ү`
 while typing `unee`). After the first deciding vowel the word still switches
@@ -220,7 +221,57 @@ composed is consumed by the composer and does not forget it. Front ends send
 the space as `Key::Space`; `Composer::commit()` (focus loss) and
 `Composer::clear_context()` forget it on demand.
 
-### 4.4 Classic behaviour
+### 4.4 The negation suffix -гүй
+
+The suffix -гүй is always гүй, also after a back vowel stem: ажлахгүй,
+байхгүй, явахгүй, авахгүй, ажилгүй. In smart mode, with smart vowels on,
+the key `ui` gives үй (not уй) when all of these hold:
+
+1. the key before it gives г;
+2. the text before that г has a vowel (`gui` → гуй, `guih` → гуйх,
+   `gutal` → гутал);
+3. the guard below does not keep гуй.
+
+| Typed | Result |
+| --- | --- |
+| `ajlahgui` | ажлахгүй |
+| `baihgui` | байхгүй |
+| `chadaagui` | чадаагүй |
+| `ajilgui` | ажилгүй |
+| `ajlahguigeer` | ажлахгүйгээр |
+| `ajilguichuud` | ажилгүйчүүд |
+
+**Guard with a word list.** Take the text so far, which ends in г. Count the
+best listed word that starts with the text plus уй, and the best one that
+starts with the text plus үй. Keep гуй only when the уй count is greater.
+`har'cangui` → харьцангуй (1188 against 21). `durgui` → дургүй (120
+against 12). When neither spelling is listed, the rules without a list apply.
+
+**Guard without a word list.** The text before г that ends in сан or сон
+gives гүй (`baisangui` → байсангүй, `chadsangui` → чадсангүй). Otherwise,
+keep гуй when the letter before г is н, or when the text before г is exactly
+one of ду, шу, бу, а, огтор. So `dugui` →
+дугуй, `shugui` → шугуй, `agui` → агуй, `ogtorgui` → огторгуй,
+`har'cangui` → харьцангуй, `bolovsrongui` → боловсронгуй, `huraangui` →
+хураангуй. The list is `GUI_STEMS` in `core/src/rules.rs`.
+
+- **Override.** `u"i` always gives гуй (`ajlahgu"i` → ажлахгуй). `w` and
+  `wi` always give гүй, as before.
+- **Front suffix after it.** After the forced үй the word is feminine, so
+  later `u` and `o` give ү and ө.
+- **Not evidence.** The forced үй does not decide the gender for the look
+  ahead, and not for the particle: `ajlahgui uu` → ажлахгүй уу.
+- **Preedit.** The key `i` changes the text: `ajlahgu` shows ажлахгу, then
+  `i` shows ажлахгүй.
+- **Classic mode and smart vowels off.** No change: `ajlahgui` → ажлахгуй.
+- **Ghost text.** With a word list, the ghost text for a preedit such as
+  дургу can offer й, while the next `i` key gives дургүй.
+- **Caret move.** After a caret move, the text is read back as Cyrillic.
+  The rule does not apply to that text.
+- **Custom keys.** The rule looks at what the keys give, so a key that
+  gives г works the same.
+
+### 4.5 Classic behaviour
 
 With smart vowels off, the engine walks the word left to right starting in
 masculine mode; each gender-deciding vowel switches the mode for the letters
@@ -234,14 +285,14 @@ default (`Options::smart()` turns every smart feature on); each feature has
 its own switch inside it. On the web converter the "Mode" switch under
 "How to type" picks one; the choice is remembered in the browser.
 
-### 4.5 What harmony does not cover
+### 4.6 What harmony does not cover
 
 - **Words with no deciding vowel** (`hun`, `ug`, `huuhdiin`): genuinely
   ambiguous without a word list.
 - **Other particles** typed as separate words.
 - **ий vs ы after г**, and stems that end in и beyond the short list above.
 - **Suffix spelling** (dropped vowels, ь before a suffix: `har'iin` stays
-  харьийн).
+  харьийн). The suffix -гүй is the exception (section 4.4).
 
 Background and sources: [issue #7](https://github.com/TengisCh/buuz/issues/7).
 
@@ -448,7 +499,7 @@ q = ""        # q is removed and stays q
 - **Longest match.** A new key of two or three characters takes part in the
   longest match as usual: with `kh = "ү"`, `khaan` gives `үаан`.
 - **Smart rules follow the output.** The ий to ы rule, the rule that `ye`
-  (е) gives no evidence for the gender, and the -гүй rule look at what the
+  (е) gives no evidence for the gender, and the -гүй rules look at what the
   key gives, not at the letters typed. So `y = "ий"` gets ы where `ii`
   would, and `ii = "х"` gives х with no swap. One limit: the particle rule
   for `u` and `uu` still reads the typed keys, so a key mapped to `у/ү` is
