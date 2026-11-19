@@ -34,8 +34,8 @@ elseif(UNIX)
   set_property(TARGET buuz_ffi PROPERTY INTERFACE_LINK_LIBRARIES pthread dl m)
 endif()
 
-# Pure logic: key mapping and the engine wrapper. No Windows headers.
-add_library(buuz_shell STATIC src/keymap.cpp src/engine.cpp)
+# Pure logic: key mapping, the engine wrapper and the edit plan. No Windows headers.
+add_library(buuz_shell STATIC src/keymap.cpp src/engine.cpp src/edit_plan.cpp)
 target_include_directories(buuz_shell PUBLIC src)
 target_link_libraries(buuz_shell PUBLIC buuz_ffi)
 
@@ -59,6 +59,9 @@ add_test(NAME app_test COMMAND app_test)
 add_executable(engine_test tests/engine_test.cpp)
 target_link_libraries(engine_test PRIVATE buuz_shell)
 add_test(NAME engine_test COMMAND engine_test)
+add_executable(edit_plan_test tests/edit_plan_test.cpp)
+target_link_libraries(edit_plan_test PRIVATE buuz_shell)
+add_test(NAME edit_plan_test COMMAND edit_plan_test)
 
 if(WIN32)
   add_library(buuz_tsf SHARED
@@ -73,7 +76,7 @@ if(WIN32)
   endif()
   if(MSVC)
     # Static C runtime: nothing else to install, small load time.
-    set_property(TARGET buuz_tsf buuz_shell engine_test buuz_app_logic app_test PROPERTY
+    set_property(TARGET buuz_tsf buuz_shell engine_test edit_plan_test buuz_app_logic app_test PROPERTY
       MSVC_RUNTIME_LIBRARY "MultiThreaded")
     target_link_options(buuz_tsf PRIVATE /DEBUG /OPT:REF /OPT:ICF)
   endif()

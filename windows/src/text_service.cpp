@@ -7,6 +7,7 @@
 #include <new>
 #include <string>
 
+#include "edit_plan.h"
 #include "guids.h"
 
 namespace buuz {
@@ -215,11 +216,10 @@ STDMETHODIMP TextService::OnKeyDown(ITfContext* ctx, WPARAM wp, LPARAM, BOOL* ea
     const Edit edit = engine_->process(key);
     *eaten = edit.consumed ? TRUE : FALSE;
 
-    if (!edit.consumed && edit.commit.empty() && edit.delete_before == 0 && !composition_) {
-        return S_OK;  // nothing to change in the text field
-    }
-    const HRESULT hr = run_session(ctx, client_id_, [this, ctx, &edit](TfEditCookie ec) {
-        return apply_edit(ec, ctx, edit);
+    const EditPlan steps = plan(edit, composition_ != nullptr);
+    if (!steps.touch_text) return S_OK;  // nothing to change in the text field
+    const HRESULT hr = run_session(ctx, client_id_, [this, ctx, &steps](TfEditCookie ec) {
+        return apply_edit(ec, ctx, steps);
     });
     if (FAILED(hr)) {
         // Fail open: let the application handle the key, drop our state.
@@ -343,21 +343,21 @@ void TextService::set_attribute(TfEditCookie ec, ITfContext* ctx, ITfRange* rang
     prop->Release();
 }
 
-HRESULT TextService::apply_edit(TfEditCookie ec, ITfContext* ctx, const Edit& edit) {
+HRESULT TextService::apply_edit(TfEditCookie ec, ITfContext* ctx, const EditPlan& steps) {
     HRESULT hr = S_OK;
 
-    if (edit.delete_before > 0) {
-        hr = delete_before_caret(ec, ctx, edit.delete_before);
+    if (steps.delete_utf16 > 0) {
+        hr = delete_before_caret(ec, ctx, steps.delete_utf16);
         if (FAILED(hr)) return hr;
     }
 
-    if (!edit.commit.empty()) {
+    if (!steps.commit.empty()) {
         if (composition_) {
             ITfRange* range = nullptr;
             hr = composition_->GetRange(&range);
             if (FAILED(hr)) return hr;
-            hr = range->SetText(ec, 0, reinterpret_cast<const WCHAR*>(edit.commit.data()),
-                                static_cast<LONG>(edit.commit.size()));
+            hr = range->SetText(ec, 0, reinterpret_cast<const WCHAR*>(steps.commit.data()),
+                                static_cast<LONG>(steps.commit.size()));
             if (SUCCEEDED(hr)) {
                 // Caret after the committed word.
                 range->Collapse(ec, TF_ANCHOR_END);
@@ -368,10 +368,10 @@ HRESULT TextService::apply_edit(TfEditCookie ec, ITfContext* ctx, const Edit& ed
             end_composition(ec);
             if (FAILED(hr)) return hr;
         } else {
-            hr = insert_at_selection(ec, ctx, edit.commit);
+            hr = insert_at_selection(ec, ctx, steps.commit);
             if (FAILED(hr)) return hr;
         }
-    } else if (!edit.composing && composition_) {
+    } else if (steps.end_composition && composition_) {
         // The composition ended with no text (Backspace on the last letter).
         ITfRange* range = nullptr;
         if (SUCCEEDED(composition_->GetRange(&range))) {
@@ -381,16 +381,17 @@ HRESULT TextService::apply_edit(TfEditCookie ec, ITfContext* ctx, const Edit& ed
         end_composition(ec);
     }
 
-    if (edit.composing && !edit.preedit.empty()) {
-        if (!composition_) {
+    if (!steps.preedit.empty()) {
+        if (steps.start_composition) {
             hr = start_composition(ec, ctx);
             if (FAILED(hr) || !composition_) return FAILED(hr) ? hr : E_FAIL;
         }
+        if (!composition_) return E_FAIL;
         ITfRange* range = nullptr;
         hr = composition_->GetRange(&range);
         if (FAILED(hr)) return hr;
-        hr = range->SetText(ec, 0, reinterpret_cast<const WCHAR*>(edit.preedit.data()),
-                            static_cast<LONG>(edit.preedit.size()));
+        hr = range->SetText(ec, 0, reinterpret_cast<const WCHAR*>(steps.preedit.data()),
+                            static_cast<LONG>(steps.preedit.size()));
         if (SUCCEEDED(hr)) {
             set_attribute(ec, ctx, range);
             // Caret at the cursor of the preedit.
@@ -398,7 +399,7 @@ HRESULT TextService::apply_edit(TfEditCookie ec, ITfContext* ctx, const Edit& ed
             if (SUCCEEDED(range->Clone(&caret))) {
                 LONG moved = 0;
                 caret->Collapse(ec, TF_ANCHOR_START);
-                caret->ShiftEnd(ec, static_cast<LONG>(edit.cursor), &moved, nullptr);
+                caret->ShiftEnd(ec, static_cast<LONG>(steps.caret_utf16), &moved, nullptr);
                 caret->Collapse(ec, TF_ANCHOR_END);
                 TF_SELECTION sel = {caret, {TF_AE_NONE, FALSE}};
                 ctx->SetSelection(ec, 1, &sel);

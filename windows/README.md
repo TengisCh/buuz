@@ -14,10 +14,11 @@ preedit. CI builds x64 and ARM64. There is no installer, settings app or onboard
 | --- | --- | --- |
 | `src/keymap.*` | Virtual key to `BuuzKey`, US QWERTY translation | no |
 | `src/engine.*` | One key in, one edit plan out; UTF-8 to UTF-16 | no |
+| `src/edit_plan.*` | Edit to text-field steps in UTF-16 units | no |
 | `src/text_service.*` | `ITfKeyEventSink`, edit sessions, composition | yes |
 | `src/display_attributes.*` | Underline for the preedit | yes |
 | `src/registration.cpp` | `DllMain`, class factory, `regsvr32` | yes |
-| `tests/engine_test.cpp` | Tests for the files marked "no" | no |
+| `tests/engine_test.cpp`, `tests/edit_plan_test.cpp` | Tests for the files marked "no" | no |
 
 ## How a key moves
 
