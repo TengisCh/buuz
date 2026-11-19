@@ -67,9 +67,9 @@ The `windows` workflow runs it after `regsvr32` on two free GitHub
 runners: x64 (`windows-latest`) and ARM64 (`windows-11-arm`). It runs on every
 PR that changes `windows/`, `ffi/` or the core. This replaces manual testing
 for typing; a human check of the real feel is still worth doing before a release. It
-needs the runner's interactive desktop and `ctfmon.exe`. The step has
-`continue-on-error: true` until it has passed on several runs. Then remove
-that line, so a failure blocks the PR.
+needs the runner's interactive desktop and `ctfmon.exe`. A failure on x64 blocks the PR. ARM64 does not block yet: its first run
+loaded the DLL but typed no text, so the test now logs the focus state to
+find out why.
 
 ## Test on a Mac (Windows 11 ARM in a VM)
 

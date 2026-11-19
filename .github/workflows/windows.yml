@@ -67,9 +67,10 @@ jobs:
           if (-not (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{5E0B7A2C-9D41-4C7E-8B1A-3F6D2A9C4E10}\InprocServer32")) { throw "CLSID not registered" }
       # Types `sain baina` with real key events into a real Rich Edit control
       # and reads the text back. It runs on the runner's interactive desktop.
-      # It does not block the build until it has proved stable (see README).
+      # It passed on x64 on its first run, so x64 blocks the build. ARM64 does
+      # not block until it has passed too (see README).
       - name: End-to-end typing test
-        continue-on-error: true
+        continue-on-error: ${{ matrix.arch == 'arm64' }}
         shell: pwsh
         run: |
           Start-Process ctfmon.exe

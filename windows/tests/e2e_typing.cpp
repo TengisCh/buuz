@@ -38,6 +38,9 @@ void pump(DWORD ms) {
     } while (static_cast<LONG>(end - GetTickCount()) > 0);
 }
 
+UINT g_sent = 0;
+UINT g_sent_expected = 0;
+
 void send_key(WORD vk) {
     INPUT in[2] = {};
     in[0].type = INPUT_KEYBOARD;
@@ -45,7 +48,8 @@ void send_key(WORD vk) {
     in[0].ki.wScan = static_cast<WORD>(MapVirtualKeyW(vk, MAPVK_VK_TO_VSC));
     in[1] = in[0];
     in[1].ki.dwFlags = KEYEVENTF_KEYUP;
-    SendInput(2, in, sizeof(INPUT));
+    g_sent += SendInput(2, in, sizeof(INPUT));
+    g_sent_expected += 2;
     pump(60);
 }
 
@@ -54,6 +58,25 @@ void type(const char* keys) {
         const char c = *p;
         send_key(c == ' ' ? VK_SPACE : static_cast<WORD>(c >= 'a' ? c - 32 : c));
     }
+}
+
+// Bring the window to the front and put the keyboard focus in the control.
+// Windows refuses SetForegroundWindow from a background process, so press a
+// harmless Alt key first and click into the control as a real user would.
+void take_focus(HWND top) {
+    keybd_event(VK_MENU, 0, 0, 0);
+    keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
+    ShowWindow(top, SW_SHOW);
+    BringWindowToTop(top);
+    SetForegroundWindow(top);
+    SetFocus(g_edit);
+    pump(200);
+    RECT r = {};
+    GetWindowRect(g_edit, &r);
+    SetCursorPos((r.left + r.right) / 2, (r.top + r.bottom) / 2);
+    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+    pump(300);
 }
 
 std::wstring read_text() {
@@ -108,17 +131,27 @@ int main() {
     mgr->Release();
     std::printf("ActivateProfile: 0x%08lX\n", static_cast<unsigned long>(hr));
     pump(1500);
-    SetForegroundWindow(top);
-    SetFocus(g_edit);
-    pump(300);
+    take_focus(top);
 
+    std::printf("foreground is the test window: %s, focus is the control: %s\n",
+                GetForegroundWindow() == top ? "yes" : "no", GetFocus() == g_edit ? "yes" : "no");
     const bool loaded = GetModuleHandleW(L"buuz_tsf.dll") != nullptr;
     std::printf("buuz_tsf.dll loaded into this process: %s\n", loaded ? "yes" : "no");
 
     type("sain baina");
     pump(300);
+    std::printf("SendInput accepted %u of %u events\n", g_sent, g_sent_expected);
 
-    const std::wstring got = read_text();
+    std::wstring got = read_text();
+    if (got.empty()) {
+        // The keys may have gone elsewhere. Take the focus again and retry once.
+        std::printf("no text yet: trying again\n");
+        take_focus(top);
+        type("sain baina");
+        pump(500);
+        std::printf("SendInput accepted %u of %u events\n", g_sent, g_sent_expected);
+        got = read_text();
+    }
     const std::wstring want = L"сайн байна";  // сайн байна
     print_hex(L"got ", got);
     print_hex(L"want", want);
