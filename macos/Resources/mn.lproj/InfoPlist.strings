@@ -1,0 +1,4 @@
+/* SPDX-License-Identifier: MIT OR Apache-2.0 */
+/* The name of the input mode in System Settings > Keyboard > Input Sources. */
+"com.thetengis.inputmethod.Buuz.Mongolian" = "Buuz";
+"CFBundleDisplayName" = "Buuz";

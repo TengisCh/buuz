@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>mn</string>
+	<key>CFBundleDisplayName</key>
+	<string>Buuz</string>
 	<key>CFBundleExecutable</key>
 	<string>Buuz</string>
 	<key>CFBundleIconFile</key>

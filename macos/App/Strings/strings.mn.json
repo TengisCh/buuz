@@ -383,5 +383,12 @@
   "tour.done.tricks": "Заль",
   "tour.done.replay": "Хичээлийг Хичээл хэсгээс дахин үзэж болно.",
   "nav.lessons": "Хичээл",
-  "home.card.mode": "горим"
+  "home.card.mode": "горим",
+  "globe.warn": "Одоо Глобус товч нь дараахыг хийж байна: {action}. Энэ нь гарыг сэлгэхгүй. “Press 🌐 key to” тохиргоог “Change Input Source” болгоно уу.",
+  "globe.warn.unknown": "Глобус товч юу хийдгийг Buuz мэдэхгүй байна. “Press 🌐 key to” тохиргоо “Change Input Source” эсэхийг шалгана уу.",
+  "globe.action.emoji": "Emoji & Symbols (эможи нээх)",
+  "globe.action.dictation": "Dictation (дуугаар бичих)",
+  "globe.action.none": "Юу ч хийхгүй",
+  "globe.fn.note": "Гар сэлгэхээр тохируулаагүй байна. macOS-д өөрчилнө үү.",
+  "globe.warn.button": "Гарын тохиргоог нээх"
 }
