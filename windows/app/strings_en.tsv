@@ -1,0 +1,71 @@
+app_title	Buuz 2.0
+lang_toggle	MN
+btn_start	Get started
+btn_next	Next
+btn_back	Back
+btn_skip	Skip
+btn_gotit	Got it
+btn_add	Add Buuz
+btn_open_settings	Open Windows Settings
+btn_finish	Start typing
+welcome_title	Type Latin, get Cyrillic
+welcome_line	In every app. Offline. Instantly.
+welcome_demo_in	sain baina uu
+welcome_demo_out	сайн байна уу
+welcome_credit	A continuation of Buuz by Нямцэрэнгийн Одбаяр. Open source.
+privacy_title	Your typing stays yours
+privacy_offline	Works without internet
+privacy_nokeys	No keystrokes saved or sent
+privacy_noaccount	No account
+privacy_password	Off in password fields
+add_title	Add Buuz to Windows
+add_line	One click adds Mongolian (Buuz) to your keyboards.
+add_status_waiting	Waiting
+add_status_done	Added
+add_done_title	Done, Buuz is added
+add_manual	Or add it yourself: Settings, Time and language, Language and region, Mongolian, Options, Add a keyboard, Buuz.
+shortcut_title	Choose your switch key
+shortcut_win_space	Win + Space (recommended)
+shortcut_ctrl_space	Ctrl + Space: Buuz on and off
+shortcut_alt_shift	Alt + Shift
+shortcut_try	Press it now
+shortcut_ok	It works
+try_title	Try it
+try_hint	Click the box and type. Buuz must be the active keyboard.
+try_task1	sain baina uu
+try_task2	bayarlalaa
+try_task3	qnqqdqr
+try_placeholder	Type here
+tip_title	Two tips
+tip_harmony_title	Vowels match by themselves
+tip_harmony_line	With э, ө or ү in a word, o becomes ө and u becomes ү.
+tip_keys_title	Need ө or ү right now
+tip_keys_line	q gives ө, w gives ү, ' gives ь, " gives ъ.
+done_title	Ready
+done_where	Find Buuz in the taskbar as МОН.
+done_recap	Switch key and q = ө, w = ү
+done_startup	Start the settings helper when Windows starts
+nav_home	Home
+nav_typing	Typing
+nav_shortcuts	Shortcuts
+nav_privacy	Privacy
+nav_general	General
+nav_about	About
+home_ok	Buuz is active
+home_fix	Buuz is off. Add it again.
+home_cheat	q = ө, w = ү, ' = ь, " = ъ
+typing_smart_vowels	Smart vowels
+typing_abbreviations	Abbreviations
+typing_keep_latin	Keep Latin words
+typing_auto_latin	Latin in code editors
+typing_autocorrect	Autocorrect
+typing_completion	Word completion
+typing_soon	Soon
+general_language	Language
+general_theme	Theme
+general_theme_light	Light
+general_theme_dark	Dark
+general_rerun	Show the tutorial again
+about_credit	Buuz 2.0 continues Buuz by Нямцэрэнгийн Одбаяр.
+about_license	Open source: MIT or Apache-2.0.
+about_feedback	Send feedback

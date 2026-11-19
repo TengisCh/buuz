@@ -57,6 +57,26 @@ cmake -S windows -B windows/build -DBUUZ_FFI_LIB=$PWD/ffi/target/debug/libbuuz_f
 cmake --build windows/build && ctest --test-dir windows/build
 ```
 
+## Settings and onboarding app
+
+`buuz_settings.exe` is a plain Win32 program (no extra runtime) that runs
+apart from the DLL. It shows the onboarding in `docs/desktop-onboarding.md`
+(welcome, privacy, add Buuz, switch key, try it, vowel tip, done), then the
+settings window. The text is in Mongolian and English (`app/strings_*.tsv`).
+
+| File | What |
+| --- | --- |
+| `app/main.cpp` | Window, pages, "Add Buuz" button |
+| `app/app_state.*` | Language, theme, onboarding step, typing switches |
+| `app/conf.*` | Edits a config file and keeps its comments |
+| `app/strings.*` | UI text lookup |
+
+- The app stores its own state in `%APPDATA%\Buuz\app.conf`.
+- It writes the typing switches to `[options]` in `%APPDATA%\Buuz\settings.conf`.
+  The DLL reads that file when an app starts, so a change applies in apps you open afterwards.
+- "Add Buuz" calls `InstallLayoutOrTip` and then checks the profile every second.
+- The tests for the logic run in `ctest` (`app_test`). The window itself needs a manual check (#84).
+
 ## Automated end-to-end test
 
 `tests/e2e_typing.cpp` makes a real window with a Rich Edit control and
@@ -114,7 +134,8 @@ Use the artifact `buuz-windows-x64`, and the same steps. The
 
 - Installer, signing (SignPath or Microsoft Store), winget.
 - ARM64X (one DLL for ARM64 and emulated x64 apps) and x86 builds.
-- Settings app and onboarding (`docs/desktop-onboarding.md`), in Mongolian
-  and English. Mongolian text needs a native check by T.
+- Settings app: import and export, abbreviation and key editors, per-app
+  memory, update check, dark theme polish. Mongolian text needs a native
+  check by T.
 - Ctrl+Space Buuz on/off key, per-app memory, password fields.
 - Key-to-glyph timing on real hardware. Measure it before the first release.

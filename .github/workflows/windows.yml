@@ -56,6 +56,7 @@ jobs:
         run: |
           $dll = "windows/build/Release/buuz_tsf.dll"
           if (-not (Test-Path $dll)) { throw "buuz_tsf.dll missing" }
+          if (-not (Test-Path "windows/build/Release/buuz_settings.exe")) { throw "buuz_settings.exe missing" }
           "{0:N0} KB" -f ((Get-Item $dll).Length / 1KB)
       - name: Register the text service
         shell: pwsh
@@ -89,7 +90,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows/dist/${{ matrix.arch }} | Out-Null
-          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/e2e_typing.exe windows/dist/${{ matrix.arch }}/
+          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/buuz_settings.exe, windows/build/Release/e2e_typing.exe windows/dist/${{ matrix.arch }}/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: buuz-windows-${{ matrix.arch }}
