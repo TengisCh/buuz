@@ -1,0 +1,45 @@
+{
+  "$comment": "Single source of truth for which model does which work. Enforced by .claude/hooks/enforce-routing.sh (PreToolUse on the Agent tool) and by the model: line in each .claude/agents/*.md file. Change a rule here, not in chat. Built-in helper agents (Explore, Plan, claude-code-guide, statusline-setup, web-fetch) are exempt from the explicit model rule, so plan mode keeps working.",
+  "default_model": "opusplan",
+  "roles": {
+    "plan": "opus",
+    "ui_design": "opus",
+    "review": "opus",
+    "language": "opus",
+    "implement": "sonnet",
+    "lookup": "haiku"
+  },
+  "pinned_agents": {
+    "planner": "opus",
+    "reviewer": "opus",
+    "translator": "opus",
+    "implementer": "sonnet",
+    "scout": "haiku"
+  },
+  "language": {
+    "model": "opus",
+    "translation_agent": "translator",
+    "pivot_language": "English",
+    "rule": "Translate source language to English first, then English to the target language. Never translate directly between two non-English languages.",
+    "translation_pattern": "translat|localis|localiz|орчуул",
+    "wording_pattern": "wording|copywrit|alternative (words|wording)|natural (mongolian|russian) (text|wording|phrasing)",
+    "non_english_languages": [
+      "mongolian",
+      "russian",
+      "chinese",
+      "japanese",
+      "korean",
+      "german",
+      "french",
+      "spanish",
+      "turkish",
+      "kazakh",
+      "buryat"
+    ]
+  },
+  "opus_work_pattern": "mockup|ui design|design spec|code review|review the (diff|pr|change)",
+  "explicit_model_required_for": [
+    "general-purpose",
+    "claude"
+  ]
+}

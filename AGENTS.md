@@ -58,6 +58,15 @@ Plan, then test-first build, then review. For an issue use the
 
 Small, clear typing bugs skip grill and plan: use `fix-typing-bug`.
 
+Model routing is set in `.claude/model-routing.json` and enforced by the hook
+`.claude/hooks/enforce-routing.sh`. Do not override it in chat.
+
+- Opus: plan, UI design and mockups, review, and all language work.
+- Sonnet: implementation. Haiku: lookups.
+- Translate with the `translator` agent. It always goes through English:
+  source to English, then English to the target. Never translate directly
+  between two non-English languages.
+
 ## Commands
 
 Run the checks for what you touched before you say a change is done.
