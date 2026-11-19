@@ -140,3 +140,34 @@ fn long_words_with_many_ambiguous_letters_stay_fast() {
     // 1 ms for each word in debug builds is a generous limit.
     assert!(start.elapsed().as_millis() < 50 * 20);
 }
+
+#[test]
+fn whole_text_converter_chooses_the_last_word_and_before_a_new_line() {
+    let o = with_list(Options::smart());
+    assert_eq!(buuz_core::convert_with("uvul", &o), "өвөл");
+    assert_eq!(buuz_core::convert_with("unuudur udur", &o), "өнөөдөр өдөр");
+    assert_eq!(buuz_core::convert_with("udur\nuvul", &o), "өдөр\nөвөл");
+    // Autocorrect still waits for a Space or punctuation.
+    let ac = with_list(Options {
+        autocorrect: true,
+        word_choice: false,
+        ..Options::smart()
+    });
+    assert_eq!(buuz_core::convert_with("delgur", &ac), "дэлгүр");
+    assert_eq!(buuz_core::convert_with("delgur ", &ac), "дэлгүүр ");
+    // Off: the word stays as typed.
+    let off = with_list(Options {
+        word_choice: false,
+        ..Options::smart()
+    });
+    assert_eq!(buuz_core::convert_with("uvul", &off), "увул");
+}
+
+#[test]
+fn all_capitals_are_chosen_too() {
+    let o = with_list(Options::smart());
+    assert_eq!(commit(o.clone(), "UVUL"), "ӨВӨЛ");
+    assert_eq!(commit(o.clone(), "Udur"), "Өдөр");
+    // Mixed case inside a word stays as typed.
+    assert_eq!(commit(o, "uVul"), "уВул");
+}
