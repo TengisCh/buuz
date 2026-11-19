@@ -14,7 +14,7 @@ const REAL: &str = include_str!("../../data/wordlist/mn.txt");
 /// The web defaults: smart mode with the word list.
 fn web() -> Options {
     Options {
-        words: Some(Arc::new(WordList::parse(REAL).unwrap())),
+        words: Some(Arc::new(WordList::parse(REAL).unwrap().with_chat_words())),
         ..Options::smart()
     }
 }
@@ -61,4 +61,70 @@ fn classic_mode_is_unchanged() {
         convert_with("boloh u? snu ", &Options::classic()),
         "болох у? сну "
     );
+}
+
+#[test]
+fn a_short_final_long_vowel_is_chosen_from_the_list() {
+    eq("boro orson ", "бороо орсон ");
+    eq("bi odo gerte ", "би одоо гэртээ ");
+    eq("dara ", "дараа ");
+    eq("ajlaasa garaad ", "ажлаасаа гараад ");
+}
+
+#[test]
+fn a_listed_word_with_a_short_final_vowel_stays() {
+    eq("shine ", "шинэ ");
+    eq("ene ", "энэ ");
+}
+
+#[test]
+fn a_merged_past_and_particle_split() {
+    eq("boroo orsnu?", "бороо орсон уу?");
+    eq("irsnu ", "ирсэн үү ");
+    eq("uzsnu ", "үзсэн үү ");
+    eq("bolsnuu ", "болсон уу ");
+}
+
+#[test]
+fn a_merged_sh_dee_splits() {
+    eq("mungu baihguishde ", "мөнгө байхгүй ш дээ ");
+    eq("medehguishdee ", "мэдэхгүй ш дээ ");
+}
+
+#[test]
+fn a_merged_dee_splits_after_a_chat_word() {
+    eq("zugerdee ", "зүгээр дээ ");
+    eq("zugeerdee ", "зүгээр дээ ");
+    eq("Bainadaa ", "Байна даа ");
+}
+
+#[test]
+fn a_case_ending_is_not_split() {
+    // -даа/-дээ is also the dative with a reflexive ending.
+    eq("ajildaa ", "ажилдаа ");
+}
+
+#[test]
+fn everyday_words_win_with_the_chat_list() {
+    eq("uchigdur ", "өчигдөр ");
+    eq("bi odo gerte harij bn ", "би одоо гэртээ харьж байна ");
+    eq("eej mini ", "ээж минь ");
+    eq("kino baisan shuu ", "кино байсан шүү ");
+    eq("medehgui ee bodod ", "мэдэхгүй ээ бодоод ");
+}
+
+#[test]
+fn y_and_final_ya_forms_are_chosen() {
+    eq("yusun tsagt uulziy, ", "есөн цагт уулзъя, ");
+    eq("ystoi goy kino ", "ёстой гоё кино ");
+    eq("ugluunii tsai ", "өглөөний цай ");
+}
+
+#[test]
+fn the_chat_words_need_the_call() {
+    let plain = Options {
+        words: Some(Arc::new(WordList::parse(REAL).unwrap())),
+        ..Options::smart()
+    };
+    assert_eq!(convert_with("uchigdur ", &plain), "учигдур ");
 }

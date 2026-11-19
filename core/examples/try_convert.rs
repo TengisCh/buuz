@@ -17,7 +17,9 @@ use buuz_core::{convert_with, Options, WordList};
 
 fn main() {
     let words = Arc::new(
-        WordList::parse(include_str!("../../data/wordlist/mn.txt")).expect("word list parses"),
+        WordList::parse(include_str!("../../data/wordlist/mn.txt"))
+            .expect("word list parses")
+            .with_chat_words(),
     );
     let web = Options {
         words: Some(words.clone()),

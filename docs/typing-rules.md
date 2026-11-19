@@ -723,14 +723,40 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
 - **Extra edits.** For a word with at most 3 such letters, each combination
   also gets one more edit: `э` to `е` (`wed` gives `үед`), a doubled vowel
   (`terer` gives `тэрээр`), `и` to `ь` (`huuli` gives `хууль`), or an added
-  `ь` (`surguul` gives `сургууль`). No edit changes the last letter's vowel
-  length, and `э` to `е` skips the last letter.
+  `ь` (`surguul` gives `сургууль`). A doubled vowel can also end the word
+  (`boro` gives `бороо`, `gerte` gives `гэртээ`): chat often drops the
+  long vowel of a case ending. The choice rules below keep a listed word
+  (`shine` stays `шинэ`). `э` to `е` skips the last letter.
 - **Choice.** All candidates share one tally. The winner has a count of at least 50, at least 3 times the
   next candidate's, and at least 50 times the count of the word as typed
   (0 if it is not listed). The last rule keeps `уурын` (642) against
   `өөрийн` (7898), and still changes `мон` (114) to `мөн` (20067).
 - **Limit.** `уруу` (399) and `өрөө` (333) are both common. The list cannot
   choose, so `uruu` stays `уруу`.
+- **Chat words.** The word list comes from Wikipedia, so everyday chat
+  words are rare in it. `WordList::with_chat_words` gives about 60 of them
+  (`core/src/chat_words.rs`) a count of at least 10,000. The web converter
+  and the C library call it when they load the list. So `uchigdur` gives
+  өчигдөр and `shuu` gives шүү.
+- **`y` edits.** Chat types `y` for ё, е, я and ы. Each candidate also gets
+  these edits: a first `ы` to ё or е (`ystoi` gives ёстой), a first `ю`
+  to е (`yusun` gives есөн), a last `ы` to я or ё (`goy` gives гоё), a
+  last `иы` to ъя or ья (`uulziy` gives уулзъя), and `ы` to `ий` when an
+  о/у/ү was changed too (`ugluunii` gives өглөөний, `uvliin` gives
+  өвлийн). A typed `surguulyn` stays сургуулын.
+- **Merged particles.** Before the choice, a word that the list does not
+  know is split when it ends in a particle typed without a space (issue
+  #101):
+
+  | Typed | Result | Rule |
+  | --- | --- | --- |
+  | `orsnu`, `irsnu` | орсон уу, ирсэн үү | -сан/-сон/-сэн/-сөн and уу/үү, the vowel left out |
+  | `baihguishde` | байхгүй ш дээ | any listed word and ш дээ |
+  | `zugerdee` | зүгээр дээ | дээ/даа after a short list of chat words |
+
+  The дээ/даа split uses a short list, because -дээ/-даа is also a case
+  ending (`ajildaa` stays ажилдаа). A listed word never splits
+  (`тиймдээ`). Backspace right after the Space undoes the split.
 - **Autocorrect.** When both are on, word choice runs first.
 - **Whole-text converters.** `convert_with` and the website also choose the
   word before a new line and the last word of the text. Autocorrect does

@@ -381,7 +381,9 @@ thread_local! {
 #[wasm_bindgen]
 pub fn load_word_list(text: &str) -> Result<usize, String> {
     let list = buuz_core::WordList::parse(text).map_err(|e| tag("bad_word_list", e.line(), ""))?;
+    // The count is the words of `text`, before the built-in chat words.
     let n = list.len();
+    let list = list.with_chat_words();
     WORDS.with(|w| *w.borrow_mut() = Some(std::sync::Arc::new(list)));
     Ok(n)
 }
@@ -1102,12 +1104,21 @@ mod tests {
             super::convert_with_config("delgur ", &neither).unwrap(),
             "дэлгүр "
         );
-        // A newline, or the end of the text, does not correct.
+        // A newline, or the end of the text, does not autocorrect. Word
+        // choice does, so switch it off here.
+        let ac_only = super::config_set_option(&on, "word_choice", false).unwrap();
         assert_eq!(
-            super::convert_with_config("delgur\n", &on).unwrap(),
+            super::convert_with_config("delgur\n", &ac_only).unwrap(),
             "дэлгүр\n"
         );
-        assert_eq!(super::convert_with_config("delgur", &on).unwrap(), "дэлгүр");
+        assert_eq!(
+            super::convert_with_config("delgur", &ac_only).unwrap(),
+            "дэлгүр"
+        );
+        assert_eq!(
+            super::convert_with_config("delgur\n", &on).unwrap(),
+            "дэлгүүр\n"
+        );
     }
 
     /// (rest, word, replaces) of a completion.
