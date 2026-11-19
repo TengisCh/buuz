@@ -1,0 +1,59 @@
+name: windows
+
+# The Windows input method. One Windows runner, and only when windows/, ffi/
+# or the core changes.
+on:
+  push:
+    branches: [main]
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: ffi
+      - name: Build buuz-ffi (release, static C runtime)
+        working-directory: ffi
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked
+      - name: Configure
+        run: cmake -S windows -B windows/build -A x64
+      - name: Build the DLL and the tests
+        run: cmake --build windows/build --config Release
+      - name: Run the shell logic tests
+        run: ctest --test-dir windows/build -C Release --output-on-failure
+      - name: Check the DLL exports
+        shell: pwsh
+        run: |
+          $dll = "windows/build/Release/buuz_tsf.dll"
+          if (-not (Test-Path $dll)) { throw "buuz_tsf.dll missing" }
+          "{0:N0} KB" -f ((Get-Item $dll).Length / 1KB)
+      - name: Register, check and unregister the text service
+        shell: pwsh
+        run: |
+          $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
+          regsvr32 /s $dll
+          if ($LASTEXITCODE -ne 0) { throw "regsvr32 failed: $LASTEXITCODE" }
+          if (-not (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{5E0B7A2C-9D41-4C7E-8B1A-3F6D2A9C4E10}\InprocServer32")) { throw "CLSID not registered" }
+          regsvr32 /s /u $dll
+          if ($LASTEXITCODE -ne 0) { throw "unregister failed: $LASTEXITCODE" }
