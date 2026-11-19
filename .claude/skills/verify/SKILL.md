@@ -12,7 +12,7 @@ description: Run the same checks CI runs (Rust core, web build and tests, Markdo
 
    | Changed paths | Run |
    | --- | --- |
-   | `core/**` | `cd core && cargo fmt --check && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked` |
+   | `core/**` | `cd core && cargo fmt --check && cargo clippy --all-targets --locked -- -D warnings && cargo test --locked && cargo test --release --locked` |
    | `core/**`, `web/**` | `cd web/site && npm ci && npm run build && npm test` |
    | `**/*.md`, `tools/lint/**` | `cd tools/lint && npm ci && cd ../.. && tools/lint/node_modules/.bin/markdownlint-cli2` |
    | Mermaid blocks in Markdown | `cd tools/lint && npx --no-install playwright install chromium && node check-mermaid.mjs` |

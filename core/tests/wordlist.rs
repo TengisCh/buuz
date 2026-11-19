@@ -153,8 +153,7 @@ fn bad_lines_are_errors_with_a_line_number() {
 // Speed budgets from the plan: parse 50k entries under 20 ms, prefix query
 // and top_two under 50 microseconds. Release builds enforce them; debug
 // builds only check a generous bound so `cargo test` stays meaningful. CI
-// runs debug, so the release budgets are NOT checked in CI: run
-// `cargo test --release --test wordlist` by hand when touching wordlist.rs.
+// also runs `cargo test --release`, which checks the release budgets.
 //
 // The path leaves the crate on purpose. The data is not packaged with
 // buuz-core (it is a separate asset, ADR 0006), and a published crate never

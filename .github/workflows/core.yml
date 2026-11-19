@@ -44,6 +44,8 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --locked -- -D warnings
       - run: cargo test --locked
+      - name: Speed budgets (the release build checks them)
+        run: cargo test --release --locked
       - name: Docs build without warnings (broken intra-doc links, bad doc tests)
         run: cargo doc --no-deps --locked
         env:
