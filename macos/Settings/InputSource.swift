@@ -46,6 +46,21 @@ enum InputSource {
         return TISEnableInputSource(source) == noErr
     }
 
+    /// Make Buuz the current keyboard for the whole session. The e2e test uses this.
+    @discardableResult
+    static func select() -> Bool {
+        guard let source = find() else { return false }
+        return TISSelectInputSource(source) == noErr
+    }
+
+    /// The id of the current keyboard input source.
+    static var currentID: String? {
+        guard let current = TISCopyCurrentKeyboardInputSource()?.takeRetainedValue(),
+            let p = TISGetInputSourceProperty(current, kTISPropertyInputSourceID)
+        else { return nil }
+        return Unmanaged<CFString>.fromOpaque(p).takeUnretainedValue() as String
+    }
+
     /// Call `changed` when the list of enabled keyboards changes.
     static func observe(_ changed: @escaping () -> Void) -> NSObjectProtocol {
         DistributedNotificationCenter.default().addObserver(

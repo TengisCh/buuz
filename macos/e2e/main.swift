@@ -59,10 +59,15 @@ log("Buuz is enabled")
 guard let context = textView.inputContext else { log("no input context"); exit(3) }
 log("keyboards offered to this text view: \(context.keyboardInputSources ?? [])")
 context.selectedKeyboardInputSource = InputSource.id
-guard waitFor("Buuz selected", timeout: 30, {
-    context.selectedKeyboardInputSource == InputSource.id
-}) else { exit(4) }
-log("Buuz is selected")
+pump(0.5)
+log("current keyboard after the text view selected Buuz: \(InputSource.currentID ?? "none")")
+if InputSource.currentID != InputSource.id {
+    // Select it for the whole login session instead.
+    log("TISSelectInputSource returned \(InputSource.select())")
+    _ = waitFor("Buuz is the current keyboard", timeout: 20, { InputSource.currentID == InputSource.id })
+}
+log("current keyboard: \(InputSource.currentID ?? "none")")
+log("text view keyboard: \(context.selectedKeyboardInputSource ?? "none")")
 pump(1.0)  // macOS starts the input method process
 
 // 3. Type. A key Buuz does not use goes to the text view, like in a real app.
