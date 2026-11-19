@@ -3,6 +3,8 @@
 
 #include <buuz.h>
 
+#include <utility>
+
 namespace buuz {
 
 std::u16string utf8_to_utf16(const char* s, size_t len) {
@@ -45,18 +47,41 @@ std::u16string utf8_to_utf16(const char* s, size_t len) {
     return out;
 }
 
-Engine::Engine(const std::string& config)
+WordList::WordList(const std::string& text)
+    : list_(buuz_word_list_parse(reinterpret_cast<const uint8_t*>(text.data()), text.size())) {}
+
+WordList::~WordList() { buuz_word_list_free(list_); }
+
+Engine::Engine(const std::string& config, WordListLoader loader)
     : composer_(buuz_composer_new(
           config.empty() ? nullptr : reinterpret_cast<const uint8_t*>(config.data()),
-          config.size(), nullptr)) {}
+          config.size(), nullptr)),
+      config_(config),
+      loader_(std::move(loader)) {}
 
 Engine::~Engine() { buuz_composer_free(composer_); }
+
+void Engine::attach_word_list() {
+    WordListLoader loader = std::move(loader_);
+    loader_ = nullptr;
+    if (!loader || !composer_ || buuz_is_composing(composer_)) return;
+    const BuuzWordList* words = loader();
+    if (!words) return;
+    // The composer keeps its own reference to the list.
+    BuuzComposer* next = buuz_composer_new(
+        config_.empty() ? nullptr : reinterpret_cast<const uint8_t*>(config_.data()), config_.size(),
+        words);
+    if (!next) return;  // keep the composer without a list
+    buuz_composer_free(composer_);
+    composer_ = next;
+}
 
 bool Engine::composing() const { return composer_ && buuz_is_composing(composer_); }
 
 Edit Engine::process(const KeyInput& key) {
     Edit edit;
     if (!composer_) return edit;
+    if (loader_) attach_word_list();
     BuuzOutcome out{};
     if (!buuz_process_key(composer_, key.kind, key.ch, &out)) return edit;
     edit.consumed = out.consumed;

@@ -6,9 +6,9 @@ name: windows
 on:
   push:
     branches: [main]
-    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", "data/wordlist/mn.txt", ".github/workflows/windows.yml"]
   pull_request:
-    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", "data/wordlist/mn.txt", ".github/workflows/windows.yml"]
   workflow_dispatch:
 
 permissions:
@@ -191,7 +191,7 @@ jobs:
           $dir = Join-Path $env:ProgramFiles "Buuz"
           $registered = (Get-Item $key).GetValue("")
           if ($registered -ne (Join-Path $dir "buuz_tsf.dll")) { throw "registered path is $registered" }
-          foreach ($f in "buuz_tsf.dll", "buuz_settings.exe", "unins000.exe") {
+          foreach ($f in "buuz_tsf.dll", "buuz_settings.exe", "mn.txt", "unins000.exe") {
             if (-not (Test-Path (Join-Path $dir $f))) { throw "$f missing after install" }
           }
           $u = Start-Process (Join-Path $dir "unins000.exe") -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait -PassThru
@@ -203,7 +203,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows/dist/${{ matrix.arch }} | Out-Null
-          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/buuz_settings.exe, windows/build/Release/e2e_typing.exe windows/dist/${{ matrix.arch }}/
+          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/buuz_settings.exe, windows/build/Release/e2e_typing.exe, windows/build/Release/mn.txt windows/dist/${{ matrix.arch }}/
           Copy-Item windows/installer/output/Buuz-*.exe windows/dist/${{ matrix.arch }}/ -ErrorAction SilentlyContinue
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

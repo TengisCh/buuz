@@ -104,6 +104,21 @@ DWORD WINAPI watchdog(LPVOID) {
     ExitProcess(3);
 }
 
+// True when mn.txt is in the folder of the loaded buuz_tsf.dll.
+bool word_list_next_to_dll() {
+    HMODULE dll = GetModuleHandleW(L"buuz_tsf.dll");
+    if (!dll) return false;
+    wchar_t path[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(dll, path, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return false;
+    std::wstring file(path, n);
+    const size_t slash = file.find_last_of(L'\\');
+    if (slash == std::wstring::npos) return false;
+    file.resize(slash + 1);
+    file += L"mn.txt";
+    return GetFileAttributesW(file.c_str()) != INVALID_FILE_ATTRIBUTES;
+}
+
 int main() {
     CreateThread(nullptr, 0, watchdog, nullptr, 0, nullptr);
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) return 2;
@@ -177,7 +192,23 @@ int main() {
     print_hex(L"want", want);
     if (got == want) {
         std::printf("PASS: sain baina -> сайн байна in a real Rich Edit control\n");
-        return 0;
+        // Word choice needs mn.txt next to the DLL (#66: ий over ы).
+        if (!word_list_next_to_dll()) {
+            std::printf("SKIP: no mn.txt next to buuz_tsf.dll, word choice not tested\n");
+            return 0;
+        }
+        type(" surguuliin ");
+        pump(500);
+        got = read_text();
+        const std::wstring want2 = want + L" сургуулийн ";  // сургуулийн
+        print_hex(L"got ", got);
+        print_hex(L"want", want2);
+        if (got == want2) {
+            std::printf("PASS: surguuliin -> сургуулийн with the word list\n");
+            return 0;
+        }
+        std::printf("FAIL: the word list did not reach the text service\n");
+        return 1;
     }
     std::printf("FAIL: the text service did not convert the keys\n");
     return 1;

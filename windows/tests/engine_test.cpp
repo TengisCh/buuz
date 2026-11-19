@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Tests for the pure shell logic, linked against the real Rust core.
 #include <cstdio>
+#include <chrono>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 #include "engine.h"
@@ -136,6 +139,71 @@ static void test_truncated_utf8() {
     CHECK(utf8_to_utf16("\xD0", 1) == u"\uFFFD");
 }
 
+static const char* kAutocorrect = "buuz_config = 1\n[options]\nautocorrect = true\n";
+
+// Same case as `the_word_list_reaches_the_composer` in ffi/tests/abi.rs.
+static void test_word_list_reaches_engine() {
+    const std::string list = "\xd0\xb4\xd1\x8d\xd0\xbb\xd0\xb3\xd2\xaf\xd2\xaf\xd1\x80\t100\n";  // дэлгүүр
+    WordList words(list);
+    CHECK(words.ok());
+    int loads = 0;
+    Engine e(kAutocorrect, [&]() {
+        loads++;
+        return words.get();
+    });
+    CHECK(e.ok());
+    CHECK(loads == 0);  // not at construction: the first key loads it
+    type(e, "delgur");
+    CHECK(loads == 1);
+    Edit ed = key(e, 0x20);
+    CHECK(ed.commit == u"дэлгүүр");  // дэлгүүр
+    type(e, "delgur");
+    key(e, 0x20);
+    CHECK(loads == 1);  // once, never again on the key path
+}
+
+// Smart mode, default config: the list picks ий over ы (issue #66).
+static void test_word_list_chooses_ii() {
+    const std::string list =
+        "\xd1\x81\xd1\x83\xd1\x80\xd0\xb3\xd1\x83\xd1\x83\xd0\xbb\xd0\xb8\xd0\xb9\xd0\xbd\t100\n";  // сургуулийн
+    WordList words(list);
+    Engine with("", [&]() { return words.get(); });
+    Engine without;
+    const Edit a = type(with, "surguuliin");
+    const Edit b = type(without, "surguuliin");
+    CHECK(a.preedit == u"сургуулийн");  // сургуулийн
+    CHECK(b.preedit != a.preedit);
+}
+
+static void test_bad_word_list_still_types() {
+    const std::string garbage("\xff\xfe", 2);
+    WordList bad(garbage);
+    CHECK(!bad.ok());
+    CHECK(bad.get() == nullptr);
+    Engine e1("", [&]() { return bad.get(); });
+    CHECK(e1.ok());
+    CHECK(type(e1, "geree").preedit == u"гэрээ");  // гэрээ
+    Engine e2("", []() -> const BuuzWordList* { return nullptr; });
+    CHECK(type(e2, "geree").preedit == u"гэрээ");
+}
+
+// Prints how long the real list takes to parse. Skipped without the file.
+static void test_real_word_list_parse_time() {
+#ifdef BUUZ_WORDLIST_PATH
+    std::ifstream f(BUUZ_WORDLIST_PATH, std::ios::binary);
+    if (!f) return;
+    std::stringstream ss;
+    ss << f.rdbuf();
+    const std::string text = ss.str();
+    const auto t0 = std::chrono::steady_clock::now();
+    WordList words(text);
+    const auto t1 = std::chrono::steady_clock::now();
+    CHECK(words.ok());
+    std::printf("mn.txt: %zu bytes parsed in %.1f ms\n", text.size(),
+                std::chrono::duration<double, std::milli>(t1 - t0).count());
+#endif
+}
+
 int main() {
     test_translate();
     test_classify();
@@ -145,6 +213,10 @@ int main() {
     test_bad_config_fails_open();
     test_null_commit_is_empty();
     test_truncated_utf8();
+    test_word_list_reaches_engine();
+    test_word_list_chooses_ii();
+    test_bad_word_list_still_types();
+    test_real_word_list_parse_time();
     if (failures) {
         std::fprintf(stderr, "%d check(s) failed\n", failures);
         return 1;
