@@ -81,13 +81,23 @@ settings window. The text is in Mongolian and English (`app/strings_*.tsv`).
 - "Add Buuz" calls `InstallLayoutOrTip` and then checks the profile every second.
 - The tests for the logic run in `ctest` (`app_test`). The window itself needs a manual check (#84).
 
+## Word list
+
+The word list `mn.txt` (from `data/wordlist/`) sits next to the DLL. The build copies it beside the DLL, and the installer puts it in the install folder.
+
+- The text service reads it on the first typing key in a process, not at activation. It parses it once for each process.
+- The list turns on word choice: ий over ы (#66) and the other list rules. Without it, Buuz types without word choice.
+- A missing or bad `mn.txt` is not an error. The text service types without a list.
+- Parse time on a Mac is about 22 ms (release build of the core). It happens once, on the first key.
+- `e2e_typing` also types `surguuliin` and expects `сургуулийн`. It skips this step when `mn.txt` is not next to the DLL.
+
 ## Installer
 
 `installer/buuz.iss` is an [Inno Setup](https://jrsoftware.org/isinfo.php) script. CI builds one installer for each CPU:
 `Buuz-<version>-windows-x64.exe` and `Buuz-<version>-windows-arm64.exe`. Both are in the `buuz-windows-<arch>` artifact.
 
 - It needs an administrator, because the text service goes into `HKLM`.
-- It copies `buuz_tsf.dll` and `buuz_settings.exe` to `C:\Program Files\Buuz`.
+- It copies `buuz_tsf.dll`, `buuz_settings.exe` and `mn.txt` to `C:\Program Files\Buuz`.
 - It registers the DLL (`regserver`) and adds a Start menu entry. The last page opens the settings app.
 - If an app still holds the old DLL, Windows replaces it at the next restart.
 - Uninstall (Settings, Apps) unregisters the DLL and removes the files.

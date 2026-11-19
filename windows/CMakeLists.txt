@@ -58,6 +58,8 @@ target_link_libraries(app_test PRIVATE buuz_app_logic)
 add_test(NAME app_test COMMAND app_test)
 add_executable(engine_test tests/engine_test.cpp)
 target_link_libraries(engine_test PRIVATE buuz_shell)
+target_compile_definitions(engine_test PRIVATE
+  BUUZ_WORDLIST_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../data/wordlist/mn.txt")
 add_test(NAME engine_test COMMAND engine_test)
 add_executable(edit_plan_test tests/edit_plan_test.cpp)
 target_link_libraries(edit_plan_test PRIVATE buuz_shell)
@@ -68,6 +70,11 @@ if(WIN32)
     src/text_service.cpp src/registration.cpp src/display_attributes.cpp src/guids.cpp buuz_tsf.def)
   target_compile_definitions(buuz_tsf PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
   target_link_libraries(buuz_tsf PRIVATE buuz_shell ole32 oleaut32 uuid advapi32 user32)
+  # The word list goes next to the DLL: the text service reads it on the first key.
+  add_custom_command(TARGET buuz_tsf POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/../data/wordlist/mn.txt" "$<TARGET_FILE_DIR:buuz_tsf>/mn.txt"
+    VERBATIM)
   # ARM64X: the ARM64 and x64 builds get a suffix (_arm64, _x64). A small
   # forwarder named buuz_tsf.dll loads the right one (windows/arm64x).
   set(BUUZ_DLL_SUFFIX "" CACHE STRING "Suffix for the DLL name, e.g. _x64")

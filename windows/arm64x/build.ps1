@@ -23,6 +23,8 @@ New-Item -ItemType Directory -Force $Out | Out-Null
 Copy-Item $Arm64Dll (Join-Path $Out "buuz_tsf_arm64.dll")
 Copy-Item $X64Dll (Join-Path $Out "buuz_tsf_x64.dll")
 Copy-Item $Settings (Join-Path $Out "buuz_settings.exe")
+# The word list sits next to the DLL: the build copies it beside the ARM64 DLL.
+Copy-Item (Join-Path (Split-Path -Parent $Arm64Dll) "mn.txt") (Join-Path $Out "mn.txt")
 
 # A pure forwarder has no code: only two export tables, one for each half.
 & $link.FullName /nologo /dll /noentry /nodefaultlib /ignore:4001 /machine:arm64x `

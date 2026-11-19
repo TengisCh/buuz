@@ -4,6 +4,7 @@
 #include <windows.h>
 
 #include <functional>
+#include <mutex>
 #include <new>
 #include <string>
 
@@ -80,6 +81,44 @@ std::string load_config() {
     return text;
 }
 
+// The word list is read from `mn.txt` in the folder of this DLL. It loads on
+// the first typing key, once for each process. A missing or bad file gives
+// no list: the engine then types without word choice.
+const BuuzWordList* shared_word_list() {
+    static std::once_flag once;
+    static std::unique_ptr<WordList> list;
+    std::call_once(once, [] {
+        HMODULE module = nullptr;
+        if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                    GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                reinterpret_cast<LPCWSTR>(&shared_word_list), &module)) {
+            return;
+        }
+        wchar_t path[MAX_PATH];
+        const DWORD n = GetModuleFileNameW(module, path, MAX_PATH);
+        if (n == 0 || n >= MAX_PATH) return;
+        std::wstring file(path, n);
+        const size_t slash = file.find_last_of(L'\\');
+        if (slash == std::wstring::npos) return;
+        file.resize(slash + 1);
+        file += L"mn.txt";
+        HANDLE f = CreateFileW(file.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                               FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (f == INVALID_HANDLE_VALUE) return;
+        std::string text;
+        char buf[65536];
+        DWORD got = 0;
+        // The list is under 1 MB. Stop at 16 MB if the file is not the list.
+        while (text.size() < (16u << 20) && ReadFile(f, buf, sizeof buf, &got, nullptr) && got > 0) {
+            text.append(buf, got);
+        }
+        CloseHandle(f);
+        auto parsed = std::make_unique<WordList>(text);
+        if (parsed->ok()) list = std::move(parsed);
+    });
+    return list ? list->get() : nullptr;
+}
+
 }  // namespace
 
 TextService::TextService() { dll_add_ref(); }
@@ -121,7 +160,7 @@ STDMETHODIMP TextService::ActivateEx(ITfThreadMgr* tm, TfClientId id, DWORD) {
     thread_mgr_->AddRef();
     client_id_ = id;
 
-    engine_ = std::make_unique<Engine>(load_config());
+    engine_ = std::make_unique<Engine>(load_config(), shared_word_list);
 
     ITfCategoryMgr* cat = nullptr;
     if (SUCCEEDED(CoCreateInstance(CLSID_TF_CategoryMgr, nullptr, CLSCTX_INPROC_SERVER,

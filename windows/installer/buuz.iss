@@ -3,7 +3,7 @@
 ;   ISCC /DArch=x64   /DSourceDir=<folder with the x64 files>   buuz.iss
 ;   ISCC /DArch=arm64 /DSourceDir=<folder with the ARM64 files> buuz.iss
 ; Add /DArm64x=1 when SourceDir holds the ARM64X forwarder (windows/arm64x).
-; SourceDir holds buuz_tsf.dll and buuz_settings.exe for that CPU.
+; SourceDir holds buuz_tsf.dll, buuz_settings.exe and mn.txt for that CPU.
 
 #ifndef Arch
   #error Pass /DArch=x64 or /DArch=arm64
@@ -50,6 +50,8 @@ RestartIfNeededByRun=no
 ; `restartreplace` replaces a DLL that an open app still holds at the next restart.
 Source: "{#SourceDir}\buuz_tsf.dll"; DestDir: "{app}"; Flags: regserver restartreplace uninsrestartdelete 64bit
 Source: "{#SourceDir}\buuz_settings.exe"; DestDir: "{app}"; Flags: ignoreversion
+; The word list sits next to the DLL. The text service loads it on the first key.
+Source: "{#SourceDir}\mn.txt"; DestDir: "{app}"; Flags: ignoreversion
 #ifdef Arm64x
 ; ARM64X: buuz_tsf.dll above is a forwarder. It loads one of these two DLLs.
 Source: "{#SourceDir}\buuz_tsf_arm64.dll"; DestDir: "{app}"; Flags: restartreplace uninsrestartdelete 64bit

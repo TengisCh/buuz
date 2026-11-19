@@ -204,6 +204,7 @@ setting.
   static library. C++ is the shortest path for TSF; the Windows SDK samples
   and all reference IMEs use it. (Rust with the `windows` crate is possible
   but adds COM boilerplate and fewer references.)
+- **Word list:** `mn.txt` ships next to the DLL. The DLL loads it on the first typing key and parses it once for each process. If the file is missing, it types without a list.
 - **Architectures:** x64 and ARM64 (plus ARM64X so x64 apps emulated on ARM
   PCs still load it), and x86 for 32-bit apps that are still common.
 - **Correctness details to plan for:** Store/sandboxed app support
