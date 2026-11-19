@@ -25,7 +25,7 @@ Copy-Item $X64Dll (Join-Path $Out "buuz_tsf_x64.dll")
 Copy-Item $Settings (Join-Path $Out "buuz_settings.exe")
 
 # A pure forwarder has no code: only two export tables, one for each half.
-& $link.FullName /nologo /dll /noentry /machine:arm64x `
+& $link.FullName /nologo /dll /noentry /nodefaultlib /ignore:4001 /machine:arm64x `
     "/defArm64Native:$here\forward_arm64.def" "/def:$here\forward_x64.def" `
     "/out:$Out\buuz_tsf.dll"
 if ($LASTEXITCODE -ne 0) { throw "link /machine:arm64x failed: $LASTEXITCODE" }
