@@ -294,14 +294,14 @@ fn options_of(config_text: &str) -> Result<buuz_core::Options, String> {
 }
 
 /// Transliterate with the options of a config text. The error is a tagged
-/// string (see above). With autocorrect on, the loaded word list (`load_word_list`) goes into the
-/// options, so a word that Space or punctuation ends is corrected as in the
-/// core (section 13). A newline does not correct. Without a list, nothing
-/// changes.
+/// string (see above). With autocorrect or word choice on, the loaded word list (`load_word_list`)
+/// goes into the options, so a word that Space or punctuation ends is
+/// corrected as in the core (sections 13 and 13.1). A newline does not
+/// correct. Without a list, nothing changes.
 #[wasm_bindgen]
 pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
     let mut opts = options_of(config_text)?;
-    if opts.autocorrect {
+    if opts.autocorrect || opts.word_choice {
         opts.words = WORDS.with(|w| w.borrow().clone());
         opts.user = user_snapshot();
     }
@@ -1031,9 +1031,11 @@ mod tests {
             super::convert_with_config("delgur.", &on).unwrap(),
             "дэлгүүр."
         );
-        // Switch off: unchanged.
+        // Both switches off: unchanged. Word choice (on by default) also
+        // finds дэлгүүр.
+        let neither = super::config_set_option(&cfg, "word_choice", false).unwrap();
         assert_eq!(
-            super::convert_with_config("delgur ", &cfg).unwrap(),
+            super::convert_with_config("delgur ", &neither).unwrap(),
             "дэлгүр "
         );
         // A newline, or the end of the text, does not correct.

@@ -365,6 +365,9 @@ fn config_switch_and_word_list_need() {
     assert!(classic.options().autocorrect);
     let mut smart = Config::default();
     smart.set_completion(Some(false));
+    // Word choice is on in smart mode and also needs the list.
+    assert!(smart.needs_word_list());
+    smart.set_word_choice(Some(false));
     assert!(!smart.needs_word_list());
     smart.set_autocorrect(Some(true));
     assert!(smart.needs_word_list());
@@ -392,8 +395,8 @@ fn config_duplicate_is_an_error() {
 }
 
 /// Time of the Space key (the whole correction) per word against the budget
-/// of 1 ms in docs/architecture.md section 4. The assert runs in release
-/// only; CI runs the debug build, where it only prints the numbers.
+/// of 1 ms in docs/architecture.md section 4. The assert on the 99th
+/// percentile runs in release only (CI runs `cargo test --release` too).
 #[test]
 fn autocorrect_is_fast_per_word_on_the_real_list() {
     let opts = Options {
@@ -418,7 +421,7 @@ fn autocorrect_is_fast_per_word_on_the_real_list() {
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     ];
     let mut c = Composer::with_options(opts);
-    let (mut n, mut total, mut worst) = (0u128, 0u128, 0u128);
+    let mut samples = Vec::new();
     for round in 0..11 {
         for w in words {
             for ch in w.chars() {
@@ -429,16 +432,23 @@ fn autocorrect_is_fast_per_word_on_the_real_list() {
             let took = start.elapsed().as_nanos();
             std::hint::black_box(r);
             if round > 0 {
-                n += 1;
-                total += took;
-                worst = worst.max(took);
+                samples.push(took);
             }
         }
     }
-    eprintln!("autocorrect: mean {} ns, worst {} ns", total / n, worst);
+    let mean = samples.iter().sum::<u128>() / samples.len() as u128;
+    let p = p99(&mut samples);
+    eprintln!("autocorrect: mean {mean} ns, p99 {p} ns");
     if !cfg!(debug_assertions) {
-        assert!(worst < 1_000_000, "worst {worst} ns, mean {} ns", total / n);
+        assert!(p < 1_000_000, "p99 {p} ns, mean {mean} ns");
     }
+}
+
+/// The 99th percentile of `samples` (sorts them). One slow sample on a busy
+/// machine (a context switch) must not fail a speed budget.
+fn p99(samples: &mut [u128]) -> u128 {
+    samples.sort_unstable();
+    samples[(samples.len() * 99 / 100).min(samples.len() - 1)]
 }
 
 #[test]
