@@ -82,8 +82,28 @@ cp "$b-512.png" "$iconset/icon_512x512.png"
 cp "$b-1024.png" "$iconset/icon_512x512@2x.png"
 iconutil -c icns "$iconset" -o "$APP/Contents/Resources/Buuz.icns"
 
+# The Buuz app: welcome steps and settings (SwiftUI). It shares the Core
+# Swift files. The input method process does the typing.
+SET=$OUT/Settings.app
+rm -rf "$SET" "$OUT/settings-slices"
+mkdir -p "$OUT/settings-slices" "$SET/Contents/MacOS" "$SET/Contents/Resources"
+set_slices=()
+for arch in $ARCHS; do
+  lib=$(ffi_lib "$arch")
+  swiftc -O -wmo -parse-as-library -target "$arch-apple-macos$MIN" -import-objc-header "$HEADER" \
+    -module-name BuuzSettings "${CORE_SWIFT[@]}" Settings/*.swift "$lib" \
+    -o "$OUT/settings-slices/BuuzSettings-$arch"
+  set_slices+=("$OUT/settings-slices/BuuzSettings-$arch")
+done
+lipo -create "${set_slices[@]}" -output "$SET/Contents/MacOS/BuuzSettings"
+cp Settings/Info.plist "$SET/Contents/Info.plist"
+cp -R App/Strings "$SET/Contents/Resources/Strings"
+cp "$b-256.png" "$SET/Contents/Resources/buuz-buddy-256.png"
+cp "$APP/Contents/Resources/Buuz.icns" "$SET/Contents/Resources/Buuz.icns"
+codesign --force --sign - "$SET"
+
 # Unsigned for now (decision: sign at launch). An ad-hoc signature lets the
 # app run on Apple silicon.
 codesign --force --sign - "$APP"
-echo "Built $APP"
+echo "Built $APP and $SET"
 lipo -info "$APP/Contents/MacOS/Buuz"

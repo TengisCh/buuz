@@ -43,3 +43,5 @@ jobs:
           lipo -archs macos/build/Buuz.app/Contents/MacOS/Buuz | grep -q arm64
           lipo -archs macos/build/Buuz.app/Contents/MacOS/Buuz | grep -q x86_64
           test -s macos/build/Buuz.app/Contents/Resources/mn.txt
+          plutil -lint macos/build/Settings.app/Contents/Info.plist
+          test -s macos/build/Settings.app/Contents/Resources/Strings/strings.mn.json
