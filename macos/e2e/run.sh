@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 OUT=build
 mkdir -p "$OUT"
 
-swiftc -O e2e/driver.swift Settings/InputSource.swift -o "$OUT/e2e"
+swiftc -O e2e/main.swift Settings/InputSource.swift -o "$OUT/e2e"
 
 status=0
 "$OUT/e2e" || status=$?
