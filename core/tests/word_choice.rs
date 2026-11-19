@@ -171,3 +171,37 @@ fn all_capitals_are_chosen_too() {
     // Mixed case inside a word stays as typed.
     assert_eq!(commit(o, "uVul"), "уВул");
 }
+
+// ---- the user's own uses break a tie (docs/research/other-imes.md) ----
+
+fn with_uses(word: &str, n: u32) -> Options {
+    let mut d = buuz_core::UserDict::new();
+    for _ in 0..n {
+        d.record_use(word);
+    }
+    Options {
+        user: Some(Arc::new(d.snapshot())),
+        ..with_list(Options::smart())
+    }
+}
+
+#[test]
+fn user_uses_break_a_word_choice_tie() {
+    assert_eq!(commit(with_list(Options::smart()), "uruu"), "уруу");
+    assert_eq!(commit(with_uses("өрөө", 5), "uruu"), "өрөө");
+    // The other word of the tie, used often, is chosen too.
+    assert_eq!(commit(with_uses("уруу", 5), "uruu"), "уруу");
+}
+
+#[test]
+fn two_uses_do_not_change_the_choice() {
+    assert_eq!(commit(with_uses("өрөө", 2), "uruu"), "уруу");
+}
+
+#[test]
+fn user_uses_never_beat_a_clear_winner() {
+    // `мөн` (20067) is far ahead of `мон` (114); uses of `мон` do not matter.
+    assert_eq!(commit(with_uses("мон", 9), "mon"), "мөн");
+    // `уурын` stays against `өөрийн`, as without the user.
+    assert_eq!(commit(with_uses("өөрийн", 9), "uuriin"), "уурын");
+}

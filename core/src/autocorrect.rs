@@ -41,6 +41,8 @@ pub(crate) struct Scratch {
     best: Vec<char>,
     /// The candidate as text, for the lookup.
     text: String,
+    /// The candidate the user used most, for a tie.
+    liked: Vec<char>,
 }
 
 /// The best candidate so far and the count of the next one.
@@ -83,6 +85,7 @@ pub(crate) fn correct(
         level,
         best,
         text,
+        ..
     } = s;
     let [first, second] = level;
     best.clear();
@@ -165,12 +168,14 @@ pub(crate) fn choose(
         return None;
     }
     let plain = words.count(&s.text).unwrap_or(0);
+    let plain_uses = user.map_or(0, |u| u.uses(&s.text));
 
     let Scratch {
         word,
         level,
         best,
         text,
+        liked,
     } = s;
     let [cand, extra] = level;
     let choices = |c: char| -> &'static [char] {
@@ -188,6 +193,9 @@ pub(crate) fn choose(
     let mut idx = [0usize; MAX_VARIED];
     best.clear();
     let mut tally = Tally { top: 0, second: 0 };
+    // The listed candidate the user used most (from 3 uses), with its count.
+    liked.clear();
+    let mut fav = Fav { uses: 0, count: 0 };
     loop {
         cand.clear();
         cand.extend_from_slice(word);
@@ -197,11 +205,13 @@ pub(crate) fn choose(
         // Skip the combination that rebuilds the word as typed.
         if cand.as_slice() != word.as_slice() {
             visit(words, cand, text, best, &mut tally);
+            note_use(words, user, cand, text, liked, &mut fav);
         }
         if extras {
             let vowels_changed = cand.as_slice() != word.as_slice();
             extra_edits(cand, extra, vowels_changed, &mut |c| {
-                visit(words, c, text, best, &mut tally)
+                visit(words, c, text, best, &mut tally);
+                note_use(words, user, c, text, liked, &mut fav);
             });
         }
         // Next combination: a counter with one digit for each position.
@@ -221,9 +231,23 @@ pub(crate) fn choose(
     let clear = tally.top >= MIN_COUNT
         && u64::from(tally.top) >= u64::from(CLEAR_FACTOR) * u64::from(tally.second)
         && u64::from(tally.top) >= u64::from(PLAIN_FACTOR) * u64::from(plain);
-    if !clear {
+    // No clear winner: the word the user used most breaks a tie between
+    // candidates of similar rank. It never beats a clear winner.
+    // Similar rank: within `CLEAR_FACTOR` of the word as typed when it is
+    // listed (it then decides what the candidates must beat), else of the top.
+    let near = |a: u32, b: u32| u64::from(a) * u64::from(CLEAR_FACTOR) > u64::from(b);
+    let similar = if plain > 0 {
+        near(fav.count, plain) && near(plain, fav.count)
+    } else {
+        near(fav.count, tally.top)
+    };
+    let best = if clear {
+        best
+    } else if fav.uses > 0 && fav.count >= MIN_COUNT && similar && plain_uses < fav.uses {
+        liked
+    } else {
         return None;
-    }
+    };
     let mut out = String::with_capacity(best.len() * 2);
     for (i, &c) in best.iter().enumerate() {
         if caps || (i == 0 && comp[0].is_uppercase()) {
@@ -305,6 +329,36 @@ fn y_edits(cur: &[char], out: &mut Vec<char>, vowels_changed: bool, f: &mut dyn 
         for c in ['я', 'ё'] {
             fill(out, &cur[..n - 1], &[c], &[]);
             f(out);
+        }
+    }
+}
+
+/// The candidate the user used most so far.
+struct Fav {
+    uses: u32,
+    count: u32,
+}
+
+/// Keep `cand` in `liked` when the user used it more than the best so far
+/// and the list knows it. Does nothing without a user snapshot.
+fn note_use(
+    words: &WordList,
+    user: Option<&UserSnapshot>,
+    cand: &[char],
+    text: &mut String,
+    liked: &mut Vec<char>,
+    fav: &mut Fav,
+) {
+    let Some(u) = user else { return };
+    text.clear();
+    text.extend(cand.iter());
+    let uses = u.uses(text);
+    if uses > fav.uses {
+        if let Some(count) = words.count(text) {
+            fav.uses = uses;
+            fav.count = count;
+            liked.clear();
+            liked.extend_from_slice(cand);
         }
     }
 }
