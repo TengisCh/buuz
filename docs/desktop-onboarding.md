@@ -210,6 +210,12 @@ Decided: no always-visible icon (see §8).
 3. **Import step hidden in v1** until portable config (#8) ships; then it
    appears between the vowel tip and Done.
 
+4. **Windows app is plain Win32, not WinUI 3 (2026-11-19).** WinUI 3 needs the
+   Windows App SDK and a heavier build. A Win32 window needs no extra runtime
+   and starts fast. §7 is superseded for Windows; the flow and the settings
+   stay as designed. Settings live in `%APPDATA%\Buuz\settings.conf`
+   (the config format of decision 0005), not in the registry.
+
 ## Sources
 
 - Wispr Flow help centre: [setup guide](https://docs.wisprflow.ai/articles/3152211871-setup-guide),

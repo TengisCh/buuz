@@ -1,0 +1,72 @@
+# Reviewer, please check: Buuz-ын (genitive suffix on a Latin name; or Буузын?); add_manual Windows labels Сонголтууд and Гар нэмэх (guessed, Mongolian Windows UI may not exist); ажлын самбар (taskbar); (зөвлөж байна) for recommended; Ухаалаг эгшиг; Товчилсон үг vs nav Товчлол (shortcuts); Код бичих программд латинаар; Өнгө төрх (theme); done_startup differs from design «Компьютер асахад бэлэн байлгах» to match the English; privacy_title wording.
+app_title	Buuz 2.0
+lang_toggle	EN
+btn_start	Эхлэх
+btn_next	Дараах
+btn_back	Буцах
+btn_skip	Алгасах
+btn_gotit	Ойлголоо
+btn_add	Нэмэх
+btn_open_settings	Windows-ийн Тохиргоог нээх
+btn_finish	Бичиж эхлэх
+welcome_title	Латинаар бич, кирилл болоод гарна
+welcome_line	Бүх апп дотор. Интернэтгүй. Шууд.
+welcome_demo_in	sain baina uu
+welcome_demo_out	сайн байна уу
+welcome_credit	Нямцэрэнгийн Одбаярын Buuz-ын үргэлжлэл. Нээлттэй эх.
+privacy_title	Бичсэн бүхэн чинь зөвхөн чинийх
+privacy_offline	Интернэтгүй ажиллана
+privacy_nokeys	Дарсан товчийг хадгалахгүй, хаашаа ч илгээхгүй
+privacy_noaccount	Бүртгэл хэрэггүй
+privacy_password	Нууц үгийн талбарт унтарна
+add_title	Windows-д Buuz нэмэх
+add_line	Нэг товшоход Монгол (Buuz) гар нэмэгдэнэ.
+add_status_waiting	Хүлээж байна
+add_status_done	Нэмэгдлээ
+add_done_title	Болчихлоо! Buuz нэмэгдлээ.
+add_manual	Эсвэл өөрөө нэм: Тохиргоо, Цаг хугацаа ба хэл, Хэл ба бүс нутаг, Монгол, Сонголтууд, Гар нэмэх, Buuz.
+shortcut_title	Хэл солих товчоо сонго
+shortcut_win_space	Win + Space (зөвлөж байна)
+shortcut_ctrl_space	Ctrl + Space: Buuz асаах, унтраах
+shortcut_alt_shift	Alt + Shift
+shortcut_try	Одоо дараад үз
+shortcut_ok	Ажиллаж байна!
+try_title	Туршаад үз
+try_hint	Талбар дээр дараад бич. Гар чинь Buuz дээр байх ёстой.
+try_task1	sain baina uu
+try_task2	bayarlalaa
+try_task3	qnqqdqr
+try_placeholder	Энд бич
+tip_title	Хоёр зөвлөгөө
+tip_harmony_title	Эгшиг өөрөө зохицно
+tip_harmony_line	Үгэнд э, ө, ү байвал o нь ө, u нь ү болно.
+tip_keys_title	Заавал ө, ү хэрэгтэй бол
+tip_keys_line	q нь ө, w нь ү, ' нь ь, " нь ъ болно.
+done_title	Бэлэн!
+done_where	Buuz ажлын самбар дээр МОН гэж харагдана.
+done_recap	Хэл солих товч, q = ө, w = ү
+done_startup	Windows асахад тохиргооны туслахыг нээх
+nav_home	Нүүр
+nav_typing	Бичих
+nav_shortcuts	Товчлол
+nav_privacy	Нууцлал
+nav_general	Ерөнхий
+nav_about	Тухай
+home_ok	Buuz идэвхтэй байна
+home_fix	Buuz унтарсан байна. Дахин нэм.
+home_cheat	q = ө, w = ү, ' = ь, " = ъ
+typing_smart_vowels	Ухаалаг эгшиг
+typing_abbreviations	Товчилсон үг
+typing_keep_latin	Латин үгийг хэвээр үлдээх
+typing_auto_latin	Код бичих программд латинаар
+typing_autocorrect	Автоматаар засах
+typing_completion	Үг гүйцээх
+typing_soon	Удахгүй
+general_language	Хэл
+general_theme	Өнгө төрх
+general_theme_light	Цайвар
+general_theme_dark	Бараан
+general_rerun	Танилцуулгыг дахин үзэх
+about_credit	Buuz 2.0 бол Нямцэрэнгийн Одбаярын Buuz-ын үргэлжлэл.
+about_license	Нээлттэй эх: MIT эсвэл Apache-2.0.
+about_feedback	Санал хүсэлт илгээх

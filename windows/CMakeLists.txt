@@ -39,7 +39,23 @@ add_library(buuz_shell STATIC src/keymap.cpp src/engine.cpp)
 target_include_directories(buuz_shell PUBLIC src)
 target_link_libraries(buuz_shell PUBLIC buuz_ffi)
 
+# Settings app logic: config edits, state and strings. No Windows headers.
+set(BUUZ_STRINGS_CPP "${CMAKE_CURRENT_BINARY_DIR}/strings_data.cpp")
+set(BUUZ_STRINGS_MN "${CMAKE_CURRENT_SOURCE_DIR}/app/strings_mn.tsv")
+set(BUUZ_STRINGS_EN "${CMAKE_CURRENT_SOURCE_DIR}/app/strings_en.tsv")
+add_custom_command(
+  OUTPUT "${BUUZ_STRINGS_CPP}"
+  COMMAND ${CMAKE_COMMAND} -DMN=${BUUZ_STRINGS_MN} -DEN=${BUUZ_STRINGS_EN}
+          -DOUT=${BUUZ_STRINGS_CPP} -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake_strings.cmake"
+  DEPENDS "${BUUZ_STRINGS_MN}" "${BUUZ_STRINGS_EN}" cmake_strings.cmake
+  VERBATIM)
+add_library(buuz_app_logic STATIC app/conf.cpp app/app_state.cpp app/strings.cpp "${BUUZ_STRINGS_CPP}")
+target_include_directories(buuz_app_logic PUBLIC app)
+
 enable_testing()
+add_executable(app_test tests/app_test.cpp)
+target_link_libraries(app_test PRIVATE buuz_app_logic)
+add_test(NAME app_test COMMAND app_test)
 add_executable(engine_test tests/engine_test.cpp)
 target_link_libraries(engine_test PRIVATE buuz_shell)
 add_test(NAME engine_test COMMAND engine_test)
@@ -51,9 +67,20 @@ if(WIN32)
   target_link_libraries(buuz_tsf PRIVATE buuz_shell ole32 oleaut32 uuid advapi32 user32)
   if(MSVC)
     # Static C runtime: nothing else to install, small load time.
-    set_property(TARGET buuz_tsf buuz_shell engine_test PROPERTY
+    set_property(TARGET buuz_tsf buuz_shell engine_test buuz_app_logic app_test PROPERTY
       MSVC_RUNTIME_LIBRARY "MultiThreaded")
     target_link_options(buuz_tsf PRIVATE /DEBUG /OPT:REF /OPT:ICF)
+  endif()
+
+  # Settings and onboarding app: plain Win32, runs apart from the DLL.
+  add_executable(buuz_settings WIN32 app/main.cpp src/guids.cpp
+    $<$<CXX_COMPILER_ID:MSVC>:app/buuz_settings.manifest>)
+  target_compile_definitions(buuz_settings PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN)
+  target_include_directories(buuz_settings PRIVATE src)
+  target_link_libraries(buuz_settings PRIVATE buuz_app_logic ole32 oleaut32 uuid user32 gdi32 shell32 comctl32)
+  if(MSVC)
+    set_property(TARGET buuz_settings PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    target_link_options(buuz_settings PRIVATE /DEBUG /OPT:REF /OPT:ICF)
   endif()
 
   # End-to-end typing test. It needs the DLL registered (regsvr32) and an
