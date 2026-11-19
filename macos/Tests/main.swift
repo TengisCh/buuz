@@ -241,6 +241,63 @@ do {
     }
 }
 
+// MARK: Config editor
+
+do {
+    let base = "buuz_config = 1\npreset = \"smart\"\n\n# my notes\n[options]\nautocorrect = false # off\n\n[abbreviations]\nbn = \"байна\"\n"
+    expect(ConfigEditor.flag(base, "autocorrect"), false, "reads a flag with a comment")
+    expect(ConfigEditor.flag(base, "smart_vowels"), nil, "unset flag is nil")
+    expect(ConfigEditor.flag(nil, "autocorrect"), nil, "no file is nil")
+    let on = ConfigEditor.setFlag(base, "autocorrect", true)
+    expect(ConfigEditor.flag(on, "autocorrect"), true, "changes a flag")
+    expect(on.contains("# my notes") && on.contains("bn = \"байна\""), true, "keeps comments and other sections")
+    let added = ConfigEditor.setFlag(base, "smart_vowels", false)
+    expect(ConfigEditor.flag(added, "smart_vowels"), false, "adds a flag to [options]")
+    expect(ConfigEditor.flag(added, "autocorrect"), false, "keeps the other flag")
+    let fresh = ConfigEditor.setFlag(nil, "abbreviations", true)
+    expect(fresh, "buuz_config = 1\n\n[options]\nabbreviations = true\n", "makes a new file")
+    let noOptions = ConfigEditor.setFlag("buuz_config = 1\npreset = \"classic\"\n", "smart_vowels", true)
+    expect(noOptions.hasSuffix("[options]\nsmart_vowels = true\n"), true, "adds [options] at the end")
+    for text in [on, added, fresh, noOptions] {
+        expect(Engine(config: text, words: nil) != nil, true, "the core accepts the edited config")
+    }
+    expect(ConfigEditor.setFlag(on, "autocorrect", true), on, "setting the same value changes nothing")
+}
+
+// MARK: Onboarding
+
+do {
+    var f = OnboardingFlow()
+    expect(f.step, .welcome, "starts at welcome")
+    f.goNext(enabled: false); expect(f.step, .privacy, "welcome to privacy")
+    f.goNext(enabled: false); expect(f.step, .enable, "privacy to enable")
+    f.goNext(enabled: false); expect(f.step, .shortcut, "enable to shortcut")
+    f.goBack(enabled: false); expect(f.step, .enable, "back to enable")
+    f.step = .privacy
+    f.goNext(enabled: true); expect(f.step, .shortcut, "enable is skipped when already added")
+    f.goBack(enabled: true); expect(f.step, .privacy, "back skips enable too")
+    f.step = .done
+    f.goNext(enabled: false); expect(f.step, .done, "done is the end")
+    f.step = .welcome
+    f.goBack(enabled: false); expect(f.step, .welcome, "welcome is the start")
+    expect(OnboardingFlow(step: .welcome).progress == nil, true, "no progress on welcome")
+    expect(OnboardingFlow(step: .done).progress == nil, true, "no progress on done")
+    let p = OnboardingFlow(step: .shortcut).progress
+    expect(p?.index, 3, "progress index")
+    expect(p?.total, 5, "progress total")
+
+    let prefs = Prefs(MemoryStore())
+    expect(prefs.language, .mn, "Mongolian by default")
+    expect(prefs.dark, false, "light by default")
+    expect(prefs.step, .welcome, "welcome by default")
+    expect(prefs.onboardingDone, false, "not done by default")
+    prefs.language = .en; prefs.dark = true; prefs.step = .tryIt; prefs.onboardingDone = true
+    expect(prefs.language, .en, "language is saved")
+    expect(prefs.dark, true, "theme is saved")
+    expect(prefs.step, .tryIt, "step is saved")
+    expect(prefs.onboardingDone, true, "done is saved")
+}
+
 // MARK: Speed
 
 do {
