@@ -15,6 +15,9 @@ pkill -x Buuz 2>/dev/null || true
 rm -rf "$DEST/Buuz.app"
 cp -R "$APP" "$DEST/Buuz.app"
 echo "Installed $DEST/Buuz.app"
+# macOS does not always start a new input method by itself. Start it now, so
+# that selecting Buuz works at once.
+open -g "$DEST/Buuz.app" || true
 
 # The welcome and settings app.
 if [ -d build/Settings.app ]; then

@@ -23,6 +23,7 @@ const cases = [
   ["unee", "үнээ"],
   ["irsen uu", "ирсэн үү"],
   ["aaviin", "аавын"],
+  ["ajlahgui", "ажлахгүй"],
   ["", ""],
   ["hello, 123!\nsain", "хэллө, 123!\nсайн"],
   ["github.com", "github.com"],
@@ -37,6 +38,7 @@ test("the Classic switch turns every smart feature off", () => {
   assert.equal(convert_classic("aaviin"), "аавийн");
   assert.equal(convert_classic("bn uu "), "бн уу ");
   assert.equal(convert_classic("sain baina uu"), "сайн байна уу");
+  assert.equal(convert_classic("ajlahgui"), "ажлахгуй");
 });
 
 test("classic mode keeps the original left-to-right rules", () => {

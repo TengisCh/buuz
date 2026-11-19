@@ -58,8 +58,7 @@ dots and Back / Next. Copy below is MN (default) / EN.
   **«Латинаар бич, кирилл болоод гарна» / "Type Latin, get Cyrillic"**.
 - Animated demo line: `sain baina uu` → **сайн байна уу**, typed letter by letter.
 - One line: «Бүх апп дотор. Интернэтгүй. Шууд.» / "In every app. Offline. Instantly."
-- Button **Эхлэх / Get started**. Credit line: continuation of Buuz by
-  Нямцэрэнгийн Одбаяр, open source.
+- Button **Эхлэх / Get started**. No credit line. Credits are in the `NOTICE` file in the app bundle. About › Open-source notices opens it.
 
 ### 3.2 🔒 Privacy promise (`mac-privacy.png`)
 
@@ -156,7 +155,7 @@ Opens from the menu, the Start menu / Launchpad, or by launching the app again.
 | 📥 Тохиргоо зөөх / Import & export | Paste / open `.buuz` file / copy my config (#8) |
 | 🔒 Нууцлал / Privacy | The four promises, link to source, "no network calls" statement, update check toggle (the only network use, off-path) |
 | ⚙️ Ерөнхий / General | МН/EN, light/dark, open at login, show onboarding again, check for updates |
-| 💬 Санал хүсэлт · ℹ️ Тухай | GitHub issues link; credits (Нямцэрэнгийн Одбаяр, license), version |
+| 💬 Санал хүсэлт · ℹ️ Тухай | GitHub issues link; license, version, Open-source notices (opens the bundled `NOTICE` file, which has the credits) |
 
 Feature flags marked «удахгүй» show as disabled rows with a pill, so people
 see what is coming.

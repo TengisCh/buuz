@@ -101,6 +101,7 @@ fn vowel_harmony_male_word() {
     eq("boov", "боов");
     eq("uu", "уу");
     eq("buuz", "бууз");
+    eq("ajlahgui", "ажлахгүй");
 }
 
 #[test]
