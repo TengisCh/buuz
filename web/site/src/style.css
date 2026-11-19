@@ -437,6 +437,12 @@ a.button.mail { width: 100%; justify-content: center; }
 .map small { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
 .map .out { font-size: 1.15rem; font-weight: 900; text-align: right; }
 .keys-rules .map { columns: 2 8.5rem; }
+.my-keys { margin-bottom: 0.8rem; }
+.my-keys .map { columns: 2 8.5rem; }
+.my-keys .map li { grid-template-columns: 1fr auto auto; }
+.my-key-x { margin-left: auto; padding: 0 0.3rem; font-size: 0.85rem; opacity: 0.7; }
+.my-key-x:hover, .my-key-x:focus-visible { opacity: 1; }
+.settings > .cfg-msg { padding: 0 1rem; }
 .map-format { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0 0.5rem; font-weight: 800; }
 .map-format select { font: inherit; font-weight: 700; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.3rem 0.5rem; max-width: 100%; }
 .map-legend { margin-top: 0.5rem; }
