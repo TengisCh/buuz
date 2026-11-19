@@ -29,6 +29,7 @@ mod composer;
 mod config;
 mod keys;
 mod rules;
+mod scheme;
 mod userdict;
 mod wordlist;
 
@@ -42,7 +43,8 @@ pub use config::{
     MAX_SECTION_ENTRIES, MAX_VALUE_CHARS,
 };
 pub use keys::{KeyError, KeyMap};
-pub use rules::export_rules;
+pub use rules::{export_rules, typing_key_table};
+pub use scheme::{KeyRow, KeyWhen, Scheme, UnknownScheme};
 pub use userdict::{
     Learned, ParsedUserDict, UserDict, UserDictEntry, UserDictError, UserDictKind, UserDictProblem,
     UserDictWarning, UserSnapshot, MAX_USERDICT_BYTES, MAX_USERDICT_ENTRIES,

@@ -3,11 +3,14 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_with_config } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, key_table, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
+import { TYPING_LANGS, formatOf, formatsOf, groupKeys, sampleKeys, type KeyOf } from "./mapping";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
 import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
+import { ghostPhrases, shuffled } from "./ghost";
 import calibrationSentences from "./calibration.json";
 import { accept, completionAt, ensureWordList, type Completion } from "./completion";
 import wordListUrl from "../../../data/wordlist/mn.txt?url";
@@ -74,6 +77,167 @@ settings.addEventListener("click", (e) => {
 // page keeps it in memory for this visit.
 const store = browserStore();
 let config = ""; // loaded once the wasm module is ready (see init below)
+
+// The language to type. "mn" uses the config and the Buuz rules; any other id
+// is a core scheme (see src/scheme.ts). It is saved by itself, not in the config.
+const schemeSelect = document.getElementById("scheme") as HTMLSelectElement;
+let scheme = MONGOLIAN;
+const typesMongolian = (): boolean => scheme === MONGOLIAN;
+
+/** Show the scheme in the dialog and tell the style sheet which settings apply. */
+function applyScheme(): void {
+  schemeSelect.value = scheme;
+  document.body.dataset.scheme = scheme;
+  (document.getElementById("scheme-draft") as HTMLElement).hidden = typesMongolian() || !scheme_is_draft(scheme);
+  // The Words tab is for Mongolian only; leave it when another scheme is picked.
+  if (!typesMongolian() && document.getElementById("tab-words")?.getAttribute("aria-selected") === "true") selectSetTab("tab-typing");
+  renderMaps();
+}
+
+// Typing language and format. The chip under the Latin field (and the copies
+// in "How to type" and the Rules tab) opens one dialog: the language, its
+// formats and the full key table. The page language in the header changes
+// only the page text; the typing language follows it at first (schemeAfterLang).
+// The tables are built from the core rules, so they match the converter.
+const typingDlg = document.getElementById("typing") as HTMLDialogElement;
+typingDlg.querySelector(".fb-close")?.addEventListener("click", () => typingDlg.close());
+typingDlg.addEventListener("click", (e) => e.target === typingDlg && typingDlg.close());
+const openTyping = () => {
+  if (settings.open) settings.close();
+  typingDlg.showModal();
+};
+for (const chip of document.querySelectorAll<HTMLButtonElement>(".typing-chip")) chip.addEventListener("click", openTyping);
+const NOTE: Partial<Record<KeyOf["when"], Key>> = { after_vowel: "mapAfterVowel", word_start: "mapWordStart" };
+const FORMAT_EMOJI = { chat: "💬", official: "🏛️", lookalike: "🔢" } as const;
+const el = <K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...kids: (Node | string)[]) => {
+  const e = Object.assign(document.createElement(tag), props);
+  e.append(...kids);
+  return e;
+};
+function flag(lang: string): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "flag");
+  svg.setAttribute("viewBox", "0 0 24 16");
+  svg.setAttribute("aria-hidden", "true");
+  const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  // Only a known language code goes into the href.
+  const code = TYPING_LANGS.find(([l]) => l === lang)?.[0] ?? "mn";
+  use.setAttribute("href", `#f-${code}`);
+  svg.append(use);
+  return svg;
+}
+function formatName(id: string): string {
+  const f = formatOf(id);
+  return f.name ?? t(f.kind === "lookalike" ? "fmtLookalike" : "fmtChat");
+}
+function formatSub(id: string): string {
+  const kind = formatOf(id).kind;
+  return kind === "official" ? t("fmtOfficialSub") : kind === "lookalike" ? "4to → что" : t("fmtChatSub");
+}
+function renderMaps(): void {
+  const { lang: typeLang } = formatOf(scheme);
+  const langName = TYPING_LANGS.find(([l]) => l === typeLang)?.[1] ?? typeLang;
+  const ids = scheme_ids().split(",");
+  for (const chip of document.querySelectorAll<HTMLButtonElement>(".typing-chip")) {
+    chip.replaceChildren(
+      el("span", { ariaHidden: "true", textContent: "⌨️" }),
+      flag(typeLang),
+      el("span", { lang: typeLang, textContent: langName }),
+      el("span", { className: "fmt", textContent: `· ${FORMAT_EMOJI[formatOf(scheme).kind]} ${formatName(scheme)}` }),
+      el("span", { className: "chev", ariaHidden: "true", textContent: "▾" }),
+    );
+    chip.setAttribute("aria-label", `${t("typingTitle")}: ${langName}, ${formatName(scheme)}`);
+  }
+  // The dialog: languages, then the formats of the chosen language.
+  document.getElementById("typing-langs")?.replaceChildren(
+    ...TYPING_LANGS.map(([l, name]) => {
+      const b = el("button", { type: "button", lang: l }, flag(l), el("span", { textContent: name }));
+      b.setAttribute("aria-pressed", String(l === typeLang));
+      b.addEventListener("click", () => ready && setScheme(formatsOf(l, ids)[0]));
+      return b;
+    }),
+  );
+  document.getElementById("typing-formats")?.replaceChildren(
+    ...formatsOf(typeLang, ids).map((id) => {
+      const b = el("button", { type: "button" }, el("b", { textContent: `${FORMAT_EMOJI[formatOf(id).kind]} ${formatName(id)}` }), el("small", { textContent: formatSub(id) }));
+      b.setAttribute("aria-pressed", String(id === scheme));
+      b.addEventListener("click", () => ready && setScheme(id));
+      return b;
+    }),
+  );
+  const rows = groupKeys(key_table(scheme), typeLang);
+  // The line under the output: a few keys of the active format, and a link to all.
+  const strip = document.getElementById("rule-strip");
+  if (strip) {
+    const more = el("button", { type: "button", className: "linkish" }, el("span", { ariaHidden: "true", textContent: "📖 " }), t("allRules"));
+    more.addEventListener("click", openTyping);
+    strip.replaceChildren(...sampleKeys(rows).flatMap((k) => [el("span", { className: "pair", lang: typeLang }, el("kbd", { lang: "en", textContent: k.latin }), ` ${k.out}`)]), more);
+  }
+  const list = () =>
+    el(
+      "ul",
+      { className: "map", lang: typeLang },
+      ...rows.map((r) => {
+        const keys = el("span", { className: "in" });
+        for (const k of r.keys) {
+          keys.append(el("kbd", { lang: "en", textContent: k.latin, className: k.when === "smart" ? "smart" : "", title: k.when === "smart" ? t("mapSmart") : "" }));
+          const note = NOTE[k.when];
+          if (note) keys.append(el("small", { textContent: t(note) }));
+        }
+        const out = el("span", { className: "out", textContent: r.out });
+        if (r.keys.some((k) => k.when === "harmony")) {
+          out.title = t("mapHarmony");
+          out.append(el("span", { ariaHidden: "true", textContent: " 🎵" }));
+        }
+        return el("li", {}, keys, out);
+      }),
+    );
+  for (const id of ["keys-cheat", "keys-rules", "keys-typing"]) document.getElementById(id)?.replaceChildren(list());
+}
+document.addEventListener("buuz:lang", () => ready && renderMaps());
+
+// Settings tabs (Typing, Words, Rules): one panel shows at a time. Arrow keys
+// move between the visible tabs, as in the WAI-ARIA tabs pattern.
+const setTabs = Array.from(document.querySelectorAll<HTMLButtonElement>('.set-tabs [role="tab"]'));
+function selectSetTab(id: string, focus = false): void {
+  for (const tab of setTabs) {
+    const on = tab.id === id;
+    tab.setAttribute("aria-selected", String(on));
+    tab.tabIndex = on ? 0 : -1;
+    (document.getElementById(tab.getAttribute("aria-controls") ?? "") as HTMLElement).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+}
+for (const tab of setTabs) {
+  tab.addEventListener("click", () => selectSetTab(tab.id));
+  tab.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const shown = setTabs.filter((t) => t.offsetParent !== null);
+    const i = shown.indexOf(tab);
+    const next = shown[(i + (e.key === "ArrowRight" ? 1 : shown.length - 1)) % shown.length];
+    e.preventDefault();
+    selectSetTab(next.id, true);
+  });
+}
+
+function setScheme(id: string): void {
+  scheme = id;
+  saveScheme(store, id);
+  applyScheme();
+  render();
+  ghostForScheme();
+  updateHint();
+}
+
+schemeSelect.addEventListener("change", () => ready && setScheme(schemeSelect.value));
+// A page in Russian types Russian, and so on (see schemeAfterLang).
+let pageLang: string = lang();
+document.addEventListener("buuz:lang-changed", (e) => {
+  const next = (e as CustomEvent<string>).detail;
+  const previous = pageLang;
+  pageLang = next;
+  if (ready) setScheme(schemeAfterLang(scheme, next, previous, scheme_for_language));
+});
 
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
 // (the original Buuz, every smart feature off, toggles greyed out).
@@ -153,7 +317,7 @@ let dismissed: string | null = null; // "start:latin word" that Esc hid
 
 /** Load the word list (a separate asset) the first time it is needed. */
 function loadWords(): void {
-  if (!ready) return;
+  if (!ready || !typesMongolian()) return;
   const s = switchesOf(config);
   if (!s.completion && !s.autocorrect && !s.wordChoice) return;
   // After the list loads, convert again so autocorrect and word choice show in the output.
@@ -168,7 +332,7 @@ function wordKey(c: Completion): string {
   return `${end - c.replaces}:${latin.value.slice(end - c.replaces, end)}`;
 }
 function currentCompletion(): Completion | null {
-  if (!ready || latin.selectionStart !== latin.selectionEnd) return null;
+  if (!ready || !typesMongolian() || latin.selectionStart !== latin.selectionEnd) return null;
   const c = completionAt(latin.value, latin.selectionStart, config);
   return c && wordKey(c) !== dismissed ? c : null;
 }
@@ -217,7 +381,7 @@ function render(): void {
   // the config once per change), so run it synchronously on every input
   // event: no debounce, no frame delay.
   const text = latin.value.normalize("NFC");
-  cyr.value = !ready ? "" : convert_with_config(text, config);
+  cyr.value = !ready ? "" : typesMongolian() ? convert_with_config(text, config) : convert_scheme(scheme, text);
 }
 
 // Settings file: export the config as text or a .buuz file, import it by
@@ -325,6 +489,7 @@ const KIND_KEY = { add: "udKindAdd", use: "udKindUse", reject: "udKindReject" } 
 function showUserDict(): void {
   const entries = entriesOf(userText).reverse(); // the newest first
   udEmpty.hidden = entries.length > 0;
+  (document.getElementById("ud-count") as HTMLElement).textContent = entries.length > 0 ? String(entries.length) : "";
   udList.hidden = entries.length === 0;
   document.getElementById("ud-clear")?.toggleAttribute("disabled", entries.length === 0);
   document.getElementById("ud-export")?.toggleAttribute("disabled", entries.length === 0);
@@ -663,10 +828,12 @@ document.addEventListener("keydown", (e) => {
 // live conversion as its placeholder. It only ever touches placeholders, so it
 // sits still the moment there is real text, and resumes when the box is empty.
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const pool = (phrases as [string, string][]).map(([l]) => l);
-for (let i = pool.length - 1; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [pool[i], pool[j]] = [pool[j], pool[i]];
+const mongolianPool = (phrases as [string, string][]).map(([l]) => l);
+let pool = shuffled(mongolianPool);
+/** The typewriter shows examples of the typing language that is on. */
+function ghostForScheme(): void {
+  pool = shuffled(ghostPhrases(scheme) ?? mongolianPool);
+  if (latin.value === "" && !isFocused()) showGhost("", false);
 }
 // While the demo types, hide the real caret so there's only one cursor.
 // The moment there is real text, the native caret comes back.
@@ -700,7 +867,7 @@ function showGhost(text: string, caret: boolean): void {
   }
   syncCaret();
   latin.placeholder = text + (caret ? "|" : "");
-  cyr.placeholder = !ready ? "" : convert_with_config(text, ghostConfig);
+  cyr.placeholder = !ready ? "" : typesMongolian() ? convert_with_config(text, ghostConfig) : convert_scheme(scheme, text);
 }
 function typewriter(): void {
   let p = 0;
@@ -710,7 +877,16 @@ function typewriter(): void {
   let blinks = 0;
   let paused = false;
   const next = (ms: number) => window.setTimeout(step, ms);
+  let usedPool = pool;
   function step(): void {
+    if (pool !== usedPool) {
+      // The typing language changed: start a fresh phrase of the new language.
+      usedPool = pool;
+      chars = [];
+      n = 0;
+      p = 0;
+      phase = "type";
+    }
     if (latin.value !== "" || document.hidden || isFocused()) {
       // Paused (focus, text, hidden tab): the next run restarts from the first
       // letter of a fresh phrase, with the boxes empty, like real typing.
@@ -756,6 +932,10 @@ init({ module_or_path: wasmUrl }).then(() => {
   const state = loadConfigState(store); // needs the wasm module (migration, parsing)
   config = state.text;
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
+  // The page language decides first (a visitor on /uk/ types Ukrainian); then the saved choice.
+  scheme = scheme_for_language(lang()) || (loadScheme(store, scheme_ids().split(",")) ?? MONGOLIAN);
+  applyScheme();
+  ghostForScheme();
   userText = loadUserDict(store); // also gives it to the converter
   showUserDict();
   applyConfig();
