@@ -35,6 +35,7 @@ fn on(base: Options) -> Options {
     Options {
         words: Some(Arc::new(WordList::parse(FIXTURE).unwrap())),
         autocorrect: true,
+        word_choice: false,
         ..base
     }
 }
@@ -315,6 +316,7 @@ fn keys_do_not_correct_inside_the_word() {
 fn off_is_unchanged() {
     let off = Options {
         autocorrect: false,
+        word_choice: false,
         ..plain()
     };
     assert_eq!(run(off, "huuhed "), "хуухэд ");
