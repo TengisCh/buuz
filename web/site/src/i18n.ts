@@ -7,7 +7,9 @@
 // We deliberately do NOT follow navigator.language: many Mongolians run
 // English-language phones and browsers, and they are this site's audience.
 
-export type Lang = "mn" | "en" | "ru";
+import { MORE, more, type MoreLang } from "./i18n-more.ts";
+
+export type Lang = "mn" | "en" | "ru" | MoreLang;
 
 const mn = {
   title: "Buuz: Латин үсгээр монголоор бич",
@@ -655,32 +657,36 @@ const ru: Record<Key, string> = {
     "Печатайте латиницей и получайте кириллицу. Например, privet даёт привет. Один апостроф даёт ь, два апострофа дают ъ.",
 };
 
-export const strings: Record<Lang, Record<Key, string>> = { mn, en, ru };
+// mn, en and ru have every key. The other languages have the keys of the main
+// page and fall back to English for the rest (see t()).
+export const strings: Record<Lang, Partial<Record<Key, string>>> = { mn, en, ru, ...more };
 
+/** The languages the language button cycles through: the fully translated ones. */
 const ORDER: Lang[] = ["mn", "en", "ru"];
-const isLang = (v: unknown): v is Lang => ORDER.includes(v as Lang);
+export const ALL_LANGS: Lang[] = [...ORDER, ...MORE];
+const isLang = (v: unknown): v is Lang => ALL_LANGS.includes(v as Lang);
 
 /** A parse error or warning from the config, in the current language. */
 export function issueText(issue: { code: string; number: number; detail: string }): string {
   const key = `cfg_${issue.code}` as Key;
-  const template = strings[current][key] ?? strings[current].cfg_other;
+  const template = strings[current][key] ?? en[key] ?? en.cfg_other;
   return template.replace("{line}", () => String(issue.number)).replace("{name}", () => issue.detail);
 }
 
 /** A string with `{name}` placeholders filled in (no markup, so use textContent). */
 export function fmt(key: Key, vars: Record<string, string | number>): string {
-  return strings[current][key].replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m));
+  return t(key).replace(/\{(\w+)\}/g, (m, name: string) => (name in vars ? String(vars[name]) : m));
 }
 
 const STORE = "buuz.lang";
 const ORIGIN = "https://buuz.thetengis.com";
 
 /** One URL for each page language, so search engines can index each one. */
-export const PATHS: Record<Lang, string> = { mn: "/", en: "/en/", ru: "/ru/" };
+export const PATHS = Object.fromEntries(ALL_LANGS.map((l) => [l, l === "mn" ? "/" : `/${l}/`])) as Record<Lang, string>;
 
 /** The page language a path belongs to, or null (the Mongolian root is "/"). */
 export function langOfPath(path: string): Lang | null {
-  for (const l of ORDER) if (l !== "mn" && (path === PATHS[l] || path === PATHS[l].slice(0, -1) || path.startsWith(PATHS[l] + "index"))) return l;
+  for (const l of ALL_LANGS) if (l !== "mn" && (path === PATHS[l] || path === PATHS[l].slice(0, -1) || path.startsWith(PATHS[l] + "index"))) return l;
   return path === "/" || path === "/index.html" ? "mn" : null;
 }
 let current: Lang = "mn";
@@ -690,12 +696,14 @@ export function lang(): Lang {
   return current;
 }
 
-function nextLang(l: Lang): Lang {
-  return ORDER[(ORDER.indexOf(l) + 1) % ORDER.length];
+/** The language the button shows next. A language outside the cycle goes to Mongolian. */
+export function nextLang(l: Lang): Lang {
+  const i = ORDER.indexOf(l);
+  return i < 0 ? "mn" : ORDER[(i + 1) % ORDER.length];
 }
 
 export function t(key: Key): string {
-  return strings[current][key];
+  return strings[current][key] ?? en[key];
 }
 
 function save(lang: Lang): void {
@@ -748,6 +756,10 @@ export function apply(lang: Lang): void {
   }
   for (const el of document.querySelectorAll<HTMLElement>("[data-i18n-html]")) {
     el.innerHTML = t(el.dataset.i18nHtml as Key);
+  }
+  for (const a of document.querySelectorAll<HTMLAnchorElement>("#langs a")) {
+    if (a.hreflang === lang) a.setAttribute("aria-current", "true");
+    else a.removeAttribute("aria-current");
   }
   const btn = document.getElementById("lang") as HTMLButtonElement | null;
   if (btn) {

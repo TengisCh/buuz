@@ -31,11 +31,17 @@ export function saveScheme(store: Store | null, id: string): void {
 }
 
 /**
- * The scheme after the page language changes. A page in Russian types Russian.
- * Leaving Russian for another page language drops back to Mongolian only if
- * the scheme is still the Russian one; any other choice is kept.
+ * The scheme after the page language changes. A page in a language with its
+ * own scheme (Russian, Ukrainian, ...) types that language. Leaving such a page
+ * drops back to Mongolian only if the scheme is still that page's own scheme;
+ * any other choice is kept.
+ *
+ * `defaultFor(page)` is the scheme id of a page language, or "" (Mongolian and
+ * English have none).
  */
-export function schemeAfterLang(current: string, page: string): string {
-  if (page === "ru") return "ru";
-  return current === "ru" ? MONGOLIAN : current;
+export function schemeAfterLang(current: string, page: string, previous: string, defaultFor: (lang: string) => string): string {
+  const own = defaultFor(page);
+  if (own) return own;
+  const before = defaultFor(previous);
+  return before && current === before ? MONGOLIAN : current;
 }

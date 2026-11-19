@@ -3,7 +3,7 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, scheme_for_language, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
 import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
 import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
@@ -98,9 +98,13 @@ function setScheme(id: string): void {
 }
 
 schemeSelect.addEventListener("change", () => ready && setScheme(schemeSelect.value));
-// A page in Russian types Russian (see schemeAfterLang).
+// A page in Russian types Russian, and so on (see schemeAfterLang).
+let pageLang: string = lang();
 document.addEventListener("buuz:lang-changed", (e) => {
-  if (ready) setScheme(schemeAfterLang(scheme, (e as CustomEvent<string>).detail));
+  const next = (e as CustomEvent<string>).detail;
+  const previous = pageLang;
+  pageLang = next;
+  if (ready) setScheme(schemeAfterLang(scheme, next, previous, scheme_for_language));
 });
 
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
@@ -784,7 +788,8 @@ init({ module_or_path: wasmUrl }).then(() => {
   const state = loadConfigState(store); // needs the wasm module (migration, parsing)
   config = state.text;
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
-  scheme = loadScheme(store, scheme_ids().split(",")) ?? (lang() === "ru" ? "ru" : MONGOLIAN);
+  // The page language decides first (a visitor on /uk/ types Ukrainian); then the saved choice.
+  scheme = scheme_for_language(lang()) || (loadScheme(store, scheme_ids().split(",")) ?? MONGOLIAN);
   applyScheme();
   userText = loadUserDict(store); // also gives it to the converter
   showUserDict();
