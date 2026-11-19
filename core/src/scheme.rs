@@ -95,7 +95,7 @@ const RU_GOST: &[Rule] = &[
 #[rustfmt::skip]
 const RU_VOLAPUK: &[Rule] = &[
     ("lli", "щ", Any), ("iii", "ш", Any), (">|<", "ж", Any), ("}|{", "ж", Any),
-    ("bl", "ы", Any), ("10", "ю", TouchesLetter),
+    ("bl", "ы", Any), ("b|", "ы", Any), ("10", "ю", TouchesLetter), ("|0", "ю", TouchesLetter),
     ("e'", "э", Any), ("€", "э", Any), ("ë", "ё", Any),
     ("a", "а", Any), ("b", "в", Any), ("c", "с", Any), ("d", "д", Any), ("e", "е", Any),
     ("f", "ф", Any), ("g", "г", Any), ("h", "н", Any), ("i", "и", Any), ("j", "й", Any),

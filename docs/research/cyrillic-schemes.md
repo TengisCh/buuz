@@ -77,13 +77,14 @@ It is the reverse of everyday translit: `p` is р, not п.
 | `b` `h` `p` `y` | в н р у |
 | `n` `u` `r` `w` | п и я ш |
 | `3` `4` `6` `9` `0` | з ч б я о |
-| `bl` `10` `lli` `iii` | ы ю щ ш |
+| `bl` `b\|` `10` `\|0` `lli` `iii` | ы ы ю ю щ ш |
 | `>\|<` | ж |
 
 - A digit gives a letter only next to a letter. `2026` stays a number.
 - A capital inside a word is a look-alike, not a capital letter. `npuBeT`
   gives привет. Only the first letter of a word keeps its case.
-- `b` is always в. Write `'` for ь.
+- `b` is в, except in `bl` and `b|`, which are ы. Write `'` for ь.
+- `bI` (capital i) is not ы: the capital turns to lower case, so it is `bi`, ви.
 - Letters with no look-alike use their sound (`d` д, `f` ф, `z` з).
 
 ## Other languages
