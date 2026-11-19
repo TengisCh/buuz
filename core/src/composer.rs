@@ -1166,6 +1166,16 @@ impl Composer {
             return None;
         }
         if self.opts.word_choice {
+            let split = autocorrect::split_particle(
+                words,
+                &self.comp,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+            if split.is_some() {
+                return split;
+            }
             let chosen = autocorrect::choose(
                 words,
                 &self.comp,

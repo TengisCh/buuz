@@ -76,3 +76,30 @@ fn a_listed_word_with_a_short_final_vowel_stays() {
     eq("shine ", "шинэ ");
     eq("ene ", "энэ ");
 }
+
+#[test]
+fn a_merged_past_and_particle_split() {
+    eq("boroo orsnu?", "бороо орсон уу?");
+    eq("irsnu ", "ирсэн үү ");
+    eq("uzsnu ", "үзсэн үү ");
+    eq("bolsnuu ", "болсон уу ");
+}
+
+#[test]
+fn a_merged_sh_dee_splits() {
+    eq("mungu baihguishde ", "мөнгө байхгүй ш дээ ");
+    eq("medehguishdee ", "мэдэхгүй ш дээ ");
+}
+
+#[test]
+fn a_merged_dee_splits_after_a_chat_word() {
+    eq("zugerdee ", "зүгээр дээ ");
+    eq("zugeerdee ", "зүгээр дээ ");
+    eq("Bainadaa ", "Байна даа ");
+}
+
+#[test]
+fn a_case_ending_is_not_split() {
+    // -даа/-дээ is also the dative with a reflexive ending.
+    eq("ajildaa ", "ажилдаа ");
+}

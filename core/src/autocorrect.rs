@@ -347,3 +347,124 @@ fn fill(out: &mut Vec<char>, a: &[char], b: &[char], c: &[char]) {
     out.extend_from_slice(b);
     out.extend_from_slice(c);
 }
+
+/// Chat words that people often run together with the particle дээ or даа
+/// (`zugerdee` for зүгээр дээ). Only these split: after other words -дээ is
+/// usually the dative with a reflexive ending (ажилдаа).
+const DEE_WORDS: &[&str] = &[
+    "зүгээр",
+    "тийм",
+    "байна",
+    "байгаа",
+    "байхгүй",
+    "мэдэхгүй",
+    "гоё",
+    "сайн",
+    "болно",
+    "үгүй",
+    "мэднэ",
+];
+
+/// A typed form of a word that the list knows: the form itself, or what
+/// word choice makes of it. Returns the word and its count.
+fn listed_form(
+    words: &WordList,
+    form: &[char],
+    rejected: &HashSet<String>,
+    user: Option<&UserSnapshot>,
+    s: &mut Scratch,
+) -> Option<(String, u32)> {
+    let text: String = form.iter().collect();
+    if let Some(n) = words.count(&text) {
+        return Some((text, n));
+    }
+    let chosen = choose(words, form, rejected, user, s)?;
+    let n = words.count(&chosen)?;
+    Some((chosen, n))
+}
+
+/// The vowel that decides a particle's form: the last vowel that is not и.
+fn last_vowel(word: &str) -> Option<char> {
+    word.chars()
+        .rev()
+        .find(|&c| matches!(c, 'а' | 'э' | 'о' | 'у' | 'ү' | 'ө' | 'я' | 'е' | 'ё' | 'ю'))
+}
+
+/// A word run together with a following particle, split again (issue #101):
+/// `орсну` gives `орсон уу`, `байхгүйшдэ` gives `байхгүй ш дээ`, `зүгэрдээ`
+/// gives `зүгээр дээ`. `comp` is the lower-case preedit of a word that the
+/// list does not know. It runs once per word, like [`choose`].
+pub(crate) fn split_particle(
+    words: &WordList,
+    comp: &[char],
+    rejected: &HashSet<String>,
+    user: Option<&UserSnapshot>,
+    s: &mut Scratch,
+) -> Option<String> {
+    let n = comp.len();
+    if !(MIN_LETTERS..=MAX_LETTERS + 4).contains(&n) || comp[1..].iter().any(|c| c.is_uppercase()) {
+        return None;
+    }
+    let word: Vec<char> = comp.iter().map(|&c| to_lower(c)).collect();
+    let text: String = word.iter().collect();
+    if words.contains(&text) || rejected.contains(text.as_str()) {
+        return None;
+    }
+    let ends = |tail: &str| -> Option<usize> {
+        let t: Vec<char> = tail.chars().collect();
+        (n > t.len() + 1 && word.ends_with(&t)).then(|| n - t.len())
+    };
+    let cap = |w: String| -> String {
+        if comp[0].is_uppercase() {
+            let mut c = w.chars();
+            c.next()
+                .map(|f| f.to_uppercase().chain(c).collect())
+                .unwrap_or_default()
+        } else {
+            w
+        }
+    };
+
+    // 1. ш дээ: any listed word before it.
+    if let Some(at) = ["шдээ", "шдэ"].iter().find_map(|t| ends(t)) {
+        let (stem, n) = listed_form(words, &word[..at], rejected, user, s)?;
+        return (n >= MIN_COUNT).then(|| cap(format!("{stem} ш дээ")));
+    }
+    // 2. The past -сан/-сон/-сэн/-сөн with уу or үү, typed without its vowel.
+    if let Some(at) = ["сну", "снуу", "снүү", "снү"].iter().find_map(|t| ends(t)) {
+        let mut best: Option<(String, u32)> = None;
+        for v in ['а', 'о', 'э', 'ө'] {
+            let mut cand = word[..at].to_vec();
+            cand.extend(['с', v, 'н']);
+            if let Some((w, c)) = listed_form(words, &cand, rejected, user, s) {
+                if best.as_ref().map_or(true, |b| c > b.1) {
+                    best = Some((w, c));
+                }
+            }
+        }
+        let (stem, c) = best?;
+        if c < MIN_COUNT {
+            return None;
+        }
+        let particle = match last_vowel(&stem) {
+            Some('э' | 'ө' | 'ү' | 'е') => "үү",
+            _ => "уу",
+        };
+        return Some(cap(format!("{stem} {particle}")));
+    }
+    // 3. дээ or даа after a chat word.
+    if let Some(at) = ["дээ", "дэ", "даа", "да"].iter().find_map(|t| ends(t)) {
+        let (stem, _) = listed_form(words, &word[..at], rejected, user, s)?;
+        if !DEE_WORDS.contains(&stem.as_str()) {
+            return None;
+        }
+        let particle = match last_vowel(&stem) {
+            Some('э' | 'ү' | 'е') => "дээ",
+            Some('ө') => "дөө",
+            Some('о' | 'ё') => "доо",
+            _ => "даа",
+        };
+        return Some(cap(format!("{stem} {particle}")));
+    }
+    None
+}
