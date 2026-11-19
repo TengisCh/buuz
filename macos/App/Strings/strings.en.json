@@ -383,5 +383,12 @@
   "tour.done.tricks": "Tricks",
   "tour.done.replay": "Replay any lesson from Lessons.",
   "nav.lessons": "Lessons",
-  "home.card.mode": "mode"
+  "home.card.mode": "mode",
+  "globe.warn": "The Globe key now does this: {action}. It does not switch keyboards. Set “Press 🌐 key to” to “Change Input Source”.",
+  "globe.warn.unknown": "Buuz cannot tell what the Globe key does. Make sure “Press 🌐 key to” is “Change Input Source”.",
+  "globe.action.emoji": "Emoji & Symbols",
+  "globe.action.dictation": "Dictation",
+  "globe.action.none": "Do nothing",
+  "globe.fn.note": "Not set to switch keyboards. Change it in macOS.",
+  "globe.warn.button": "Open Keyboard settings"
 }

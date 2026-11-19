@@ -74,6 +74,8 @@ final class AppModel: ObservableObject {
 
     // The switch key
     @Published var selectedKey: SwitchKey?
+    /// What the Globe key does in macOS now.
+    @Published var globe: GlobeKeyState = GlobeKeyState.read()
     @Published var customHotkey: Hotkey?
     @Published var recorder: RecorderState = .idle
     /// The OSStatus when the input method could not register the chosen key.
@@ -124,6 +126,7 @@ final class AppModel: ObservableObject {
             NotificationCenter.default.addObserver(
                 forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
             ) { [weak self] _ in
+                self?.globe = GlobeKeyState.read()
                 self?.refreshKeyboard()
                 self?.refreshConfig()
                 self?.refreshHotkeyStatus()
@@ -326,23 +329,39 @@ final class AppModel: ObservableObject {
 
     // MARK: Switch key
 
+    /// The hotkey to show for a custom or an unchosen key. With no choice, it
+    /// is the key that the input method registered. It is never fn.
+    private var shownHotkey: Hotkey? { customHotkey ?? (selectedKey == nil ? hotkeyStore.resolve() : nil) }
+
     /// The keys of the chosen switch key, as keycap texts.
     var switchKeyCaps: [String] {
-        switch selectedKey ?? .fn {
+        switch selectedKey {
         case .fn: return ["🌐 fn"]
         case .controlSpace: return ["⌃", "Space"]
         case .capsLock: return ["⇪ caps"]
-        case .custom: return customHotkey.map { Self.caps($0) } ?? []
+        case .custom, nil: return shownHotkey.map { Self.caps($0) } ?? []
         }
     }
 
     /// One line for the texts, for example "🌐 fn".
     var switchKeyLabel: String {
-        switch selectedKey ?? .fn {
+        switch selectedKey {
         case .fn: return "🌐 fn"
         case .controlSpace: return "⌃ Space"
         case .capsLock: return "⇪ Caps Lock"
-        case .custom: return customHotkey?.display ?? "—"
+        case .custom, nil: return shownHotkey?.display ?? "—"
+        }
+    }
+
+    /// fn is the switch key, but the Globe key does not switch the input source.
+    var globeWarningActive: Bool { selectedKey == .fn && !globe.works }
+
+    /// The warning text for the Globe key. Empty when Globe works.
+    var globeWarningText: String {
+        switch globe {
+        case .switchesSource: return ""
+        case .unknown: return t("globe.warn.unknown")
+        case .other(let name): return t("globe.warn", ["action": t("globe.action.\(name)")])
         }
     }
 

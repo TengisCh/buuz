@@ -254,6 +254,11 @@ do {
         for key in ["switch.failed.title", "switch.failed.notEnabled", "switch.failed.body", "switch.failed.path"] {
             expect(strings.raw(key, .en) != nil && strings.raw(key, .mn) != nil, true, "both languages have \(key)")
         }
+        for key in ["globe.warn", "globe.warn.unknown", "globe.action.emoji", "globe.action.dictation",
+            "globe.action.none", "globe.fn.note"] {
+            expect(strings.raw(key, .en) != nil && strings.raw(key, .mn) != nil, true, "both languages have \(key)")
+        }
+        expect(placeholders(strings.raw("globe.warn", .en) ?? ""), ["action"], "globe warn placeholder")
         for n in 1...8 where LessonRequirement.option(for: n) != nil {
             expect(strings.raw("lesson\(n).off", .en) != nil, true, "lesson \(n) has an off banner text")
         }
@@ -578,6 +583,21 @@ do {
     r = SwitchKeyState.initial(saved: .custom, custom: k, storeHasChoice: true, resolved: k)
     expect(r.key, .custom, "a saved custom key stays")
     expect(r.hotkey, k, "with its key")
+}
+
+// MARK: Globe key
+
+do {
+    expect(GlobeKeyState(usageType: 1), .switchesSource, "globe changes the input source")
+    expect(GlobeKeyState(usageType: 0), .other("none"), "globe does nothing")
+    expect(GlobeKeyState(usageType: 2), .other("emoji"), "globe opens emoji")
+    expect(GlobeKeyState(usageType: 3), .other("dictation"), "globe starts dictation")
+    expect(GlobeKeyState(usageType: nil), .unknown, "no value is unknown")
+    expect(GlobeKeyState(usageType: 9), .unknown, "a new value is unknown")
+    expect(GlobeKeyState.switchesSource.works, true, "switching works")
+    expect(GlobeKeyState.other("emoji").works, false, "emoji does not switch")
+    expect(GlobeKeyState.unknown.works, false, "unknown is not trusted")
+    _ = GlobeKeyState.read()
 }
 
 // MARK: Try it checks

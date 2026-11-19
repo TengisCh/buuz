@@ -13,12 +13,16 @@ struct SwitchKeyPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             SettingsGroup {
-                option(.fn, title: m.t("hotkey.fn"), note: m.t("hotkey.fn.note"), pill: m.t("common.recommended"))
+                option(
+                    .fn, title: m.t("hotkey.fn"),
+                    note: m.globe.works ? m.t("hotkey.fn.note") : m.t("globe.fn.note"),
+                    pill: m.globe.works ? m.t("common.recommended") : nil)
                 option(.controlSpace, title: "Control + Space", note: m.t("hotkey.controlSpace.note"))
                 option(.capsLock, title: "Caps Lock", note: m.t("hotkey.capsLock.note"))
                 option(
                     .custom, title: m.t("hotkey.custom"),
-                    note: m.selectedKey == .custom ? m.t("hotkey.custom.note") : m.t("hotkey.record"))
+                    note: m.selectedKey == .custom ? m.t("hotkey.custom.note") : m.t("hotkey.record"),
+                    pill: m.globe.works ? nil : m.t("common.recommended"))
             }
             below
         }
@@ -70,7 +74,9 @@ struct SwitchKeyPicker: View {
 
     @ViewBuilder private var below: some View {
         if let k = m.selectedKey {
-            if k != .custom {
+            if m.globeWarningActive {
+                GlobeWarning()
+            } else if k != .custom {
                 StatusBanner(
                     .neutral, m.t("hotkey.system"),
                     actions: AnyView(
@@ -82,6 +88,21 @@ struct SwitchKeyPicker: View {
                     StatusBanner(.warn, title: m.t("hotkey.failed.title"), m.t("hotkey.failed.body", ["code": "\(code)"]))
                 }
             }
+        }
+    }
+}
+
+/// A warning row: fn is the switch key, but the Globe key does something else.
+struct GlobeWarning: View {
+    @EnvironmentObject var m: AppModel
+
+    var body: some View {
+        if m.globeWarningActive {
+            StatusBanner(
+                .warn, m.globeWarningText,
+                actions: AnyView(
+                    Button(m.t("globe.warn.button")) { m.open(AppModel.keyboardSettings) }
+                        .buttonStyle(SecondaryButtonStyle())))
         }
     }
 }

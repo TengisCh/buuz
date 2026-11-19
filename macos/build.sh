@@ -63,6 +63,8 @@ lipo -create "${slices[@]}" -output "$APP/Contents/MacOS/Buuz"
 
 cp Info.plist "$APP/Contents/Info.plist"
 cp Resources/*.png "$APP/Contents/Resources/"
+# Localized names (the input mode name in System Settings).
+cp -R Resources/*.lproj "$APP/Contents/Resources/"
 cp "$ROOT/data/wordlist/mn.txt" "$APP/Contents/Resources/mn.txt"
 # The Apache-2.0 NOTICE must ship with the app.
 cp "$ROOT/NOTICE" "$APP/Contents/Resources/NOTICE"

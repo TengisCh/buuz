@@ -369,6 +369,7 @@ struct SwitchStep: View {
             check(m.t("tour.switch.toBuuz"), done: p.toBuuz, waiting: !p.toBuuz)
             check(m.t("tour.switch.back", ["name": other]), done: p.done, waiting: p.toBuuz && !p.done)
         }
+        GlobeWarning()
         if let f = m.switchFailure { SwitchFailureBanner(failure: f) }
         if !p.toBuuz {
             StatusBanner(
@@ -477,6 +478,7 @@ struct LessonStep: View {
                     trailing: AnyView(Keycaps(keys: m.switchKeyCaps)),
                     actions: AnyView(
                         Button(m.t("tour.switch.toBuuz")) { m.switchToBuuz() }.buttonStyle(SecondaryButtonStyle())))
+                GlobeWarning()
             case .latinOnly:
                 StatusBanner(.info, title: m.t("lesson.latin.title"), m.t("lesson.latin.body"))
             case .almost(let got, let own):
