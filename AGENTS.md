@@ -42,6 +42,8 @@ the names in [docs/glossary.md](docs/glossary.md) in code, tests and issues.
 4. **No new dependency without the add-dependency checklist** (below).
 5. **Never** commit secrets or `.env` files, force-push `main`, publish
    packages, or change GitHub or Vercel settings. Ask the maintainer.
+6. **Never** release the macOS or Windows app (a download link, a signed
+   build, a store or winget entry) while issue #84, the manual test, is open.
 
 ## Workflow
 
