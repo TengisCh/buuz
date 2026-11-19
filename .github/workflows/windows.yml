@@ -1,0 +1,97 @@
+name: windows
+
+# The Windows input method. It runs only when windows/, ffi/ or the core
+# changes. Each CPU type builds and tests on its own free runner: x64 on
+# windows-latest, ARM64 on windows-11-arm (free for public repositories).
+on:
+  push:
+    branches: [main]
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**", "ffi/**", "core/src/**", "core/Cargo.toml", ".github/workflows/windows.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, os: windows-latest, cmake_arch: x64 }
+          - { arch: arm64, os: windows-11-arm, cmake_arch: ARM64 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: ffi
+          key: ${{ matrix.arch }}
+      - name: Build buuz-ffi (release, static C runtime)
+        working-directory: ffi
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release --locked
+      - name: Configure
+        run: cmake -S windows -B windows/build -A ${{ matrix.cmake_arch }}
+      - name: Build the DLL and the tests
+        run: cmake --build windows/build --config Release
+      - name: Run the shell logic tests
+        run: ctest --test-dir windows/build -C Release --output-on-failure
+      - name: Check the DLL
+        shell: pwsh
+        run: |
+          $dll = "windows/build/Release/buuz_tsf.dll"
+          if (-not (Test-Path $dll)) { throw "buuz_tsf.dll missing" }
+          "{0:N0} KB" -f ((Get-Item $dll).Length / 1KB)
+      - name: Register the text service
+        shell: pwsh
+        run: |
+          $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
+          # regsvr32 is a GUI program: wait for it and read its exit code.
+          $p = Start-Process regsvr32 -ArgumentList "/s", "`"$dll`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "regsvr32 failed: $($p.ExitCode)" }
+          if (-not (Test-Path "HKLM:\SOFTWARE\Classes\CLSID\{5E0B7A2C-9D41-4C7E-8B1A-3F6D2A9C4E10}\InprocServer32")) { throw "CLSID not registered" }
+      # Types `sain baina` with real key events into a real Rich Edit control
+      # and reads the text back. It runs on the runner's interactive desktop.
+      # It passed on x64 on its first run, so x64 blocks the build. ARM64 does
+      # not block until it has passed too (see README).
+      - name: End-to-end typing test
+        timeout-minutes: 4
+        continue-on-error: ${{ matrix.arch == 'arm64' }}
+        shell: pwsh
+        run: |
+          Start-Process ctfmon.exe
+          Start-Sleep -Seconds 3
+          & windows/build/Release/e2e_typing.exe
+          exit $LASTEXITCODE
+      - name: Unregister the text service
+        if: always()
+        shell: pwsh
+        run: |
+          $dll = (Resolve-Path "windows/build/Release/buuz_tsf.dll").Path
+          $p = Start-Process regsvr32 -ArgumentList "/s", "/u", "`"$dll`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "unregister failed: $($p.ExitCode)" }
+      - name: Collect the test files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force windows/dist/${{ matrix.arch }} | Out-Null
+          Copy-Item windows/build/Release/buuz_tsf.dll, windows/build/Release/e2e_typing.exe windows/dist/${{ matrix.arch }}/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: buuz-windows-${{ matrix.arch }}
+          path: windows/dist
+          retention-days: 14
