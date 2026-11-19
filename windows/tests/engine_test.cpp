@@ -103,12 +103,20 @@ static void test_edit_keys() {
     CHECK(ed.commit == u"сайн");
 }
 
-static void test_fail_open() {
-    Engine bad("this is not a config\n\x01");
-    if (!bad.ok()) {
-        Edit ed = bad.process(classify('A', Modifiers{}));
-        CHECK(!ed.consumed);  // a broken engine never eats keys
-    }
+static void test_bad_config_fails_open() {
+    Engine bad(std::string("\xff\xfe", 2));
+    CHECK(!bad.ok());
+    CHECK(!bad.composing());
+    Edit ed = bad.process(classify('A', Modifiers{}));
+    CHECK(!ed.consumed);  // a broken engine never eats keys
+}
+
+static void test_null_commit_is_empty() {
+    CHECK(utf8_to_utf16(nullptr, 3).empty());
+}
+
+static void test_truncated_utf8() {
+    CHECK(utf8_to_utf16("\xD0", 1) == u"\uFFFD");
 }
 
 int main() {
@@ -117,7 +125,9 @@ int main() {
     test_utf16();
     test_typing();
     test_edit_keys();
-    test_fail_open();
+    test_bad_config_fails_open();
+    test_null_commit_is_empty();
+    test_truncated_utf8();
     if (failures) {
         std::fprintf(stderr, "%d check(s) failed\n", failures);
         return 1;

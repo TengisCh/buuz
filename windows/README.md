@@ -57,6 +57,9 @@ cmake -S windows -B windows/build -DBUUZ_FFI_LIB=$PWD/ffi/target/debug/libbuuz_f
 cmake --build windows/build && ctest --test-dir windows/build
 ```
 
+CI runs these tests on Linux (job `logic-linux`, gcc) before it builds
+for Windows. If this job fails, the Windows jobs do not start.
+
 ## Settings and onboarding app
 
 `buuz_settings.exe` is a plain Win32 program (no extra runtime) that runs
