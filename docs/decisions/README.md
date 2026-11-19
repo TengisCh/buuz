@@ -17,6 +17,7 @@ record that supersedes the old one instead of editing history.
 | [0004](0004-license-mit-or-apache-for-new-code.md) | MIT OR Apache-2.0 for new code, Apache-2.0 for the ported core | Accepted |
 | [0005](0005-portable-config-format.md) | Portable config format, a small TOML subset | Accepted |
 | [0006](0006-word-list-data-licence.md) | Word list data under CC BY-SA 4.0, as a separate asset | Accepted |
+| [0007](0007-schemes-for-other-cyrillic-languages.md) | Table schemes for other Cyrillic languages | Accepted |
 
 ## Template
 
