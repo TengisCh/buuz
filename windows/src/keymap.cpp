@@ -63,7 +63,7 @@ KeyInput classify(uint32_t vk, const Modifiers& mods) {
     const uint32_t ch = translate_us(vk, mods.shift, mods.caps);
     if (ch == 0) return {BUUZ_KEY_OTHER, 0};
     const bool letter = (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
-    return {letter ? BUUZ_KEY_CHAR : BUUZ_KEY_SYMBOL, ch};
+    return {static_cast<uint32_t>(letter ? BUUZ_KEY_CHAR : BUUZ_KEY_SYMBOL), ch};
 }
 
 bool is_typing_key(uint32_t vk, const Modifiers& mods) {
