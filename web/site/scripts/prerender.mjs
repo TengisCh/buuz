@@ -25,7 +25,17 @@ const ALT = {
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const escAttr = (s) => esc(s).replace(/"/g, "&quot;");
-const plain = (s) => s.replace(/<[^>]+>/g, "");
+/** The text of a string with markup: everything outside `<...>`. A scan, not a pattern, so no tag can be rebuilt from what is left. */
+function plain(s) {
+  let out = "";
+  let depth = 0;
+  for (const c of s) {
+    if (c === "<") depth++;
+    else if (c === ">" && depth > 0) depth--;
+    else if (depth === 0) out += c;
+  }
+  return out;
+}
 
 /** Set (or add) an attribute in one opening tag. */
 function setAttr(tag, name, value) {
@@ -44,7 +54,8 @@ export function faqJson(lang) {
       acceptedAnswer: { "@type": "Answer", text: plain(s[`faq${i}a`]) },
     });
   }
-  return JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", inLanguage: lang, mainEntity }, null, 2);
+  // "<" is escaped so the data can never close its own <script> element.
+  return JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", inLanguage: lang, mainEntity }, null, 2).replace(/</g, "\\u003c");
 }
 
 /** The head links that say which page is which language. */
