@@ -9,6 +9,10 @@
       content="Латинаар бичихэд шууд кирилл болно. Үнэгүй, бичсэн зүйл тань хаашаа ч илгээгдэхгүй."
     />
     <link rel="canonical" href="https://buuz.thetengis.com/" />
+    <link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/" />
+    <link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/en/" />
+    <link rel="alternate" hreflang="ru" href="https://buuz.thetengis.com/ru/" />
+    <link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -20,7 +24,7 @@
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Any (web browser)",
         "browserRequirements": "Requires WebAssembly",
-        "inLanguage": ["mn", "en"],
+        "inLanguage": ["mn", "en", "ru"],
         "isAccessibleForFree": true,
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "license": "https://opensource.org/license/mit",
@@ -101,6 +105,7 @@
     <meta property="og:description" content="sain baina uu → сайн байна уу. Латинаар бичихэд шууд кирилл болно. Үнэгүй, нээлттэй эх." />
     <meta property="og:locale" content="mn_MN" />
     <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
     <meta property="og:image" content="https://buuz.thetengis.com/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -213,12 +218,12 @@
             <input id="double-v" type="checkbox" checked />
             <span data-i18n="doubleV">vv-г үү болгох (svv → сүү)</span>
           </label>
-          <p class="hint" data-i18n="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p>
+          <p class="hint" data-i18n-html="doubleVHint">Хоёр <kbd>v</kbd> дараалан бичвэл үү болно (svv → сүү). Ганц v нь в хэвээр (avah → авах). Унтраавал vv нь вв болно. Анхнаасаа асаалттай.</p>
           <label class="toggle">
             <input id="habit-keys" type="checkbox" checked />
             <span data-i18n="habitKeys">ts-г ц, zh-г ж болгох (tsagaan → цагаан)</span>
           </label>
-          <p class="hint" data-i18n="habitKeysHint">Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.</p>
+          <p class="hint" data-i18n-html="habitKeysHint">Хоёр үсэг <kbd>ts</kbd> бичвэл ц, <kbd>zh</kbd> бичвэл ж болно (tsagaan → цагаан, gezh → гэж). Үгийн жагсаалт ачаалагдсан үед тс, зх-тэй үгийг тэр хэвээр нь үлдээнэ (hwrtsen → хүртсэн). Жагсаалтгүй үед үргэлж ц, ж болно. Унтраавал ts нь тс, zh нь зх болно. Анхнаасаа асаалттай.</p>
           <label class="toggle">
             <input id="word-choice" type="checkbox" checked />
             <span data-i18n="wordChoice">ө, ү-г үгийн жагсаалтаар сонгох (tov → төв)</span>

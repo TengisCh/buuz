@@ -39,6 +39,16 @@
   "cleanUrls": false,
   "redirects": [
     {
+      "source": "/en",
+      "destination": "/en/",
+      "permanent": true
+    },
+    {
+      "source": "/ru",
+      "destination": "/ru/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

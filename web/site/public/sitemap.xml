@@ -3,7 +3,22 @@
   <url>
     <loc>https://buuz.thetengis.com/</loc>
     <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/en/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://buuz.thetengis.com/ru/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/" />
+  </url>
+  <url>
+    <loc>https://buuz.thetengis.com/en/</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/en/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://buuz.thetengis.com/ru/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/" />
+  </url>
+  <url>
+    <loc>https://buuz.thetengis.com/ru/</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/en/" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://buuz.thetengis.com/ru/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/" />
   </url>
   <url>

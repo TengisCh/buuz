@@ -673,6 +673,16 @@ export function fmt(key: Key, vars: Record<string, string | number>): string {
 }
 
 const STORE = "buuz.lang";
+const ORIGIN = "https://buuz.thetengis.com";
+
+/** One URL for each page language, so search engines can index each one. */
+export const PATHS: Record<Lang, string> = { mn: "/", en: "/en/", ru: "/ru/" };
+
+/** The page language a path belongs to, or null (the Mongolian root is "/"). */
+export function langOfPath(path: string): Lang | null {
+  for (const l of ORDER) if (l !== "mn" && (path === PATHS[l] || path === PATHS[l].slice(0, -1) || path.startsWith(PATHS[l] + "index"))) return l;
+  return path === "/" || path === "/index.html" ? "mn" : null;
+}
 let current: Lang = "mn";
 
 /** The language the page shows now. */
@@ -697,6 +707,9 @@ function save(lang: Lang): void {
 }
 
 function initial(): Lang {
+  // The URL decides, so each language has its own page for search engines.
+  const fromPath = langOfPath(location.pathname);
+  if (fromPath && fromPath !== "mn") return fromPath;
   const q = new URLSearchParams(location.search).get("lang");
   if (isLang(q)) {
     save(q);
@@ -716,6 +729,8 @@ export function apply(lang: Lang): void {
   const root = document.documentElement;
   root.lang = lang;
   document.title = t("title");
+  const canon = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (canon && Object.values(PATHS).includes(new URL(canon.href).pathname)) canon.href = ORIGIN + PATHS[lang];
   document
     .querySelector('meta[name="description"]')
     ?.setAttribute("content", t("description"));
@@ -746,12 +761,23 @@ export function apply(lang: Lang): void {
 
 export function setupLang(): void {
   const lang = initial();
-  if (lang !== "mn") apply(lang); // HTML already ships Mongolian
+  if (lang !== "mn") apply(lang); // the HTML of "/" is Mongolian
   else current = "mn";
+  // A saved choice or ?lang= on the root page moves to that language's own URL.
+  if (langOfPath(location.pathname) === "mn" && lang !== "mn") history.replaceState(null, "", PATHS[lang]);
   document.getElementById("lang")?.addEventListener("click", () => {
     const next = nextLang(current);
     save(next);
     apply(next);
+    history.pushState(null, "", PATHS[next]);
     document.dispatchEvent(new CustomEvent("buuz:lang-changed", { detail: next }));
+  });
+  // Back and forward move between the language URLs.
+  window.addEventListener("popstate", () => {
+    const l = langOfPath(location.pathname);
+    if (l && l !== current) {
+      apply(l);
+      document.dispatchEvent(new CustomEvent("buuz:lang-changed", { detail: l }));
+    }
   });
 }

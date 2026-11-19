@@ -27,6 +27,15 @@ function saved(): Lang {
 function show(lang: Lang): void {
   const desc = document.querySelector('meta[name="description"]')?.getAttribute("content") ?? "";
   apply(lang); // footer and shared labels
+  // These pages have two languages, so the button names the other one.
+  const btn = document.getElementById("lang");
+  if (btn) {
+    const label = lang === "mn" ? "EN: Switch to English" : "МН: Монгол хэл рүү шилжих";
+    btn.textContent = lang === "mn" ? "EN" : "МН";
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
+    btn.lang = lang === "mn" ? "en" : "mn";
+  }
   document.querySelector('meta[name="description"]')?.setAttribute("content", desc);
   for (const el of document.querySelectorAll<HTMLElement>("[data-lang]")) el.hidden = el.dataset.lang !== lang;
   const title = document.querySelector<HTMLElement>(`[data-title-${lang}]`);
