@@ -49,6 +49,7 @@ when a new concept appears; rename here first when a name changes.
 | Key map | The built-in rule table with the user's `[keys]` changes applied. Built once and shared. Without one, the composer uses the built-in table. See `docs/typing-rules.md` §10 | `KeyMap`, `Options::keys` |
 | Completion | Ghost text after the preedit: the rest of a clear winner from the word list. Tab, or Right at the end, accepts it. See `docs/typing-rules.md` §12 | `Composer::completion`, `Options::completion`, `Key::Tab` |
 | Autocorrect | At Space or punctuation, a word that is not in the word list becomes its one clear neighbour that is (`хуухэд` to `хүүхэд`). Off by default. Backspace right after undoes it. See `docs/typing-rules.md` §13 | `Options::autocorrect`, `KeyOutcome::corrected` |
+| Word choice | At Space or punctuation, the word list picks between о/ө and у/ү/ө (`tov` gives төв). On in smart mode, off in classic mode. Backspace right after undoes it. See `docs/typing-rules.md` §13.1 | `Options::word_choice` |
 | Double V | The key pair `vv` gives үү (`svv` is сүү). On in smart mode, off in classic mode. See `docs/typing-rules.md` §3 | `Options::double_v` |
 | Habit keys | The key pairs `ts` (ц) and `zh` (ж). On in smart mode, off in classic mode. With a word list, a word that only exists with тс or зх keeps them (`хүртсэн`). See `docs/typing-rules.md` §3 | `Options::habit_keys` |
 | Rejected set | The words whose correction the user undid in this session, at most 256. Autocorrect skips them. Not saved | `Composer` |
