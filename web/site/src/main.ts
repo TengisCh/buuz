@@ -3,9 +3,10 @@
 
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
-import init, { config_set_classic, config_set_option, convert_with_config } from "./wasm/buuz.js";
+import init, { config_set_classic, config_set_option, convert_scheme, convert_with_config, scheme_ids, scheme_is_draft } from "./wasm/buuz.js";
 import wasmUrl from "./wasm/buuz_bg.wasm?url";
-import { setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { lang, setupLang, t, fmt, issueText, type Key } from "./i18n";
+import { MONGOLIAN, loadScheme, saveScheme, schemeAfterLang } from "./scheme";
 import { applyImport, browserStore, loadConfigState, parseIssue, saveConfig, switchesOf, type Issue } from "./config";
 import phrases from "./phrases.json";
 import calibrationSentences from "./calibration.json";
@@ -74,6 +75,33 @@ settings.addEventListener("click", (e) => {
 // page keeps it in memory for this visit.
 const store = browserStore();
 let config = ""; // loaded once the wasm module is ready (see init below)
+
+// The language to type. "mn" uses the config and the Buuz rules; any other id
+// is a core scheme (see src/scheme.ts). It is saved by itself, not in the config.
+const schemeSelect = document.getElementById("scheme") as HTMLSelectElement;
+let scheme = MONGOLIAN;
+const typesMongolian = (): boolean => scheme === MONGOLIAN;
+
+/** Show the scheme in the dialog and tell the style sheet which settings apply. */
+function applyScheme(): void {
+  schemeSelect.value = scheme;
+  document.body.dataset.scheme = scheme;
+  (document.getElementById("scheme-draft") as HTMLElement).hidden = typesMongolian() || !scheme_is_draft(scheme);
+}
+
+function setScheme(id: string): void {
+  scheme = id;
+  saveScheme(store, id);
+  applyScheme();
+  render();
+  updateHint();
+}
+
+schemeSelect.addEventListener("change", () => ready && setScheme(schemeSelect.value));
+// A page in Russian types Russian (see schemeAfterLang).
+document.addEventListener("buuz:lang-changed", (e) => {
+  if (ready) setScheme(schemeAfterLang(scheme, (e as CustomEvent<string>).detail));
+});
 
 // Mode: "smart" (the default; the feature toggles below apply) or "classic"
 // (the original Buuz, every smart feature off, toggles greyed out).
@@ -153,7 +181,7 @@ let dismissed: string | null = null; // "start:latin word" that Esc hid
 
 /** Load the word list (a separate asset) the first time it is needed. */
 function loadWords(): void {
-  if (!ready) return;
+  if (!ready || !typesMongolian()) return;
   const s = switchesOf(config);
   if (!s.completion && !s.autocorrect && !s.wordChoice) return;
   // After the list loads, convert again so autocorrect and word choice show in the output.
@@ -168,7 +196,7 @@ function wordKey(c: Completion): string {
   return `${end - c.replaces}:${latin.value.slice(end - c.replaces, end)}`;
 }
 function currentCompletion(): Completion | null {
-  if (!ready || latin.selectionStart !== latin.selectionEnd) return null;
+  if (!ready || !typesMongolian() || latin.selectionStart !== latin.selectionEnd) return null;
   const c = completionAt(latin.value, latin.selectionStart, config);
   return c && wordKey(c) !== dismissed ? c : null;
 }
@@ -217,7 +245,7 @@ function render(): void {
   // the config once per change), so run it synchronously on every input
   // event: no debounce, no frame delay.
   const text = latin.value.normalize("NFC");
-  cyr.value = !ready ? "" : convert_with_config(text, config);
+  cyr.value = !ready ? "" : typesMongolian() ? convert_with_config(text, config) : convert_scheme(scheme, text);
 }
 
 // Settings file: export the config as text or a .buuz file, import it by
@@ -756,6 +784,8 @@ init({ module_or_path: wasmUrl }).then(() => {
   const state = loadConfigState(store); // needs the wasm module (migration, parsing)
   config = state.text;
   (document.getElementById("cfg-notice") as HTMLElement).hidden = !state.recovered;
+  scheme = loadScheme(store, scheme_ids().split(",")) ?? (lang() === "ru" ? "ru" : MONGOLIAN);
+  applyScheme();
   userText = loadUserDict(store); // also gives it to the converter
   showUserDict();
   applyConfig();

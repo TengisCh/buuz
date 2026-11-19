@@ -175,6 +175,10 @@ button.icon .sun { display: none; }
 .cal-list .toggle { margin-top: 0; overflow-wrap: anywhere; }
 .cal-list .hint { margin-left: 1.8rem; }
 .cal-notes li { margin-top: 0.4rem; font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
+.scheme { margin: 0 0 1rem; }
+.scheme select { display: block; margin-top: 0.35rem; max-width: 100%; font: inherit; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.4rem 0.6rem; }
+body[data-scheme]:not([data-scheme="mn"]) .mn-only { display: none; }
+body[data-scheme="mn"] .other-only, body:not([data-scheme]) .other-only { display: none; }
 .hint { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }
 
 /* "How to type": grouped columns that read top-to-bottom */

@@ -3,7 +3,8 @@
 
 // Shared script for the simple pages (privacy, cookies, 404). Each page ships
 // both languages; this shows the one the visitor chose on the main page
-// (same "buuz.lang" key) and lets them switch.
+// (same "buuz.lang" key) and lets them switch. They have no Russian text, so
+// a visitor who chose Russian sees the English text.
 import "@fontsource-variable/nunito/wght.css";
 import "./style.css";
 import { apply } from "./i18n";
@@ -14,8 +15,10 @@ const KEY = "buuz.lang";
 function saved(): Lang {
   const q = new URLSearchParams(location.search).get("lang");
   if (q === "mn" || q === "en") return q;
+  if (q === "ru") return "en";
   try {
-    return localStorage.getItem(KEY) === "en" ? "en" : "mn";
+    const s = localStorage.getItem(KEY);
+    return s === "en" || s === "ru" ? "en" : "mn";
   } catch {
     return "mn";
   }

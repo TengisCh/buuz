@@ -162,15 +162,34 @@
           <h2 id="settings-title" data-i18n="settings">Тохиргоо</h2>
           <button type="button" class="fb-close" data-i18n-aria="close" aria-label="Хаах" title="Хаах"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
         </div>
-        <fieldset class="mode">
+        <section class="scheme" aria-labelledby="scheme-label">
+          <label id="scheme-label" for="scheme"><span aria-hidden="true">🌐</span> <span data-i18n="schemeLabel">Бичих хэл</span></label>
+          <select id="scheme">
+            <option value="mn" data-i18n="schemeMn">Монгол (үндсэн)</option>
+            <option value="ru" lang="ru">Русский</option>
+            <option value="ru-gost" lang="ru">Русский (ГОСТ 7.79 B)</option>
+            <option value="uk" lang="uk">Українська</option>
+            <option value="be" lang="be">Беларуская</option>
+            <option value="bg" lang="bg">Български</option>
+            <option value="sr" lang="sr">Српски</option>
+            <option value="mk" lang="mk">Македонски</option>
+            <option value="kk" lang="kk">Қазақша</option>
+            <option value="ky" lang="ky">Кыргызча</option>
+          </select>
+          <p class="hint" data-i18n="schemeHint">Өөр кирилл хэлээр латин үсгээр бичих бол тэр хэлээ сонгоорой. Тэгвэл хуудас тухайн хэлний бичих зуршлаар хөрвүүлнэ (zh → ж). Монгол хэл үндсэн бөгөөд Buuz-ийн дүрмээр бичнэ.</p>
+          <p id="scheme-tip" class="hint other-only" data-i18n="schemeTip">Латин үсгээр бичихэд кирилл болно. Жишээ нь privet гэвэл привет болно. Нэг апостроф (') бичвэл ь, хоёр апостроф бичвэл ъ болно.</p>
+          <p id="scheme-draft" class="hint other-only" data-i18n="schemeDraft" hidden>Туршилтын хувилбар: энэ хэлийг эх хэлтэн хараахан шалгаагүй байна.</p>
+          <p class="hint other-only" data-i18n="schemeOnlyMn">Доорх тохиргоо зөвхөн монгол хэлэнд ажиллана.</p>
+        </section>
+        <fieldset class="mode mn-only">
           <legend data-i18n="mode">Горим</legend>
           <label class="toggle"><input type="radio" name="mode" value="smart" checked /><span data-i18n="modeSmart">Ухаалаг (үндсэн)</span></label>
           <label class="toggle"><input type="radio" name="mode" value="classic" /><span data-i18n="modeClassic">Сонгодог (анхны Buuz)</span></label>
         </fieldset>
-        <p class="hint" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p>
-        <p id="classic-note" class="hint" data-i18n="classicFeaturesOn" hidden>Сонгодог горимд зарим ухаалаг боломж асаалттай байна.</p>
+        <p class="hint mn-only" data-i18n="modeHint">Ухаалаг горимд доорх нэмэлт боломжууд ажиллана. Сонгодог горим нь анхны Buuz-ийн дүрмээр яг хэвээр нь, нэмэлт боломжгүйгээр бичнэ.</p>
+        <p id="classic-note" class="hint mn-only" data-i18n="classicFeaturesOn" hidden>Сонгодог горимд зарим ухаалаг боломж асаалттай байна.</p>
         <p id="cfg-notice" class="hint" data-i18n="configReset" hidden>Хадгалсан тохиргоо уншигдсангүй тул үндсэн тохиргоог ашиглаж байна. Муу текстийг buuz.config.bad дээр хадгалсан.</p>
-        <fieldset id="features" class="features">
+        <fieldset id="features" class="features mn-only">
           <label class="toggle">
             <input id="smart" type="checkbox" checked />
             <span data-i18n="smartVowels">Ухаалаг эгшиг</span>
@@ -208,14 +227,14 @@
           </label>
           <p class="hint" data-i18n="autocorrectHint">Алдаатай бичсэн үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz дээрх ижил үгийн жагсаалтаар алдааг нь засна (delgur + зай → дэлгүүр). Жагсаалтад байгаа үгийг хэзээ ч өөрчлөхгүй. Энэ сайт дээр засварласан бичвэр шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Засуулахыг хүсэхгүй бол унтраана уу. Анхнаасаа унтраалттай.</p>
         </fieldset>
-        <section class="cfg" aria-labelledby="cal-open-title">
+        <section class="cfg mn-only" aria-labelledby="cal-open-title">
           <h3 id="cal-open-title" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</h3>
           <p class="hint" data-i18n="calHint">Хэдэн өгүүлбэрийг өөрийн ердийн аргаар латинаар бичихэд Buuz таны товчлуурыг сурна. Бичсэн зүйл тань хадгалагдахгүй, цонхыг хаахад хаягдана.</p>
           <div class="cfg-row">
             <button id="cal-open" type="button" class="ghost" aria-haspopup="dialog" aria-controls="calibrate" data-i18n="calButton">Би яаж бичдэгийг Buuz-д зааж өгөх</button>
           </div>
         </section>
-        <section class="cfg" aria-labelledby="ud-title">
+        <section class="cfg mn-only" aria-labelledby="ud-title">
           <h3 id="ud-title" data-i18n="udTitle">Buuz-ийн сурсан үгс</h3>
           <p class="hint" data-i18n="udHint">Энд таны нэмсэн үгс харагдана. Нэмсэн үгийг Buuz алдаа гэж засахгүй, Tab-аар гүйцээнэ. Энэ жагсаалт зөвхөн энэ төхөөрөмж дээрх хөтөч дотор хадгалагдаж, хаашаа ч илгээгдэхгүй. Тохиргооны файлд ордоггүй. Энэ сайт дээр Buuz өөрөө үг сурдаггүй: та нэмсэн үгээ л хадгална.</p>
           <ul id="ud-list" class="ud-list" lang="mn"></ul>
