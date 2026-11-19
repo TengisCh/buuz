@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+#include "edit_plan.h"
 #include "engine.h"
 
 namespace buuz {
@@ -53,7 +54,7 @@ private:
     ~TextService();
     bool read_modifiers(Modifiers* mods) const;
     // The five steps of one key, always inside an edit session (`ec`).
-    HRESULT apply_edit(TfEditCookie ec, ITfContext* ctx, const Edit& edit);
+    HRESULT apply_edit(TfEditCookie ec, ITfContext* ctx, const EditPlan& steps);
     HRESULT delete_before_caret(TfEditCookie ec, ITfContext* ctx, uint32_t count);
     HRESULT insert_at_selection(TfEditCookie ec, ITfContext* ctx, const std::u16string& text);
     HRESULT start_composition(TfEditCookie ec, ITfContext* ctx);
