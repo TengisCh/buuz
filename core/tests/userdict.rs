@@ -772,22 +772,25 @@ fn completion_with_a_full_dictionary_scans_a_small_range_and_is_fast() {
         user: Some(Arc::new(snap)),
         ..opts(None)
     });
-    let mut worst = 0u128;
+    let mut samples = Vec::new();
     for _ in 0..50 {
         for ch in "tengis".chars() {
             let start = Instant::now();
             c.process_key(Key::Char(ch));
             std::hint::black_box(c.completion());
-            worst = worst.max(start.elapsed().as_nanos());
+            samples.push(start.elapsed().as_nanos());
         }
         c.process_key(Key::Space);
     }
-    eprintln!("full user dictionary: worst {worst} ns");
+    // The 99th percentile: one context switch must not fail the budget.
+    samples.sort_unstable();
+    let p99 = samples[samples.len() * 99 / 100];
+    eprintln!("full user dictionary: p99 {p99} ns");
     // A generous bound in debug, the completion budget in release.
     let limit = if cfg!(debug_assertions) {
         5_000_000
     } else {
         10_000
     };
-    assert!(worst < limit, "worst {worst} ns");
+    assert!(p99 < limit, "p99 {p99} ns");
 }
