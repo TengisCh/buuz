@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises";
 import init, { convert_scheme, scheme_for_language, scheme_ids, scheme_is_draft } from "../src/wasm/buuz.js";
 import { SCHEME_KEY, loadScheme, saveScheme, schemeAfterLang } from "../src/scheme.ts";
 import { strings } from "../src/i18n.ts";
+import { MORE } from "../src/i18n-more.ts";
 
 await init({ module_or_path: await readFile(new URL("../src/wasm/buuz_bg.wasm", import.meta.url)) });
 
@@ -58,16 +59,30 @@ test("a blocked store does not throw", () => {
   saveScheme(null, "ru");
 });
 
-test("a Russian page types Russian; leaving it drops back to Mongolian", () => {
-  assert.equal(schemeAfterLang("mn", "ru"), "ru");
-  assert.equal(schemeAfterLang("uk", "ru"), "ru");
-  assert.equal(schemeAfterLang("ru", "mn"), "mn");
-  assert.equal(schemeAfterLang("ru", "en"), "mn");
-  assert.equal(schemeAfterLang("uk", "en"), "uk");
-  assert.equal(schemeAfterLang("mn", "en"), "mn");
+test("a page language with a scheme types it; leaving it drops back to Mongolian", () => {
+  const f = scheme_for_language;
+  assert.equal(schemeAfterLang("mn", "ru", "mn", f), "ru");
+  assert.equal(schemeAfterLang("ru", "uk", "ru", f), "uk");
+  assert.equal(schemeAfterLang("ru", "mn", "ru", f), "mn");
+  assert.equal(schemeAfterLang("ru", "en", "ru", f), "mn");
+  assert.equal(schemeAfterLang("uk", "en", "ru", f), "uk");
+  assert.equal(schemeAfterLang("uk", "en", "uk", f), "mn");
+  assert.equal(schemeAfterLang("mn", "en", "mn", f), "mn");
 });
 
-test("every language has every string", () => {
+test("mn, en and ru have every string; the others only keys that exist", () => {
   const mn = Object.keys(strings.mn).sort();
   for (const lang of ["en", "ru"]) assert.deepEqual(Object.keys(strings[lang]).sort(), mn, lang);
+  for (const lang of MORE) {
+    for (const key of Object.keys(strings[lang])) assert.ok(key in strings.mn, `${lang}.${key}`);
+  }
+});
+
+test("each more language has the text of the main page", () => {
+  const needed = ["title", "description", "tag", "howToBody", "faqTitle", "faq0q", "faq0a", "faq1q", "faq1a", "faq2q", "faq2a", "faq3q", "faq3a", "faq4q", "faq4a", "faq5q", "faq5a", "faq6q", "faq6a", "footProduct", "feedbackTitle", "schemeLabel", "schemeHint"];
+  for (const lang of MORE) {
+    for (const key of needed) assert.ok(strings[lang][key], `${lang}.${key}`);
+    assert.notEqual(strings[lang].title, strings.en.title, lang);
+    assert.equal(scheme_for_language(lang), lang, `${lang} has its own scheme`);
+  }
 });
