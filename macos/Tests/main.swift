@@ -217,6 +217,30 @@ do {
     expect(c.text, "сайн ", "a bad config file still types")
 }
 
+// MARK: Strings
+
+do {
+    let dir = URL(fileURLWithPath: wordListPath).deletingLastPathComponent()
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("macos/App/Strings")
+    let strings = Strings(directory: dir)
+    expect(strings != nil, true, "string files load")
+    if let strings = strings {
+        expect(strings.keys.isEmpty, false, "there are strings")
+        for key in strings.keys.sorted() {
+            let mn = strings.raw(key, .mn), en = strings.raw(key, .en)
+            expect(mn != nil && !(mn ?? "").isEmpty, true, "mn text for \(key)")
+            expect(en != nil && !(en ?? "").isEmpty, true, "en text for \(key)")
+            expect(placeholders(mn ?? ""), placeholders(en ?? ""), "same placeholders in \(key)")
+        }
+        expect(strings.text("common.next"), "Цааш", "default language is Mongolian")
+        strings.language = .en
+        expect(strings.text("common.next"), "Next", "English on request")
+        expect(strings.text("no.such.key"), "no.such.key", "unknown key gives the key")
+        expect(strings.text("common.next", ["x": "1"]), "Next", "unused values are ignored")
+    }
+}
+
 // MARK: Speed
 
 do {
