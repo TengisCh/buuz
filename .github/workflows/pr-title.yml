@@ -19,7 +19,7 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          areas='core|web|docs|brand|design|lint|ci|deps|agents'
+          areas='core|web|docs|brand|design|lint|ci|deps|agents|windows|macos'
           own="^(${areas})(, ?(${areas}))*: [^[:space:]]"
           bot='^build\(deps(-dev)?\): '
           if [[ "$TITLE" =~ $own ]] || [[ "$TITLE" =~ $bot ]]; then
