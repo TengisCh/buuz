@@ -446,6 +446,61 @@ pub fn export_rules() -> Vec<(String, String, bool, bool)> {
     out
 }
 
+/// The Buuz typing rules as a key table for people, sorted by the Latin
+/// keys. Only lower-case keys are listed. Vowel + i pairs (ai gives ай) are
+/// left out: they follow from the vowel and i. A key with two outputs (o gives
+/// о or ө) is one `Harmony` row. Keys of the `double_v` and `habit_keys`
+/// options are `Smart` rows.
+pub fn typing_key_table() -> Vec<crate::KeyRow> {
+    use crate::KeyWhen;
+    let lower_key = |c: char| c.is_ascii_lowercase() || matches!(c, '\'' | '"' | 'ö' | 'ü');
+    let mut rows: Vec<crate::KeyRow> = Vec::new();
+    for (from, &i) in &rules().map {
+        if !from.iter().all(|&c| lower_key(c)) {
+            continue;
+        }
+        let latin: String = from.iter().collect();
+        let pair = from.len() >= 2 && from[from.len() - 1] == 'i' && !latin.starts_with("ii");
+        if pair {
+            continue;
+        }
+        let group = rules().group(i);
+        let smart = |r: &Rule| r.flags & (X_DV | X_HK) != 0;
+        let plain: Vec<String> = group
+            .iter()
+            .filter(|r| !smart(r))
+            .map(|r| r.to.iter().collect())
+            .collect();
+        let mut outs: Vec<String> = Vec::new();
+        for o in plain {
+            if !outs.contains(&o) {
+                outs.push(o);
+            }
+        }
+        if !outs.is_empty() {
+            let when = if outs.len() > 1 {
+                KeyWhen::Harmony
+            } else {
+                KeyWhen::Always
+            };
+            rows.push(crate::KeyRow {
+                latin: latin.clone(),
+                cyrillic: outs.join("/"),
+                when,
+            });
+        }
+        if let Some(r) = group.iter().find(|r| smart(r)) {
+            rows.push(crate::KeyRow {
+                latin,
+                cyrillic: r.to.iter().collect(),
+                when: KeyWhen::Smart,
+            });
+        }
+    }
+    rows.sort_by(|a, b| a.latin.cmp(&b.latin));
+    rows
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

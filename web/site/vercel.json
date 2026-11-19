@@ -39,6 +39,51 @@
   "cleanUrls": false,
   "redirects": [
     {
+      "source": "/en",
+      "destination": "/en/",
+      "permanent": true
+    },
+    {
+      "source": "/ru",
+      "destination": "/ru/",
+      "permanent": true
+    },
+    {
+      "source": "/uk",
+      "destination": "/uk/",
+      "permanent": true
+    },
+    {
+      "source": "/be",
+      "destination": "/be/",
+      "permanent": true
+    },
+    {
+      "source": "/bg",
+      "destination": "/bg/",
+      "permanent": true
+    },
+    {
+      "source": "/sr",
+      "destination": "/sr/",
+      "permanent": true
+    },
+    {
+      "source": "/mk",
+      "destination": "/mk/",
+      "permanent": true
+    },
+    {
+      "source": "/kk",
+      "destination": "/kk/",
+      "permanent": true
+    },
+    {
+      "source": "/ky",
+      "destination": "/ky/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

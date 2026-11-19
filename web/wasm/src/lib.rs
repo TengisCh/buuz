@@ -35,6 +35,71 @@ pub fn convert_classic(input: &str) -> String {
     buuz_core::convert_with(input, &buuz_core::Options::classic())
 }
 
+/// Convert Latin text to Cyrillic with the scheme of another language
+/// (`ru`, `ru-gost`, `uk`, `be`, `bg`, `sr`, `mk`, `kk`, `ky`). Mongolian is
+/// not a scheme here: use `convert_with_config` for it. An unknown id returns
+/// the input unchanged.
+#[wasm_bindgen]
+pub fn convert_scheme(id: &str, input: &str) -> String {
+    match buuz_core::Scheme::from_id(id) {
+        Ok(scheme) => scheme.convert(input),
+        Err(_) => input.to_string(),
+    }
+}
+
+/// The scheme ids in the order a settings list shows them, comma separated.
+#[wasm_bindgen]
+pub fn scheme_ids() -> String {
+    buuz_core::Scheme::ALL
+        .iter()
+        .map(|s| s.id())
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// The id of the scheme a language uses by default, or an empty string.
+#[wasm_bindgen]
+pub fn scheme_for_language(language: &str) -> String {
+    buuz_core::Scheme::for_language(language)
+        .map(|s| s.id().to_string())
+        .unwrap_or_default()
+}
+
+/// The scheme is a draft that no native speaker has checked yet.
+#[wasm_bindgen]
+pub fn scheme_is_draft(id: &str) -> bool {
+    buuz_core::Scheme::from_id(id).is_ok_and(|s| s.is_draft())
+}
+
+/// The key table of a scheme for people, one row per line:
+/// `latin<TAB>cyrillic<TAB>when`. `when` is `always`, `after_vowel`,
+/// `word_start`, `harmony` or `smart`. The id `mn` gives the Buuz typing
+/// rules. An unknown id gives an empty string.
+#[wasm_bindgen]
+pub fn key_table(id: &str) -> String {
+    let rows = if id == "mn" {
+        buuz_core::typing_key_table()
+    } else {
+        match buuz_core::Scheme::from_id(id) {
+            Ok(scheme) => scheme.key_table(),
+            Err(_) => return String::new(),
+        }
+    };
+    rows.iter()
+        .map(|r| {
+            let when = match r.when {
+                buuz_core::KeyWhen::Always => "always",
+                buuz_core::KeyWhen::AfterVowel => "after_vowel",
+                buuz_core::KeyWhen::WordStart => "word_start",
+                buuz_core::KeyWhen::Harmony => "harmony",
+                buuz_core::KeyWhen::Smart => "smart",
+            };
+            format!("{}\t{}\t{}", r.latin, r.cyrillic, when)
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// The built-in abbreviation list as text, one `abbreviation = expansion` per line.
 #[wasm_bindgen]
 pub fn abbreviation_list() -> String {
@@ -829,6 +894,17 @@ pub fn calibrate_apply(
 #[cfg(test)]
 mod tests {
     const LIST: &str = "# test\nгэрлэх\t100\nгэрлэлт\t10\nбайна\t500\n";
+
+    #[test]
+    fn schemes_convert_and_list() {
+        assert_eq!(super::convert_scheme("ru", "privet"), "привет");
+        assert_eq!(super::convert_scheme("nope", "privet"), "privet");
+        assert_eq!(super::scheme_ids().split(',').count(), 12);
+        assert_eq!(super::scheme_for_language("uk"), "uk");
+        assert_eq!(super::scheme_for_language("mn"), "");
+        assert!(super::scheme_is_draft("kk"));
+        assert!(!super::scheme_is_draft("ru"));
+    }
 
     #[test]
     fn userdict_normalize_reports_warnings_and_too_large() {
