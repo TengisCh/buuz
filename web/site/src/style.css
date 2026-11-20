@@ -88,8 +88,6 @@ textarea:focus-visible, button:focus-visible, summary:focus-visible, a:focus-vis
 }
 .converter { display: grid; gap: 1.25rem; }
 @media (min-width: 900px) { .converter { grid-template-columns: 1fr 1fr; gap: 1.75rem; } textarea { min-height: 15rem; } }
-.actions { display: flex; justify-content: flex-end; align-items: center; gap: 0.75rem; margin-top: 0.85rem; }
-.pane:first-child .actions { justify-content: flex-start; }
 button {
   font: inherit; font-weight: 800; cursor: pointer;
   padding: 0.5rem 1.15rem; border-radius: 999px; min-height: 44px;
@@ -300,7 +298,6 @@ a.button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--press); 
 a.button.mail { width: 100%; justify-content: center; }
 /* Phones: keep Copy clear of the floating button in the bottom-right corner. */
 @media (max-width: 520px) {
-  .pane:last-child .actions { justify-content: space-between; flex-direction: row-reverse; }
   .fab { width: 52px; height: 52px; }
 }
 
@@ -332,9 +329,15 @@ a.button.mail { width: 100%; justify-content: center; }
 /* ---------- Inline icon actions + toast ---------- */
 .pane { position: relative; }
 .out-wrap { position: relative; }
-.in-btn { display: none; }
-.paste-btn { display: inline-flex; align-items: center; gap: 0.45rem; }
-.paste-btn[hidden], button.ghost[hidden] { display: none; }
+.in-wrap { position: relative; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#latin, #cyr { padding-right: 3.9rem; }
+.in-btn { display: grid; place-items: center; position: absolute; top: 0.5rem; right: 0.5rem; width: 48px; height: 48px; min-height: 48px; padding: 0; border-radius: 999px; }
+.in-btn[hidden] { display: none; }
+.clear-x { background: transparent; box-shadow: none; color: var(--muted); }
+.clear-x:active { transform: none; box-shadow: none; }
+.paste-x, .copy-x { z-index: 2; background: var(--accent); color: var(--accent-fg); box-shadow: 0 3px 0 var(--accent-press); }
+.paste-x:active, .copy-x:active { box-shadow: 0 1px 0 var(--accent-press); }
 .toast {
   position: fixed; left: 50%; bottom: 16px; z-index: 45; transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
   background: var(--fg); color: var(--bg); font-weight: 800; padding: 0.6rem 1.1rem; border-radius: 999px;
@@ -351,22 +354,13 @@ a.button.mail { width: 100%; justify-content: center; }
   .tag { margin: 0.4rem 0 1rem; font-size: 1rem; }
   .converter { gap: 0.75rem; }
   .pane label { margin-bottom: 0.25rem; }
-  .pane .actions { display: none; }
   textarea { resize: none; overflow-y: auto; font-size: 1.2rem; padding: 0.8rem 3.2rem 0.8rem 1rem; min-height: 96px; }
   #latin { padding-right: 3rem; }
   #cyr { padding-bottom: 0.8rem; padding-right: 3.6rem; }
-  .in-btn { display: grid; place-items: center; position: absolute; width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 999px; }
-  .in-btn[hidden] { display: none; }
-  .clear-x { top: 1.85rem; right: 0.35rem; background: transparent; box-shadow: none; color: var(--muted); }
-  .clear-x:active { transform: none; box-shadow: none; }
-  .paste-x { top: 1.85rem; right: 0.4rem; z-index: 2; background: var(--accent); color: var(--accent-fg); box-shadow: 0 3px 0 var(--accent-press); }
-  .paste-x:active { box-shadow: 0 1px 0 var(--accent-press); }
-  .copy-x { right: 0.4rem; top: 0.4rem; background: var(--accent); color: #fff; box-shadow: 0 3px 0 var(--accent-press); }
-  .copy-x:active { box-shadow: 0 1px 0 var(--accent-press); }
+  .in-btn { top: 0.4rem; right: 0.4rem; width: 44px; height: 44px; min-height: 44px; }
   /* While typing, the floating feedback button would sit on the keyboard edge. */
   body:has(#latin:focus) .fab { display: none; }
 }
-@media (min-width: 641px) { .toast { display: none; } }
 
 /* FAQ */
 .faq { background: var(--card); border-radius: 24px; padding: 1rem 1.25rem; margin-bottom: 1.1rem; box-shadow: 0 5px 0 var(--press); }

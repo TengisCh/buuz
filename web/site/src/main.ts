@@ -47,8 +47,6 @@ syncTheme();
 
 const latin = document.getElementById("latin") as HTMLTextAreaElement;
 const cyr = document.getElementById("cyr") as HTMLTextAreaElement;
-const copyBtn = document.getElementById("copy") as HTMLButtonElement;
-const clearBtn = document.getElementById("clear") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLElement;
 const mascot = document.getElementById("mascot") as HTMLElement;
 
@@ -778,15 +776,12 @@ document.addEventListener("buuz:lang", () => {
 const toast = document.getElementById("toast") as HTMLElement;
 const clearX = document.getElementById("clear-x") as HTMLButtonElement;
 const copyX = document.getElementById("copy-x") as HTMLButtonElement;
-const pasteBtn = document.getElementById("paste") as HTMLButtonElement;
 const pasteX = document.getElementById("paste-x") as HTMLButtonElement;
 
 // Paste shows while the Latin box is empty; Clear takes its place once there is text.
 function syncPaste(): void {
   const empty = latin.value === "";
-  pasteBtn.hidden = !empty;
   pasteX.hidden = !empty;
-  clearBtn.hidden = empty;
 }
 
 async function paste(): Promise<void> {
@@ -805,7 +800,6 @@ async function paste(): Promise<void> {
     latin.focus(); // the person can press Ctrl+V / long-press instead
   }
 }
-pasteBtn.addEventListener("click", () => void paste());
 pasteX.addEventListener("click", () => void paste());
 
 // Phones: Google Translate-style. Both boxes grow with their text (capped), so
@@ -866,10 +860,8 @@ latin.addEventListener("input", () => {
   if (!mascot.classList.contains("puff")) animate("puff");
 });
 mascot.addEventListener("animationend", () => mascot.classList.remove("puff", "hop"));
-copyBtn.addEventListener("click", () => void copy());
 copyX.addEventListener("click", () => void copy());
-clearX.addEventListener("click", () => clearBtn.click());
-clearBtn.addEventListener("click", () => {
+clearX.addEventListener("click", () => {
   latin.value = "";
   render();
   syncCaret();
