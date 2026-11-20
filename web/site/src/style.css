@@ -495,3 +495,14 @@ a.button.mail { width: 100%; justify-content: center; }
 .keys-typing { margin-top: 0.8rem; }
 .keys-typing .map { columns: 3 8.5rem; }
 @media (max-width: 520px) { .typing-dlg { margin: 4.5rem auto auto; } }
+
+/* Help page (/help): prompts to type in Latin. */
+.samples { margin-top: 1.5rem; }
+.prompts { list-style: none; padding: 0; margin: 0 0 1.5rem; display: grid; gap: 1rem; }
+.prompts li { background: var(--card); border-radius: 20px; padding: 0.9rem 1rem; box-shadow: 0 4px 0 var(--press); }
+.prompts .prompt { color: var(--fg); font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem; }
+.prompts input { width: 100%; box-sizing: border-box; font: inherit; font-size: 1.05rem; padding: 0.6rem 0.8rem; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--fg); }
+.samples .device { border: 0; padding: 0; margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; align-items: center; }
+.samples .device legend { font-weight: 800; margin-bottom: 0.4rem; }
+.samples .device label, .samples .consent { display: inline-flex; gap: 0.4rem; align-items: center; color: var(--fg); font-size: 1rem; }
+.samples .consent { margin-bottom: 1rem; }

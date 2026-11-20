@@ -103,6 +103,10 @@
     {
       "source": "/cookies",
       "destination": "/cookies.html"
+    },
+    {
+      "source": "/help",
+      "destination": "/help.html"
     }
   ]
 }

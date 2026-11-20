@@ -152,4 +152,10 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/cookies?lang=en" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/cookies" />
   </url>
+  <url>
+    <loc>https://buuz.thetengis.com/help</loc>
+    <xhtml:link rel="alternate" hreflang="mn" href="https://buuz.thetengis.com/help" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://buuz.thetengis.com/help?lang=en" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://buuz.thetengis.com/help" />
+  </url>
 </urlset>

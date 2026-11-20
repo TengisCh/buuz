@@ -13,6 +13,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         privacy: resolve(__dirname, "privacy.html"),
         cookies: resolve(__dirname, "cookies.html"),
+        help: resolve(__dirname, "help.html"),
         notFound: resolve(__dirname, "404.html"),
       },
     },
