@@ -12,6 +12,7 @@
 - {name: feedback, color: fbca04, description: "Ideas, impressions and suggestions from users"}
 - {name: thanks, color: ff8e8e, description: "A thank-you from a user (feedback form)"}
 - {name: collaboration, color: 2e6bff, description: "Someone wants to work with us (feedback form)"}
+- {name: typing-samples, color: 0e8a16, description: "Latin typing samples sent from the help page (CC0)"}
 - {name: documentation, color: 0075ca, description: "Improvements or additions to documentation"}
 - {name: question, color: d876e3, description: "Further information is requested"}
 - {name: epic, color: 3e4b9e, description: "Tracking issue that groups several issues"}
