@@ -331,11 +331,10 @@ a.button.mail { width: 100%; justify-content: center; }
 .out-wrap { position: relative; }
 .in-wrap { position: relative; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-#latin, #cyr { padding-right: 3.9rem; }
-.in-btn { display: grid; place-items: center; position: absolute; top: 0.5rem; right: 0.5rem; width: 48px; height: 48px; min-height: 48px; padding: 0; border-radius: 999px; }
+#latin, #cyr { padding-bottom: 4rem; }
+/* Round icon buttons sit in the bottom-right corner of each box. Desktop adds the name. */
+.in-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; position: absolute; bottom: 0.9rem; right: 0.9rem; height: 48px; min-height: 48px; padding: 0 1.15rem; border-radius: 999px; }
 .in-btn[hidden] { display: none; }
-.clear-x { background: transparent; box-shadow: none; color: var(--muted); }
-.clear-x:active { transform: none; box-shadow: none; }
 .paste-x, .copy-x { z-index: 2; background: var(--accent); color: var(--accent-fg); box-shadow: 0 3px 0 var(--accent-press); }
 .paste-x:active, .copy-x:active { box-shadow: 0 1px 0 var(--accent-press); }
 .toast {
@@ -354,10 +353,12 @@ a.button.mail { width: 100%; justify-content: center; }
   .tag { margin: 0.4rem 0 1rem; font-size: 1rem; }
   .converter { gap: 0.75rem; }
   .pane label { margin-bottom: 0.25rem; }
-  textarea { resize: none; overflow-y: auto; font-size: 1.2rem; padding: 0.8rem 3.2rem 0.8rem 1rem; min-height: 96px; }
-  #latin { padding-right: 3rem; }
-  #cyr { padding-bottom: 0.8rem; padding-right: 3.6rem; }
-  .in-btn { top: 0.4rem; right: 0.4rem; width: 44px; height: 44px; min-height: 44px; }
+  textarea { resize: none; overflow-y: auto; font-size: 1.2rem; padding: 0.8rem 1rem 3.7rem; min-height: 96px; }
+  #latin, #cyr { padding-bottom: 3.7rem; }
+  .in-btn { bottom: 0.6rem; right: 0.6rem; width: 44px; height: 44px; min-height: 44px; padding: 0; }
+  .in-btn .lbl { display: none; }
+  .clear-x { background: transparent; box-shadow: none; color: var(--muted); }
+  .clear-x:active { transform: none; box-shadow: none; }
   /* While typing, the floating feedback button would sit on the keyboard edge. */
   body:has(#latin:focus) .fab { display: none; }
 }
