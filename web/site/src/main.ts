@@ -15,6 +15,7 @@ import calibrationSentences from "./calibration.json";
 import { accept, completionAt, ensureWordList, type Completion } from "./completion";
 import wordListUrl from "../../../data/wordlist/mn.txt?url";
 import { CalibrationFlow, saveError, type Outcome } from "./calibration";
+import { readPaste } from "./paste";
 import { addUserWord, clearUserDict, entriesOf, importUserDict, loadUserDict, removeUserWord } from "./userdict";
 
 setupLang();
@@ -777,6 +778,35 @@ document.addEventListener("buuz:lang", () => {
 const toast = document.getElementById("toast") as HTMLElement;
 const clearX = document.getElementById("clear-x") as HTMLButtonElement;
 const copyX = document.getElementById("copy-x") as HTMLButtonElement;
+const pasteBtn = document.getElementById("paste") as HTMLButtonElement;
+const pasteX = document.getElementById("paste-x") as HTMLButtonElement;
+
+// Paste shows while the Latin box is empty; Clear takes its place once there is text.
+function syncPaste(): void {
+  const empty = latin.value === "";
+  pasteBtn.hidden = !empty;
+  pasteX.hidden = !empty;
+  clearBtn.hidden = empty;
+}
+
+async function paste(): Promise<void> {
+  const before = latin.value;
+  const r = await readPaste(navigator.clipboard);
+  if (r.kind === "text") {
+    if (latin.value !== before) return; // the person typed while the read was pending
+    latin.value = r.text;
+    render();
+    fit();
+    syncCaret();
+    latin.focus();
+    animate("puff");
+  } else {
+    say(t(r.kind === "empty" ? "pasteEmpty" : "pasteBlocked"));
+    latin.focus(); // the person can press Ctrl+V / long-press instead
+  }
+}
+pasteBtn.addEventListener("click", () => void paste());
+pasteX.addEventListener("click", () => void paste());
 
 // Phones: Google Translate-style. Both boxes grow with their text (capped), so
 // input, result and the copy button stay above the on-screen keyboard.
@@ -793,6 +823,7 @@ function fit(): void {
     el.style.height = Math.min(el.scrollHeight + 2, Math.max(cap, 96)) + "px";
   }
   clearX.hidden = latin.value === "";
+  syncPaste();
 }
 phone.addEventListener("change", fit);
 window.visualViewport?.addEventListener("resize", () => {
