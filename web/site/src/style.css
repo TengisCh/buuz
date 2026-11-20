@@ -333,6 +333,9 @@ a.button.mail { width: 100%; justify-content: center; }
 .pane { position: relative; }
 .out-wrap { position: relative; }
 .in-btn { display: none; }
+.paste-x { display: none; }
+.paste-btn { display: inline-flex; align-items: center; gap: 0.45rem; }
+.paste-btn[hidden], button.ghost[hidden] { display: none; }
 .toast {
   position: fixed; left: 50%; bottom: 16px; z-index: 45; transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
   background: var(--fg); color: var(--bg); font-weight: 800; padding: 0.6rem 1.1rem; border-radius: 999px;
@@ -357,6 +360,8 @@ a.button.mail { width: 100%; justify-content: center; }
   .in-btn[hidden] { display: none; }
   .clear-x { top: 1.85rem; right: 0.35rem; background: transparent; box-shadow: none; color: var(--muted); }
   .clear-x:active { transform: none; box-shadow: none; }
+  .paste-x { display: inline-flex; align-items: center; gap: 0.4rem; position: absolute; left: 0.75rem; bottom: 3.4rem; z-index: 2; background: var(--accent); color: var(--accent-fg); box-shadow: 0 3px 0 var(--accent-press); }
+  .paste-x[hidden] { display: none; }
   .copy-x { right: 0.4rem; top: 0.4rem; background: var(--accent); color: #fff; box-shadow: 0 3px 0 var(--accent-press); }
   .copy-x:active { box-shadow: 0 1px 0 var(--accent-press); }
   /* While typing, the floating feedback button would sit on the keyboard edge. */

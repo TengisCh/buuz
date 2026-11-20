@@ -21,6 +21,9 @@ const mn = {
   clear: "Цэвэрлэх",
   copy: "Хуулах",
   copied: "Хуулагдлаа",
+  paste: "Буулгах",
+  pasteBlocked: "Санах ойг уншиж чадсангүй. Оронд нь нүдэнд Ctrl+V (Mac дээр ⌘V) дараарай.",
+  pasteEmpty: "Санах ой хоосон байна",
   privacy:
     "Бүх зүйл таны төхөөрөмж дээр ажиллана. Бичсэн зүйл тань хаашаа ч илгээгдэхгүй.",
   howTo: "Яаж бичих вэ?",
@@ -264,6 +267,9 @@ const en: Record<Key, string> = {
   clear: "Clear",
   copy: "Copy",
   copied: "Copied",
+  paste: "Paste",
+  pasteBlocked: "Can't read the clipboard. Press Ctrl+V (⌘V on Mac) in the box instead.",
+  pasteEmpty: "Clipboard is empty",
   privacy:
     "Everything runs on your device. What you type is never sent anywhere.",
   howTo: "How to type",
@@ -506,6 +512,9 @@ const ru: Record<Key, string> = {
   clear: "Очистить",
   copy: "Копировать",
   copied: "Скопировано",
+  paste: "Вставить",
+  pasteBlocked: "Не удалось прочитать буфер обмена. Нажмите Ctrl+V (⌘V на Mac) в поле ввода.",
+  pasteEmpty: "Буфер обмена пуст",
   privacy: "Всё работает на вашем устройстве. То, что вы печатаете, никуда не отправляется.",
   howTo: "Как печатать",
   howToBody:
