@@ -790,8 +790,10 @@ function syncPaste(): void {
 }
 
 async function paste(): Promise<void> {
+  const before = latin.value;
   const r = await readPaste(navigator.clipboard);
   if (r.kind === "text") {
+    if (latin.value !== before) return; // the person typed while the read was pending
     latin.value = r.text;
     render();
     fit();
