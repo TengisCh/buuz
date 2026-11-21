@@ -60,6 +60,28 @@ function animate(cls: "puff" | "hop"): void {
 
 let ready = false;
 
+// While a dialog is open the page behind it must not scroll. iOS Safari
+// ignores `overflow: hidden` on the body, so fix the body in place and keep
+// the scroll offset to restore it when the last dialog closes.
+let lockedAt: number | null = null;
+function syncScrollLock(): void {
+  const anyOpen = document.querySelector("dialog[open]") !== null;
+  const body = document.body;
+  if (anyOpen && lockedAt === null) {
+    lockedAt = window.scrollY;
+    body.style.top = `-${lockedAt}px`;
+    body.classList.add("scroll-locked");
+  } else if (!anyOpen && lockedAt !== null) {
+    const y = lockedAt;
+    lockedAt = null;
+    body.classList.remove("scroll-locked");
+    body.style.removeProperty("top");
+    window.scrollTo({ top: y, left: 0, behavior: "instant" });
+  }
+}
+const dialogWatcher = new MutationObserver(syncScrollLock);
+for (const d of document.querySelectorAll("dialog")) dialogWatcher.observe(d, { attributes: true, attributeFilter: ["open"] });
+
 // Settings: the gear in the header opens a dialog with the mode and options.
 const settings = document.getElementById("settings") as HTMLDialogElement;
 document.getElementById("settings-btn")?.addEventListener("click", () => settings.showModal());
