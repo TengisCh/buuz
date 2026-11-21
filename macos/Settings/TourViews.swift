@@ -44,7 +44,7 @@ struct TourRail: View {
         let i = TourStep.allCases.firstIndex(of: s) ?? 0
         let isDone: Bool = {
             if let n = s.lessonNumber { return m.passed.contains(n) && s != m.step }
-            return i < index
+            return TourFlow.isDone(s, current: m.step, enabled: m.enabled)
         }()
         let current = s == m.step
         return Button { m.step = s } label: {
