@@ -44,6 +44,11 @@ the names in [docs/glossary.md](docs/glossary.md) in code, tests and issues.
    packages, or change GitHub or Vercel settings. Ask the maintainer.
 6. **Never** release the macOS or Windows app (a download link, a signed
    build, a store or winget entry) while issue #84, the manual test, is open.
+7. **Never** edit files under `windows/`. Windows development is paused until
+   the maintainer finishes the macOS app
+   ([decision 0009](docs/decisions/0009-mac-app-first-windows-paused.md)).
+   `.claude/project-focus.json` lists the paused paths, and a hook enforces
+   it. Only the maintainer lifts the pause.
 
 ## Workflow
 

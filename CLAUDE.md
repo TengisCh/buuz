@@ -24,6 +24,9 @@
   (`.claude/hooks/format-rust.sh`), so `cargo fmt --check` stays green.
 - Dependency installs (`npm install`, `npx`, `cargo add`, `cargo install`)
   ask for approval on purpose. Follow `add-dependency` before asking.
+- A `PreToolUse` hook (`.claude/hooks/enforce-focus.sh`) blocks edits under
+  `windows/` while Windows is paused. The paused paths are in
+  `.claude/project-focus.json`. Only the maintainer changes that file.
 - Long sessions compact at about 400k tokens. Before a big compaction-prone
   task, write the plan into the PR description or an issue comment, not only
   into the chat, so it survives the summary.
