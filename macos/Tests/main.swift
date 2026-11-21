@@ -295,6 +295,20 @@ do {
     expect(ConfigEditor.setFlag(on, "autocorrect", true), on, "setting the same value changes nothing")
 }
 
+// MARK: Enabled sources
+
+do {
+    let abc: [String: Any] = ["InputSourceKind": "Keyboard Layout", "KeyboardLayout Name": "ABC"]
+    let other: [String: Any] = ["Bundle ID": "com.apple.inputmethod.Kotoeri", "InputSourceKind": "Input Mode"]
+    let byBundle: [String: Any] = ["Bundle ID": "com.thetengis.inputmethod.Buuz", "InputSourceKind": "Keyboard Input Method"]
+    let byMode: [String: Any] = ["Input Mode": "com.thetengis.inputmethod.Buuz.Mongolian", "InputSourceKind": "Input Mode"]
+    expect(EnabledSources.containsBuuz([abc]), false, "list without Buuz")
+    expect(EnabledSources.containsBuuz([abc, byBundle]), true, "Bundle ID entry")
+    expect(EnabledSources.containsBuuz([abc, byMode]), true, "Input Mode entry")
+    expect(EnabledSources.containsBuuz([]), false, "empty list")
+    expect(EnabledSources.containsBuuz([abc, other]), false, "unrelated entries only")
+}
+
 // MARK: Tutorial flow
 
 do {
@@ -313,6 +327,16 @@ do {
     f.step = .lesson8
     f.goNext(enabled: true); expect(f.step, .done, "last lesson to done")
     f.goNext(enabled: true); expect(f.step, .done, "done is the end")
+    f.step = .key
+    f.goNext(enabled: false); expect(f.step, .add, "next cannot skip add after Buuz was removed")
+    f.step = .lesson3
+    f.goNext(enabled: false); expect(f.step, .add, "next from a lesson goes back to add when removed")
+    f.step = .done
+    f.goNext(enabled: false); expect(f.step, .done, "done stays done")
+    expect(TourFlow.isDone(.add, current: .key, enabled: false), false, "add is not done when removed")
+    expect(TourFlow.isDone(.add, current: .key, enabled: true), true, "add is done when enabled")
+    expect(TourFlow.isDone(.privacy, current: .key, enabled: false), true, "other earlier steps stay done")
+    expect(TourFlow.isDone(.key, current: .privacy, enabled: true), false, "later step is not done")
     f.step = .welcome
     f.goBack(enabled: false); expect(f.step, .welcome, "welcome is the start")
     f.step = .lesson3

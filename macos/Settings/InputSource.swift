@@ -29,6 +29,19 @@ enum InputSource {
 
     /// True when Buuz is in the user's keyboards.
     static var isEnabled: Bool {
+        // The preference is the reliable source. The TIS flag can be stale in
+        // a long-lived process.
+        let domain = "com.apple.HIToolbox" as CFString
+        CFPreferencesAppSynchronize(domain)
+        if let value = CFPreferencesCopyAppValue("AppleEnabledInputSources" as CFString, domain),
+            let entries = value as? [[String: Any]]
+        {
+            return EnabledSources.containsBuuz(entries)
+        }
+        return tisIsEnabled
+    }
+
+    private static var tisIsEnabled: Bool {
         guard let source = find(),
             let p = TISGetInputSourceProperty(source, kTISPropertyInputSourceIsEnabled)
         else { return false }

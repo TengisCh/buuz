@@ -52,8 +52,8 @@ final class AppModel: ObservableObject {
     @Published var setupFolded: Bool { didSet { prefs.setupFolded = setupFolded } }
 
     // Tutorial
-    @Published var tourActive: Bool
-    @Published var step: TourStep { didSet { stepChanged() } }
+    @Published var tourActive: Bool { didSet { updatePolling() } }
+    @Published var step: TourStep { didSet { stepChanged(); updatePolling() } }
     @Published var passed: Set<Int> { didSet { prefs.passedLessons = passed } }
     @Published var checker = LessonChecker(lesson: 1)
     @Published var fieldReset = 0
@@ -128,6 +128,7 @@ final class AppModel: ObservableObject {
             NotificationCenter.default.addObserver(
                 forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
             ) { [weak self] _ in
+                self?.refreshEnabled()
                 self?.globe = GlobeKeyState.read()
                 self?.refreshKeyboard()
                 self?.refreshConfig()
@@ -139,6 +140,24 @@ final class AppModel: ObservableObject {
                 forName: Notification.Name(HotkeyToggle.statusNotification), object: nil, queue: .main
             ) { [weak self] _ in self?.refreshHotkeyStatus() })
         refreshKeyboard()
+        updatePolling()
+    }
+
+    /// Polls the enabled keyboards while the add or switch step is open, because
+    /// the change notification can be late. It reads no key.
+    private var pollTimer: Timer?
+
+    private func updatePolling() {
+        let needed = tourActive && (step == .add || step == .switchTo)
+        if needed {
+            guard pollTimer == nil else { return }
+            pollTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+                self?.refreshEnabled()
+            }
+        } else {
+            pollTimer?.invalidate()
+            pollTimer = nil
+        }
     }
 
     /// Text for `key` in the chosen language. Reading `language` makes the
@@ -163,7 +182,10 @@ final class AppModel: ObservableObject {
 
     // MARK: Keyboard
 
-    func refreshEnabled() { enabled = InputSource.isEnabled }
+    func refreshEnabled() {
+        let now = InputSource.isEnabled
+        if now != enabled { enabled = now }
+    }
 
     /// Reads the current keyboard again. Called when the user picks another
     /// keyboard and when the window gets focus.
