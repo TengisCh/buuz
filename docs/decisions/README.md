@@ -19,6 +19,7 @@ record that supersedes the old one instead of editing history.
 | [0006](0006-word-list-data-licence.md) | Word list data under CC BY-SA 4.0, as a separate asset | Accepted |
 | [0007](0007-schemes-for-other-cyrillic-languages.md) | Table schemes for other Cyrillic languages | Accepted |
 | [0008](0008-one-url-per-page-language.md) | One URL for each page language | Accepted |
+| [0009](0009-mac-app-first-windows-paused.md) | Finish the macOS app first, pause Windows | Accepted |
 
 ## Template
 

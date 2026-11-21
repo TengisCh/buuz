@@ -1,0 +1,8 @@
+{
+  "_comment": "Read by .claude/hooks/enforce-focus.sh. Only the maintainer changes this file. See docs/decisions/0009-mac-app-first-windows-paused.md.",
+  "focus": "macos",
+  "decision": "docs/decisions/0009-mac-app-first-windows-paused.md",
+  "paused_paths": ["windows/"],
+  "allowed_in_paused": [".github/workflows/windows.yml"],
+  "message": "Windows development is paused until the maintainer finishes the macOS app (decision 0009). Do not edit windows/. Work on the macOS app, core/ or web/ instead. Only the maintainer can lift the pause by editing .claude/project-focus.json."
+}
