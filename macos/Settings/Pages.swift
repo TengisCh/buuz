@@ -16,7 +16,7 @@ struct LessonInfo {
 
     static let all: [LessonInfo] = [
         LessonInfo(number: 1, keys: [w("sain"), w("baina"), w("uu")], out: "сайн байна уу"),
-        LessonInfo(number: 2, keys: [w("gertoo"), w("teruu")], out: "гэртөө тэрүү"),
+        LessonInfo(number: 2, keys: [w("eruul"), w("mend")], out: "эрүүл мэнд"),
         LessonInfo(number: 3, keys: [w("qndqr"), w("wg")], out: "өндөр үг"),
         LessonInfo(number: 4, keys: [w("mor'"), w("hon'")], out: "морь хонь"),
         LessonInfo(number: 5, keys: [w("nom"), k("⏎ Enter")], out: "ном"),
@@ -119,7 +119,7 @@ struct HomeView: View {
             CheatEntry(keys: ["w"], latin: "wg", out: "үг", desc: "cheat.w", flag: nil, smart: false),
             CheatEntry(keys: ["'"], latin: "mor'", out: "морь", desc: "cheat.soft", flag: nil, smart: false),
             CheatEntry(keys: ["\""], latin: "\"", out: "ъ", desc: "cheat.hard", flag: nil, smart: false),
-            CheatEntry(keys: ["o", "u"], latin: "gertoo", out: "гэртөө", desc: "cheat.harmony", flag: "smart_vowels", smart: true),
+            CheatEntry(keys: ["o", "u"], latin: "eruul", out: "эрүүл", desc: "cheat.harmony", flag: "smart_vowels", smart: true),
             CheatEntry(keys: ["v", "v"], latin: "svv", out: "сүү", desc: "cheat.vv", flag: "double_v", smart: true),
             CheatEntry(keys: ["t", "s"], latin: "tsai", out: "цай", desc: "cheat.ts", flag: "habit_keys", smart: true),
             CheatEntry(keys: ["z", "h"], latin: "zhims", out: "жимс", desc: "cheat.zh", flag: "habit_keys", smart: true),

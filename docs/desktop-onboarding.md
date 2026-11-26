@@ -120,7 +120,7 @@ If Buuz is not the active input source, a hint shows the chosen switch key.
 Two cards:
 
 - 🪄 **Эгшиг өөрөө зохицно**: with э, ө, ү in the word, o → ө, u → ү.
-  `nomoo` → ном**оо**, `gertoo` → гэрт**өө**, `teruu` → тэр**үү** (all checked against `buuz-core`).
+  `nomoo` → ном**оо**, `eruul` → эр**үү**л, `delguur` → дэлг**үү**р (all checked against `buuz-core`).
 - 🎯 **Заавал ө, ү хэрэгтэй бол**: `q` → ө, `w` → ү, `'` → ь, `"` → ъ; `qndqr` → **ө**нд**ө**р.
 
 When issue #7 (smarter vowel harmony) lands, update the examples from its tests.

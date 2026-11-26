@@ -492,7 +492,7 @@ const NEW = {
   "typing.group.latin": ["Latin words", "Латин үг"],
   "typing.group.soon": ["Coming soon", "Удахгүй"],
   "typing.smartVowels": ["Smart vowels", "Ухаалаг эгшиг"],
-  "typing.smartVowels.hint": ["o and u match the word: gertoo → гэртөө", "o, u үгэндээ зохицно: gertoo → гэртөө"],
+  "typing.smartVowels.hint": ["o and u match the word: eruul → эрүүл", "o, u үгэндээ зохицно: eruul → эрүүл"],
   "typing.autocorrect": ["Autocorrect", "Автомат засвар"],
   "typing.autocorrect.hint": ["хуухэд → хүүхэд at Space. Off by default.", "Space дарахад хуухэд → хүүхэд. Анхдагчаар унтраалттай."],
   "typing.doubleV": ["vv for үү", "vv-ээр үү бичих"],
@@ -750,7 +750,7 @@ const FN = () => k("🌐 fn");
 // ---------------------------------------------------------------------------
 const LESSONS = [
   { n: 1, keys: ["sain", "baina", "uu"], out: "сайн байна уу", typed: ["сайн ", "бай"], latin: "sain baina", close: "сайн <b>баи</b>на уу", closeTxt: "сайн баина уу" },
-  { n: 2, keys: ["gertoo", "teruu"], out: "гэртөө тэрүү", typed: ["гэртөө ", "тэр"], latin: "gertoo teruu", close: "гэрт<b>оо</b> тэр<b>уу</b>", closeTxt: "гэртоо тэруу" },
+  { n: 2, keys: ["eruul", "mend"], out: "эрүүл мэнд", typed: ["эрүүл ", "мэнд"], latin: "eruul mend", close: "эр<b>уу</b>л мэнд", closeTxt: "эруул мэнд" },
   { n: 3, keys: ["qndqr", "wg"], out: "өндөр үг", typed: ["өндөр ", "ү"], latin: "qndqr wg", close: "<b>о</b>нд<b>о</b>р <b>у</b>г", closeTxt: "ондор уг" },
   { n: 4, keys: ["mor'", "hon'"], out: "морь хонь", typed: ["морь ", "хон"], latin: "mor' hon'", close: "мор хон", closeTxt: "мор хон" },
   { n: 5, keys: ["nom", "⏎ Enter"], out: "ном", typed: ["", "ном"], latin: "nom", closeOwn: "lesson5.close", closeField: ["", "ном"] },
@@ -849,7 +849,7 @@ function home(state) {
     [k("w"), "wg", "үг", "cheat.w"],
     [k("'"), "mor'", "морь", "cheat.soft"],
     [k('"'), '"', "ъ", "cheat.hard"],
-    [k("o") + k("u"), "gertoo", "гэртөө", "cheat.harmony"],
+    [k("o") + k("u"), "eruul", "эрүүл", "cheat.harmony"],
     [k("v") + k("v"), "svv", "сүү", "cheat.vv"],
     [k("t") + k("s"), "tsai", "цай", "cheat.ts"],
     [k("z") + k("h"), "zhims", "жимс", "cheat.zh"],
@@ -925,7 +925,7 @@ function typing(state) {
   const classic = state === "classic";
   const row = (key, on) => `<div class="srow"><div class="t"><b>${t(key)}</b><span>${t(key + ".hint")}</span></div>${sw(on && !classic, classic)}</div>`;
   const soon = key => `<div class="srow soon"><div class="t"><b>${noEmoji(t(key))}</b><span>${t(key + ".hint")}</span></div><span class="pill">${t("common.comingSoon")}</span></div>`;
-  const prev = [["gertoo", "гэртөө", "гэртоо"], ["svv", "сүү", "свв"], ["tsai", "цай", "тсай"], ["bn", "байна", "бн"], ["zoom ⎋", "zoom", "зоом"]]
+  const prev = [["eruul", "эрүүл", "эруул"], ["svv", "сүү", "свв"], ["tsai", "цай", "тсай"], ["bn", "байна", "бн"], ["zoom ⎋", "zoom", "зоом"]]
     .map(([l, smart, cl]) => `<div class="prow"><span class="mono">${l}</span><b>${classic ? cl : smart}</b></div>`).join("");
   const sec = (title, body) => `<section class="sec"><div class="sh">${title}</div><div class="group">${body}</div></section>`;
   return `${ph(t("settings.typing.title"), t("typing.subtitle"))}
