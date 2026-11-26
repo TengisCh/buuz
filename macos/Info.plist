@@ -34,6 +34,8 @@
 	<string>com.thetengis.inputmethod.Buuz_Connection</string>
 	<key>InputMethodServerControllerClass</key>
 	<string>BuuzController</string>
+	<key>TISIconIsTemplate</key>
+	<true/>
 	<key>tsInputMethodIconFileKey</key>
 	<string>Buuz.icns</string>
 	<key>tsInputMethodCharacterRepertoireKey</key>
@@ -46,6 +48,11 @@
 		<dict>
 			<key>com.thetengis.inputmethod.Buuz.Mongolian</key>
 			<dict>
+				<key>TISIconLabels</key>
+				<dict>
+					<key>Primary</key>
+					<string>Б</string>
+				</dict>
 				<key>TISInputSourceID</key>
 				<string>com.thetengis.inputmethod.Buuz.Mongolian</string>
 				<key>TISIntendedLanguage</key>
