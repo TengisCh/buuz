@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Make macos/Resources/Buuz-menu.png: the single-colour Б glyph for the
 Input menu. Run once, then commit the PNG. Needs Pillow and a bold sans font
-with Cyrillic (DejaVu Sans Bold)."""
+with Cyrillic (DejaVu Sans Bold).
+The PNG is only the fallback for macOS versions that do not read
+`TISIconLabels`. New macOS draws the `Primary` label from Info.plist."""
 from PIL import Image, ImageDraw, ImageFont
 
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
