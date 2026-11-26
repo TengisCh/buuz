@@ -65,6 +65,9 @@ struct LessonChecker {
     private var step2 = false
     /// The committed text when the marked зоом was last seen. Lesson 7 passes
     /// only when Esc turns that marked text into zoom in place.
+    /// After Esc, the zoom text stays marked until the user presses Space.
+    /// While the marked text is zoom and the committed text is the same,
+    /// keep this value. Any other marked text clears it.
     private var zoomBase: String?
 
     init(lesson: Int) { self.lesson = lesson }
@@ -120,7 +123,9 @@ struct LessonChecker {
                 zoomBase = last.committed
             } else if let base = zoomBase {
                 if last.hasMarked {
-                    zoomBase = nil
+                    // Esc keeps the Latin zoom marked. Any other marked text ends the check.
+                    let latin = LessonChecker.normalize(last.markedText ?? "") == "zoom"
+                    if !(latin && last.committed == base) { zoomBase = nil }
                 } else if last.full == base {
                     // The field cleared the marked text. The Latin text follows.
                 } else if LessonChecker.normalize(last.full) == LessonChecker.normalize(base + "zoom") {
