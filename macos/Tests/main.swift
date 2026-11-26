@@ -116,6 +116,18 @@ do {
 }
 
 do {
+    // Backspace after a committed word opens the word again.
+    let c = FakeClient()
+    let s = session()
+    type("tov ", into: s, c)
+    expect(c.text, "тов ", "tov and space commit the word")
+    let used = s.handle(keyCode: 51, characters: "\u{7F}", mods: Mods(), client: c)
+    expect(used, true, "Backspace after a space is used")
+    expect(c.text, "", "the committed word is deleted")
+    expect(c.marked, "тов", "the word is marked again")
+}
+
+do {
     // Backspace edits the preedit and does not reach the application.
     let c = FakeClient()
     let s = session()

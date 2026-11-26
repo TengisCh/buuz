@@ -33,7 +33,7 @@ func waitFor(_ what: String, timeout: Double, _ ok: () -> Bool) -> Bool {
 let keyCodes: [Character: UInt16] = [
     "a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9, "b": 11,
     "q": 12, "w": 13, "e": 14, "r": 15, "y": 16, "t": 17, "o": 31, "u": 32, "i": 34, "p": 35,
-    "l": 37, "j": 38, "k": 40, "n": 45, "m": 46, " ": 49,
+    "l": 37, "j": 38, "k": 40, "n": 45, "m": 46, " ": 49, "⌫": 51,
 ]
 
 let app = NSApplication.shared
@@ -74,7 +74,7 @@ pump(1.0)  // macOS starts the input method process
 // 3. Type. A key Buuz does not use goes to the text view, like in a real app.
 func press(_ ch: Character) {
     guard let code = keyCodes[ch] else { fatalError("no key code for \(ch)") }
-    let s = String(ch)
+    let s = ch == "⌫" ? "\u{7f}" : String(ch)
     let event = NSEvent.keyEvent(
         with: .keyDown, location: .zero, modifierFlags: [],
         timestamp: ProcessInfo.processInfo.systemUptime,
@@ -122,6 +122,16 @@ if textView.hasMarkedText() && textView.string == "сай" {
     log("ok   marked text while typing")
 } else {
     log("FAIL marked text: hasMarkedText=\(textView.hasMarkedText()) string=\(textView.string.debugDescription)")
+    failed = true
+}
+
+// Backspace after a space opens the word again: the text view deletes the
+// committed word and shows it as marked text.
+_ = typeAndRead("tov ⌫")
+if textView.string == "тов" && textView.hasMarkedText() {
+    log("ok   Backspace after a space reopens the word")
+} else {
+    log("FAIL reopen: hasMarkedText=\(textView.hasMarkedText()) string=\(textView.string.debugDescription)")
     failed = true
 }
 

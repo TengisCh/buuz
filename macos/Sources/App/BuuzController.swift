@@ -24,6 +24,13 @@ private final class IMKClientAdapter: TextClient {
                 range = NSRange(location: caret.location - deleteBefore, length: deleteBefore)
             }
         }
+        if text.isEmpty, range.location != NSNotFound {
+            // IMK ignores an empty insertText. An empty marked text with a
+            // replacement range deletes the range.
+            client.setMarkedText(
+                "", selectionRange: NSRange(location: 0, length: 0), replacementRange: range)
+            return
+        }
         client.insertText(text, replacementRange: range)
     }
 
