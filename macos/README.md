@@ -109,7 +109,10 @@ step except Welcome and Done has a Skip button. The app saves the step, so
 quitting resumes in the same place. The checks are real:
 
 - **Add the keyboard.** Next turns on when macOS lists Buuz. The app
-  watches the enabled keyboards.
+  reads the list `AppleEnabledInputSources` (domain `com.apple.HIToolbox`)
+  when the window gets focus, when the list changes, and every 1.5 seconds
+  on the add and switch steps. If you remove Buuz later, the add step is
+  open again and Next does not skip it.
 - **Switch key.** You choose Globe, Control + Space, Caps Lock or your own
   switch key. The recorder refuses keys that macOS already uses and says
   which macOS action owns them. Your own switch key is saved in

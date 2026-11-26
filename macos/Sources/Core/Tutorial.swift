@@ -43,6 +43,8 @@ struct TourFlow: Equatable {
 
     func next(enabled: Bool) -> TourStep {
         guard let i = all.firstIndex(of: step), i + 1 < all.count else { return step }
+        // Buuz was removed after the add step: Next cannot skip the add step.
+        if !enabled, let a = all.firstIndex(of: .add), i > a, step != .done { return .add }
         let n = all[i + 1]
         return (n == .add && enabled) ? .key : n
     }
@@ -51,6 +53,14 @@ struct TourFlow: Equatable {
         guard let i = all.firstIndex(of: step), i > 0 else { return step }
         let p = all[i - 1]
         return (p == .add && enabled) ? .privacy : p
+    }
+
+    /// True when the rail shows `s` as done while `current` is open. The add
+    /// step is done only while Buuz is in the keyboards.
+    static func isDone(_ s: TourStep, current: TourStep, enabled: Bool) -> Bool {
+        let all = TourStep.allCases
+        guard let i = all.firstIndex(of: s), let c = all.firstIndex(of: current), i < c else { return false }
+        return s == .add ? enabled : true
     }
 
     mutating func goNext(enabled: Bool) { step = next(enabled: enabled) }
