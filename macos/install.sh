@@ -21,8 +21,23 @@ open -g "$DEST/Buuz.app" || true
 
 # The welcome and settings app.
 if [ -d build/Settings.app ]; then
+  # Quit a running copy first. An old copy keeps running after its files are
+  # replaced, and it can show old state, for example "not added" in step 3.
+  was_running=false
+  if pgrep -x BuuzSettings >/dev/null; then
+    was_running=true
+    pkill -x BuuzSettings || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      pgrep -x BuuzSettings >/dev/null || break
+      sleep 0.5
+    done
+  fi
   rm -rf "$HOME/Applications/Buuz.app"
   mkdir -p "$HOME/Applications"
   cp -R build/Settings.app "$HOME/Applications/Buuz.app"
   echo "Installed $HOME/Applications/Buuz.app (open it for the welcome steps)"
+  # Open the new copy again if an old copy was open.
+  if [ "$was_running" = true ]; then
+    open "$HOME/Applications/Buuz.app" || true
+  fi
 fi

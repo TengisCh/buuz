@@ -35,7 +35,7 @@ You need Xcode command line tools and Rust (`rustup`).
 ```sh
 macos/build.sh test   # Swift tests for this Mac
 macos/build.sh        # build/Buuz.app, universal (arm64 and x86_64), ad-hoc signed
-macos/install.sh      # copy to ~/Library/Input Methods and ~/Applications/Buuz.app
+macos/install.sh      # copy to ~/Library/Input Methods and ~/Applications/Buuz.app, restart an open app
 ```
 
 Open `~/Applications/Buuz.app` for the tutorial. The app adds Buuz to the
