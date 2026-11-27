@@ -50,6 +50,11 @@ const mn = {
   wordChoice: "ө, ү-г үгээр таах",
   wordChoiceHint:
     "Үгийн дараа зай эсвэл цэг, таслал бичихэд Buuz о, ө, у, ү үсгийн алийг нь бичихийг үгийн жагсаалтаас харж сонгоно (tov → төв, uvul → өвөл). Мөн урт эгшиг, ь, е-г шаардлагатай үед нөхнө (terer → тэрээр, huuli → хууль, wed → үед). Жагсаалтад байгаа түгээмэл үгийг өөрчлөхгүй (uuriin → уурын). Энэ сайт дээр сонгосон үг шууд харагдах бөгөөд Backspace-аар буцаах боломжгүй. Унтраавал үг бичсэнээрээ үлдэнэ. Анхнаасаа асаалттай.",
+  // TODO(mn): translate
+  suffixChoice: "Suffix choice",
+  // TODO(mn): translate
+  suffixChoiceHint:
+    "Fixes the case ending from the word list: usiin → усны, hotaas → хотоос.",
   schemeLabel: "Бичих хэл",
   schemeMn: "Монгол (үндсэн)",
   schemeHint: "Өөр кирилл хэлээр латин үсгээр бичих бол тэр хэлээ сонгоорой. Тэгвэл хуудас тухайн хэлний бичих зуршлаар хөрвүүлнэ (zh → ж). Монгол хэл үндсэн бөгөөд Buuz-ийн дүрмээр бичнэ.",
@@ -296,6 +301,9 @@ const en: Record<Key, string> = {
   wordChoice: "Guess ө, ү from words",
   wordChoiceHint:
     "When you type a space or punctuation after a word, Buuz uses the word list to choose between о, ө, у and ү (tov gives төв, uvul gives өвөл). It also adds a long vowel, ь or е where the list needs them (terer gives тэрээр, huuli gives хууль, wed gives үед). It does not change a common word that is in the list (uuriin gives уурын). This website shows the chosen word and has no Backspace undo. Turn the checkbox off to keep words as typed. It is on by default.",
+  suffixChoice: "Suffix choice",
+  suffixChoiceHint:
+    "Fixes the case ending from the word list: usiin → усны, hotaas → хотоос.",
   schemeLabel: "Language to type",
   schemeMn: "Mongolian (default)",
   schemeHint:
@@ -736,6 +744,11 @@ const ru: Record<Key, string> = {
   wordChoice: "Угадывать ө, ү по словам",
   wordChoiceHint:
     "Когда после слова вы ставите пробел или знак препинания, Buuz по списку слов выбирает между о, ө, у, ү (tov даёт төв, uvul даёт өвөл). Он также добавляет долгие гласные, ь и е, когда нужно (terer даёт тэрээр, huuli даёт хууль, wed даёт үед). Частые слова из списка он не меняет (uuriin даёт уурын). На этом сайте виден уже выбранный вариант, отмены через Backspace нет. Если выключить, слово остаётся как набрано. По умолчанию включено.",
+  // TODO(ru): translate
+  suffixChoice: "Suffix choice",
+  // TODO(ru): translate
+  suffixChoiceHint:
+    "Fixes the case ending from the word list: usiin → усны, hotaas → хотоос.",
   schemeLabel: "Язык набора",
   schemeMn: "Монгольский (по умолчанию)",
   schemeHint:

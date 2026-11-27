@@ -296,6 +296,7 @@ const autocorrectBox = document.getElementById("autocorrect") as HTMLInputElemen
 const doubleVBox = document.getElementById("double-v") as HTMLInputElement;
 const habitKeysBox = document.getElementById("habit-keys") as HTMLInputElement;
 const wordChoiceBox = document.getElementById("word-choice") as HTMLInputElement;
+const suffixChoiceBox = document.getElementById("suffix-choice") as HTMLInputElement;
 // The typewriter demo never expands abbreviations.
 let ghostConfig = "";
 
@@ -313,6 +314,7 @@ function applyConfig(): void {
   doubleVBox.checked = s.doubleV;
   habitKeysBox.checked = s.habitKeys;
   wordChoiceBox.checked = s.wordChoice;
+  suffixChoiceBox.checked = s.suffixChoice;
   // Turned on while the box has focus: load the list now (see loadWords).
   // Autocorrect needs the list for the output, so it loads it at once.
   if (document.activeElement === latin || s.autocorrect) loadWords();
@@ -351,6 +353,7 @@ doubleVBox.addEventListener("change", () => ready && setConfig(config_set_option
 // "Type ts as ц and zh as ж" (on by default): see docs/typing-rules.md section 3.
 habitKeysBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "habit_keys", habitKeysBox.checked)));
 wordChoiceBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "word_choice", wordChoiceBox.checked)));
+suffixChoiceBox.addEventListener("change", () => ready && setConfig(config_set_option(config, "suffix_choice", suffixChoiceBox.checked)));
 
 // Completion hint: under the Latin box, the whole Cyrillic word with the
 // ghost part in grey. It shows only while the box has focus, nothing is
@@ -366,12 +369,12 @@ let dismissed: string | null = null; // "start:latin word" that Esc hid
 function loadWords(): void {
   if (!ready || !typesMongolian()) return;
   const s = switchesOf(config);
-  if (!s.completion && !s.autocorrect && !s.wordChoice) return;
+  if (!s.completion && !s.autocorrect && !s.wordChoice && !s.suffixChoice) return;
   // After the list loads, convert again so autocorrect and word choice show in the output.
   void ensureWordList(wordListUrl, location.href, fetch).then((ok) => {
     updateHint();
     const now = switchesOf(config);
-    if (ok && (now.autocorrect || now.wordChoice)) render();
+    if (ok && (now.autocorrect || now.wordChoice || now.suffixChoice)) render();
   });
 }
 function wordKey(c: Completion): string {

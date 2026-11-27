@@ -129,6 +129,7 @@ export function switchesOf(text: string): {
   doubleV: boolean;
   habitKeys: boolean;
   wordChoice: boolean;
+  suffixChoice: boolean;
   /** Classic preset, but overrides turn a smart feature on. */
   classicWithFeatures: boolean;
 } {
@@ -142,7 +143,8 @@ export function switchesOf(text: string): {
     doubleV: r.double_v,
     habitKeys: r.habit_keys,
     wordChoice: r.word_choice,
-    classicWithFeatures: r.classic && (r.smart_vowels || r.abbreviations || r.completion || r.autocorrect || r.double_v || r.habit_keys || r.word_choice),
+    suffixChoice: r.suffix_choice,
+    classicWithFeatures: r.classic && (r.smart_vowels || r.abbreviations || r.completion || r.autocorrect || r.double_v || r.habit_keys || r.word_choice || r.suffix_choice),
   };
   r.free();
   return out;
