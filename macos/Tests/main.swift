@@ -22,12 +22,22 @@ final class FakeClient: TextClient {
     var marked = ""      // marked text
     var cursor = 0
     var beeps = 0
+    var canReplace = true
+    var inserts: [(String, Int)] = []          // insert calls
+    var replaces: [(String, Int, Int)] = []    // text, cursor, replacingBefore
     func insert(_ s: String, deleteBefore: Int) {
+        inserts.append((s, deleteBefore))
         marked = ""
         text.removeLast(deleteBefore)
         text += s
     }
     func setMarked(_ s: String, cursor: Int) { marked = s; self.cursor = cursor }
+    func setMarked(_ s: String, cursor: Int, replacingBefore n: Int) {
+        replaces.append((s, cursor, n))
+        text.removeLast(n)
+        marked = s
+        self.cursor = cursor
+    }
     func clearMarked() { marked = "" }
     func beep() { beeps += 1 }
     var visible: String { text + marked }
@@ -125,6 +135,29 @@ do {
     expect(used, true, "Backspace after a space is used")
     expect(c.text, "", "the committed word is deleted")
     expect(c.marked, "тов", "the word is marked again")
+    // One call replaces the old text with the marked text.
+    expect(c.replaces.count, 1, "one replace-marked call")
+    expect(c.replaces.first?.0 ?? "", "тов", "the call has the word")
+    expect(c.replaces.first?.2 ?? 0, 4, "the call replaces the word and the space")
+    expect(c.inserts.count, 1, "only the insert from the Space key")
+}
+
+do {
+    // The text field cannot report the caret: Backspace goes to the application.
+    let c = FakeClient()
+    c.canReplace = false
+    let s = session()
+    type("tov ", into: s, c)
+    let used = s.handle(keyCode: 51, characters: "\u{7F}", mods: Mods(), client: c)
+    expect(used, false, "Backspace is not used without a caret")
+    expect(c.marked, "", "no marked text without a caret")
+    expect(c.replaces.count, 0, "no replace call without a caret")
+    expect(s.engine.isComposing, false, "the word stays closed")
+    // Backspace while composing still works.
+    type("sain", into: s, c)
+    let used2 = s.handle(keyCode: 51, characters: "\u{7F}", mods: Mods(), client: c)
+    expect(used2, true, "Backspace edits the preedit without a caret")
+    expect(c.marked, "сай", "the preedit loses a letter")
 }
 
 do {
