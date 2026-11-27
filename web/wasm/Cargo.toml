@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 buuz-core = { path = "../../core" }
-wasm-bindgen = "0.2"
+wasm-bindgen = "=0.2.130"
 
 [profile.release]
 opt-level = 3
