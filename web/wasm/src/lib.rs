@@ -173,6 +173,7 @@ pub struct ConfigReport {
     habit_keys: bool,
     word_choice: bool,
     suffix_choice: bool,
+    rounding_harmony: bool,
 }
 
 #[wasm_bindgen]
@@ -236,6 +237,12 @@ impl ConfigReport {
     pub fn suffix_choice(&self) -> bool {
         self.suffix_choice
     }
+
+    /// Rounding harmony (о for а after a first о, by the word list) is on after the preset and overrides.
+    #[wasm_bindgen(getter)]
+    pub fn rounding_harmony(&self) -> bool {
+        self.rounding_harmony
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -262,6 +269,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         habit_keys: o.habit_keys,
         word_choice: o.word_choice,
         suffix_choice: o.suffix_choice,
+        rounding_harmony: o.rounding_harmony,
     })
 }
 
@@ -301,7 +309,7 @@ pub fn config_remove_key(text: &str, key: &str) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys`, `word_choice` or `suffix_choice` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys`, `word_choice`, `suffix_choice` or `rounding_harmony` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -323,6 +331,9 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         "habit_keys" => config.set_habit_keys((value != base.habit_keys).then_some(value)),
         "word_choice" => config.set_word_choice((value != base.word_choice).then_some(value)),
         "suffix_choice" => config.set_suffix_choice((value != base.suffix_choice).then_some(value)),
+        "rounding_harmony" => {
+            config.set_rounding_harmony((value != base.rounding_harmony).then_some(value))
+        }
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -355,14 +366,14 @@ fn options_of(config_text: &str) -> Result<buuz_core::Options, String> {
 }
 
 /// Transliterate with the options of a config text. The error is a tagged
-/// string (see above). With autocorrect, word choice or suffix choice on, the loaded word list (`load_word_list`)
+/// string (see above). With autocorrect, word choice, suffix choice or rounding harmony on, the loaded word list (`load_word_list`)
 /// goes into the options, so a word that Space or punctuation ends is
 /// corrected as in the core (sections 13 and 13.1). A newline does not
 /// correct. Without a list, nothing changes.
 #[wasm_bindgen]
 pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
     let mut opts = options_of(config_text)?;
-    if opts.autocorrect || opts.word_choice || opts.suffix_choice {
+    if opts.autocorrect || opts.word_choice || opts.suffix_choice || opts.rounding_harmony {
         opts.words = WORDS.with(|w| w.borrow().clone());
         opts.user = user_snapshot();
     }
@@ -1067,6 +1078,34 @@ mod tests {
         );
         let off = super::config_set_option(&no_choice, "suffix_choice", false).unwrap();
         assert_eq!(super::convert_with_config("usiin ", &off).unwrap(), "усын ");
+    }
+
+    #[test]
+    fn rounding_harmony_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().rounding_harmony());
+        let off = super::config_set_option(&cfg, "rounding_harmony", false).unwrap();
+        assert!(off.contains("rounding_harmony = false"));
+        assert!(!super::config_normalize(&off).unwrap().rounding_harmony());
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic)
+            .unwrap()
+            .rounding_harmony());
+    }
+
+    #[test]
+    fn rounding_harmony_converts_with_the_loaded_list() {
+        let cfg = super::default_config_text();
+        super::load_word_list("болсон\t500\nболсан\t3\n").unwrap();
+        assert_eq!(
+            super::convert_with_config("bolsan ", &cfg).unwrap(),
+            "болсон "
+        );
+        let off = super::config_set_option(&cfg, "rounding_harmony", false).unwrap();
+        assert_eq!(
+            super::convert_with_config("bolsan ", &off).unwrap(),
+            "болсан "
+        );
     }
 
     #[test]

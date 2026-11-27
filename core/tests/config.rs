@@ -774,6 +774,7 @@ fn adr_example_parses() {
     assert_eq!(c.double_v(), Some(true));
     assert_eq!(c.habit_keys(), Some(true));
     assert_eq!(c.suffix_choice(), Some(true));
+    assert_eq!(c.rounding_harmony(), Some(true));
     assert_eq!(
         c.abbreviation_entries(),
         pairs(&[("mgl", "Монгол"), ("bn", "байна аа"), ("tgd", "")])
@@ -880,4 +881,39 @@ fn generated_inputs_never_panic_and_round_trip() {
     }
     // The loop must reach the accepted path often, or it tests nothing.
     assert!(accepted > 2_000, "only {accepted} accepted");
+}
+
+#[test]
+fn rounding_harmony_key_round_trips() {
+    let mut c = Config::default();
+    assert_eq!(c.rounding_harmony(), None);
+    c.set_rounding_harmony(Some(true));
+    let text = c.to_text();
+    assert!(text.contains("rounding_harmony = true"));
+    assert_eq!(Config::parse(&text).unwrap().config, c);
+    let off = "buuz_config = 1\n[options]\nrounding_harmony = false\n";
+    let p = Config::parse(off).unwrap();
+    assert!(p.warnings.is_empty());
+    assert_eq!(p.config.rounding_harmony(), Some(false));
+    assert!(!p.config.options().rounding_harmony);
+    assert!(Config::default().options().rounding_harmony);
+    let dup = "buuz_config = 1\n[options]\nrounding_harmony = true\nrounding_harmony = false\n";
+    assert!(Config::parse(dup).is_err());
+}
+
+#[test]
+fn rounding_harmony_needs_the_word_list() {
+    let mut c = Config::parse(
+        "buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\nsuffix_choice = false\n",
+    )
+    .unwrap()
+    .config;
+    assert!(
+        c.needs_word_list(),
+        "rounding harmony is on in the smart preset"
+    );
+    c.set_rounding_harmony(Some(false));
+    assert!(!c.needs_word_list());
+    c.set_rounding_harmony(Some(true));
+    assert!(c.needs_word_list());
 }

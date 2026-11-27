@@ -288,9 +288,9 @@ fn config_switch_follows_the_preset() {
     assert!(classic.needs_word_list());
     smart.options(); // options() never loads data
     assert!(smart.options().words.is_none());
-    // Word choice and suffix choice also need the list, so turn them off too.
+    // Word choice, suffix choice and rounding harmony also need the list, so turn them off too.
     let parsed = Config::parse(
-        "buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\nsuffix_choice = false\n",
+        "buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\nsuffix_choice = false\nrounding_harmony = false\n",
     )
     .unwrap()
     .config;

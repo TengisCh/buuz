@@ -120,8 +120,10 @@ fn off_in_classic_mode_or_without_list() {
     };
     assert_eq!(commit(classic, "hotaas"), "хотаас");
     assert_eq!(commit(Options::smart(), "hotaas"), "хотаас");
+    // Rounding harmony would also change хотаас, so it is off here.
     let off = Options {
         suffix_choice: false,
+        rounding_harmony: false,
         ..real()
     };
     assert_eq!(commit(off, "hotaas"), "хотаас");
@@ -478,7 +480,7 @@ fn config_round_trip_and_duplicate_key() {
 #[test]
 fn suffix_choice_needs_the_word_list() {
     let mut c =
-        Config::parse("buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\n")
+        Config::parse("buuz_config = 1\n[options]\ncompletion = false\nword_choice = false\nrounding_harmony = false\n")
             .unwrap()
             .config;
     assert!(
