@@ -63,3 +63,35 @@ node --test tools/wordlist/test
 ```
 
 It runs the builder on `test/fixture.xml`, a tiny made-up dump.
+
+## Suffix review table
+
+`suffixes.mjs` mines case-suffix patterns from `mn.txt` (issue #52). A native
+speaker reviews the result. Node only, no dependency.
+
+```sh
+node tools/wordlist/suffixes.mjs data/wordlist/mn.txt > /tmp/suffix-review.tsv
+```
+
+The script finds listed words that are a listed stem plus a suffix variant. It
+covers the genitive, accusative, ablative and comitative families. It groups
+the pairs by family, stem class and gender. Each row gives the variant, the
+number of pairs, the weight (sum of word counts), the share of the weight in
+the group and up to three examples.
+
+Do not commit the TSV. Make a new one when you need it. The family tables in
+`suffixes.mjs` must stay the same as the planned `core/src/suffix_choice.rs` (issue #52).
+
+Rules and limits of the table:
+
+- The script never parses the one-letter variants `н` and `г`.
+- A parse is `ambiguous` when its variant starts with `г` or `н` and the stem
+  plus that letter is also a listed word (`ба` + `гийн` and `баг` + `ийн` for
+  `багийн`). These rows have `stem_class` `ambiguous` and stay out of the
+  shares of the other groups.
+- Gender names are `masculine`, `masculine_o`, `feminine`, `feminine_ö` and
+  `neutral`.
+- Stems that end in `я`, `е`, `ё` or `ю` count as vowel letters. A long
+  vowel such as `яа` shows as `diphthong`.
+- Plurals (`-ууд`) and loanwords can fall into an unexpected gender group.
+- Two suffixes in a row (`байсны` + `г`) are out of scope.
