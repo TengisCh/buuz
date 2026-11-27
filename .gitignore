@@ -25,3 +25,6 @@ pkg/
 .env.*
 .claude/settings.local.json
 windows/installer/output/
+
+# Suffix review table (tools/wordlist/suffixes.mjs)
+suffix-review.tsv

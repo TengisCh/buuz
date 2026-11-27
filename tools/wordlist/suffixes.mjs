@@ -28,10 +28,11 @@ export const COLUMNS = [
   "examples",
 ];
 
-// These family tables must stay the same as core/src/suffix_choice.rs.
+// These family tables must stay the same as the planned core/src/suffix_choice.rs
+// (issue #52). The one-letter variants н and г are left out on purpose (guard G1).
 export const FAMILIES = {
-  genitive: ["гийн", "ийн", "ын", "ний", "ны", "н"],
-  accusative: ["гийг", "ийг", "ыг", "г"],
+  genitive: ["гийн", "ийн", "ын", "ний", "ны"],
+  accusative: ["гийг", "ийг", "ыг"],
   ablative: [
     "аас", "оос", "ээс", "өөс",
     "наас", "ноос", "нээс", "нөөс",
@@ -67,7 +68,9 @@ export function parseList(text) {
 /**
  * Find the (stem, family, variant) pairs. Per family, one word gets at most
  * one parse: the longest variant whose stem is listed. Guard G2: a variant
- * that starts with г needs a stem that ends in a vowel letter.
+ * that starts with г needs a stem that ends in a vowel letter. Guard G3: a
+ * parse is `ambiguous` when its variant starts with г or н and stem + that
+ * letter is also listed. One-letter variants are never parsed (guard G1).
  */
 export function findPairs(words) {
   const pairs = [];
@@ -77,8 +80,11 @@ export function findPairs(words) {
         if (!word.endsWith(variant)) continue;
         const stem = word.slice(0, word.length - variant.length);
         if (stem.length < MIN_STEM || !words.has(stem)) continue;
-        if (variant.startsWith("г") && !VOWELS.has(stem.at(-1))) continue;
-        pairs.push({ word, stem, family, variant, count });
+        const lead = variant[0];
+        if (lead === "г" && !VOWELS.has(stem.at(-1))) continue;
+        // Guard G3: the stem's own final г or н may belong to the variant.
+        const ambiguous = (lead === "г" || lead === "н") && words.has(stem + lead);
+        pairs.push({ word, stem, family, variant, count, ambiguous });
         break;
       }
     }
@@ -106,10 +112,10 @@ export function stemClass(stem) {
 /** Gender of the stem: its first deciding vowel. */
 export function gender(stem) {
   for (const ch of stem) {
-    if (ch === "о" || ch === "ё") return "o";
-    if (ch === "ө") return "ö";
-    if (BACK.has(ch)) return "back";
-    if (FRONT.has(ch)) return "front";
+    if (ch === "о" || ch === "ё") return "masculine_o";
+    if (ch === "ө") return "feminine_ö";
+    if (BACK.has(ch)) return "masculine";
+    if (FRONT.has(ch)) return "feminine";
   }
   return "neutral";
 }
@@ -122,7 +128,7 @@ function cmp(a, b) {
 export function group(pairs) {
   const groups = new Map();
   for (const p of pairs) {
-    const sc = stemClass(p.stem);
+    const sc = p.ambiguous ? "ambiguous" : stemClass(p.stem);
     const g = gender(p.stem);
     const gkey = `${p.family}\t${sc}\t${g}`;
     let entry = groups.get(gkey);
