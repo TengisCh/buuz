@@ -792,7 +792,7 @@ the word list. It is on in smart mode and off in classic mode.
 - **Switch.** `Options::suffix_choice` (config `[options] suffix_choice`). It
   needs `Options::words`. Without a list, nothing changes.
   `Config::needs_word_list()` is true when it is on. The web converter has
-  no switch yet. The config key works in every shell. Rounding harmony
+  a switch in the settings dialog. The config key works in every shell. Rounding harmony
   (13.3) can still round the suffix when this switch is off.
 - **When it runs.** Once per word, at Space or punctuation, with the same
   skip rules as autocorrect: the word has 3 to 16 letters, a capital after
@@ -873,7 +873,8 @@ the word list changes the vowel of a later syllable. `bolsan` gives
 - **Switch.** `Options::rounding_harmony` (config `[options]
   rounding_harmony`). It needs `Options::words`. Without a list, nothing
   changes. `Config::needs_word_list()` is true when it is on. The web
-  converter has no switch yet. The config key works in every shell.
+  converter has a switch in the settings dialog. The config key works in
+  every shell.
 - **Overlap with suffix choice.** Rounding harmony also rounds an ablative
   or a comitative suffix. With suffix choice off, `hotaas` still gives
   `хотоос`. To keep `хотаас`, turn both switches off.

@@ -41,7 +41,7 @@ test("old keys migrate into a config, which is saved; the old keys go", () => {
   const cfg = loadConfig(store);
   assert.equal(store.getItem(CONFIG_KEY), cfg);
   assert.equal(store.data.has("buuz.mode") || store.data.has("buuz.smart") || store.data.has("buuz.abbr"), false);
-  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, wordChoice: false, suffixChoice: false, classicWithFeatures: false });
+  assert.deepEqual(switchesOf(cfg), { classic: true, smartVowels: false, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, wordChoice: false, suffixChoice: false, roundingHarmony: false, classicWithFeatures: false });
   assert.equal(convert_with_config("unee", cfg), "унээ");
 });
 
@@ -56,6 +56,7 @@ test("each old key migrates on its own", () => {
     habitKeys: true,
     wordChoice: true,
     suffixChoice: true,
+    roundingHarmony: true,
     classicWithFeatures: false,
   });
   const abbr = migrateLegacy((k) => (k === "buuz.abbr" ? "off" : null));
@@ -168,7 +169,7 @@ test("a corrupt saved config is kept in buuz.config.bad before the default is us
 
 test("classic with overrides that turn smart features on is reported", () => {
   const s = switchesOf('buuz_config = 1\npreset = "classic"\n[options]\nsmart_vowels = true\n');
-  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, wordChoice: false, suffixChoice: false, classicWithFeatures: true });
+  assert.deepEqual(s, { classic: true, smartVowels: true, abbreviations: false, completion: false, autocorrect: false, doubleV: false, habitKeys: false, wordChoice: false, suffixChoice: false, roundingHarmony: false, classicWithFeatures: true });
 });
 
 test("the size limit has one wording, and entry counts have their own message", () => {
