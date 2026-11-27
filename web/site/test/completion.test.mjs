@@ -146,3 +146,16 @@ test("suffix choice: the converter fixes the case ending with the list, and the 
   const classicOn = config_set_option(classic, "suffix_choice", true);
   assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
+
+test("rounding harmony: the converter rounds the suffix with the list, and the switch turns it off", () => {
+  assert.equal(switchesOf(cfg).roundingHarmony, true);
+  load_word_list("# t\nболсон\t500\nболсан\t3\n");
+  assert.equal(convert_with_config("bolsan ", cfg), "болсон ");
+  const off = config_set_option(cfg, "rounding_harmony", false);
+  assert.equal(switchesOf(off).roundingHarmony, false);
+  assert.equal(convert_with_config("bolsan ", off), "болсан ");
+  const classic = config_set_classic(cfg, true);
+  assert.equal(switchesOf(classic).roundingHarmony, false);
+  const classicOn = config_set_option(classic, "rounding_harmony", true);
+  assert.equal(switchesOf(classicOn).classicWithFeatures, true);
+});

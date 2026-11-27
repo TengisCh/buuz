@@ -53,6 +53,9 @@ const mn = {
   suffixChoice: "Нөхцөл дагавар сонгох",
   suffixChoiceHint:
     "Тийн ялгалын нөхцөлийг үгийн жагсаалтаас харж засна: usiin → усны, hotaas → хотоос.",
+  roundingHarmony: "Хэлбэрийн зохицол",
+  roundingHarmonyHint:
+    "Эхний эгшиг о, ө бол дагаврын а, э-г үгийн жагсаалтаас харж о, ө болгоно: bolsan → болсон, ogsen → өгсөн.",
   schemeLabel: "Бичих хэл",
   schemeMn: "Монгол (үндсэн)",
   schemeHint: "Өөр кирилл хэлээр латин үсгээр бичих бол тэр хэлээ сонгоорой. Тэгвэл хуудас тухайн хэлний бичих зуршлаар хөрвүүлнэ (zh → ж). Монгол хэл үндсэн бөгөөд Buuz-ийн дүрмээр бичнэ.",
@@ -302,6 +305,9 @@ const en: Record<Key, string> = {
   suffixChoice: "Suffix choice",
   suffixChoiceHint:
     "Fixes the case ending from the word list: usiin → усны, hotaas → хотоос.",
+  roundingHarmony: "Rounding harmony",
+  roundingHarmonyHint:
+    "After о or ө, uses the word list to round а and э in the suffix: bolsan → болсон, ogsen → өгсөн.",
   schemeLabel: "Language to type",
   schemeMn: "Mongolian (default)",
   schemeHint:
@@ -745,6 +751,9 @@ const ru: Record<Key, string> = {
   suffixChoice: "Подбирать окончания",
   suffixChoiceHint:
     "Исправляет падежное окончание по списку слов: usiin → усны, hotaas → хотоос.",
+  roundingHarmony: "Губная гармония",
+  roundingHarmonyHint:
+    "После о или ө заменяет а и э в суффиксе на о и ө по списку слов: bolsan → болсон, ogsen → өгсөн.",
   schemeLabel: "Язык набора",
   schemeMn: "Монгольский (по умолчанию)",
   schemeHint:
