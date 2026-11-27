@@ -30,6 +30,7 @@ use crate::rules::{
     rules, to_lower, Rule, RuleSet, GUI_STEMS, II_FINAL_STEMS, KEEP_II, X_AC, X_DV, X_F, X_HK,
     X_II, X_M, X_MF, X_MM,
 };
+use crate::suffix_choice;
 use crate::userdict::{Learned, UserSnapshot};
 use crate::wordlist::WordList;
 
@@ -183,6 +184,14 @@ pub struct Options {
     /// Backspace right after the Space undoes it. `true` in smart mode,
     /// `false` in classic mode.
     pub word_choice: bool,
+    /// Suffix choice: when Space or punctuation ends a word with a case
+    /// suffix (genitive, accusative, ablative, comitative), commit the suffix
+    /// form that the word list clearly prefers (`hotaas` gives `хотоос`,
+    /// `usaas` gives `уснаас`). It also changes a listed word when another
+    /// form is much more common (`усын` 12 gives `усны` 3131). Active only
+    /// with `words` set. Backspace right after the Space undoes it. `true` in
+    /// smart mode, `false` in classic mode.
+    pub suffix_choice: bool,
 }
 
 impl Default for Options {
@@ -201,6 +210,7 @@ impl Default for Options {
             double_v: true,
             habit_keys: true,
             word_choice: true,
+            suffix_choice: true,
         }
     }
 }
@@ -224,6 +234,7 @@ impl Options {
             double_v: true,
             habit_keys: true,
             word_choice: true,
+            suffix_choice: true,
         }
     }
 
@@ -244,6 +255,7 @@ impl Options {
             double_v: false,
             habit_keys: false,
             word_choice: false,
+            suffix_choice: false,
         }
     }
 }
@@ -1163,7 +1175,11 @@ impl Composer {
             return Some(text);
         }
         let words = match &self.opts.words {
-            Some(w) if self.opts.autocorrect || self.opts.word_choice => w,
+            Some(w)
+                if self.opts.autocorrect || self.opts.word_choice || self.opts.suffix_choice =>
+            {
+                w
+            }
             _ => return None,
         };
         if !may_correct || self.no_correct || self.latin || self.run_latin || self.reseeded {
@@ -1187,17 +1203,33 @@ impl Composer {
                 self.opts.user.as_deref(),
                 &mut self.fix,
             );
-            if chosen.is_some() || !self.opts.autocorrect {
+            if chosen.is_some() {
                 return chosen;
             }
         }
-        autocorrect::correct(
-            words,
-            &self.comp,
-            &self.rejected,
-            self.opts.user.as_deref(),
-            &mut self.fix,
-        )
+        if self.opts.autocorrect {
+            let fixed = autocorrect::correct(
+                words,
+                &self.comp,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+            if fixed.is_some() {
+                return fixed;
+            }
+        }
+        if self.opts.suffix_choice {
+            return suffix_choice::choose(
+                words,
+                &self.comp,
+                &self.read,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+        }
+        None
     }
 
     /// The particle typed short: in smart mode a lone `u` right after a word

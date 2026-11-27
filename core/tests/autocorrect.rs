@@ -368,6 +368,9 @@ fn config_switch_and_word_list_need() {
     // Word choice is on in smart mode and also needs the list.
     assert!(smart.needs_word_list());
     smart.set_word_choice(Some(false));
+    // Suffix choice is on in smart mode and needs the list too.
+    assert!(smart.needs_word_list());
+    smart.set_suffix_choice(Some(false));
     assert!(!smart.needs_word_list());
     smart.set_autocorrect(Some(true));
     assert!(smart.needs_word_list());

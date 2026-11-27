@@ -71,7 +71,7 @@ pub struct BuuzOutcome {
     pub consumed: bool,
     /// The composition is full and the key was refused.
     pub rejected: bool,
-    /// The commit holds a word that word choice or autocorrect changed.
+    /// The commit holds a word that word choice, autocorrect or suffix choice changed.
     /// Backspace right after the Space undoes the change.
     pub corrected: bool,
     /// Characters (Unicode scalars) before the caret that the application
@@ -156,7 +156,7 @@ pub unsafe extern "C" fn buuz_word_list_free(words: *mut BuuzWordList) {
 
 /// Make a composer from a portable config text (`docs/decisions/0005`).
 /// A null `config` gives the smart defaults. `words` may be null; the
-/// features that need words (completion, word choice, autocorrect) are then
+/// features that need words (completion, word choice, suffix choice, autocorrect) are then
 /// off. Gives null when the config is not UTF-8 or not valid. Free the result
 /// with `buuz_composer_free`.
 ///

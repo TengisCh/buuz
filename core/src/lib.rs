@@ -31,6 +31,7 @@ mod config;
 mod keys;
 mod rules;
 mod scheme;
+mod suffix_choice;
 mod userdict;
 mod wordlist;
 

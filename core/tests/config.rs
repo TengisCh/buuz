@@ -773,6 +773,7 @@ fn adr_example_parses() {
     assert_eq!(c.auto_latin(), Some(true));
     assert_eq!(c.double_v(), Some(true));
     assert_eq!(c.habit_keys(), Some(true));
+    assert_eq!(c.suffix_choice(), Some(true));
     assert_eq!(
         c.abbreviation_entries(),
         pairs(&[("mgl", "Монгол"), ("bn", "байна аа"), ("tgd", "")])

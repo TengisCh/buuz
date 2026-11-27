@@ -686,6 +686,8 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
 - **Choice.** The winner has the highest count. It needs a count of at least
   50, and a count at least 3 times the next candidate's. A single candidate
   needs only the count of 50. Otherwise the word stays as typed.
+- **Order.** Word choice (13.1) runs first, then autocorrect, then suffix
+  choice (13.2). The first one that changes the word ends the search.
 - **Case.** A leading capital stays (`Хуухэд` gives `Хүүхэд`).
 - **Undo.** Backspace right after the Space reopens the word with its raw
   keys (section 8) and shows the typed conversion. The word goes into the
@@ -768,7 +770,9 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
   The дээ/даа split uses a short list, because -дээ/-даа is also a case
   ending (`ajildaa` stays ажилдаа). A listed word never splits
   (`тиймдээ`). Backspace right after the Space undoes the split.
-- **Autocorrect.** When both are on, word choice runs first.
+- **Autocorrect.** When both are on, word choice runs first. The order is
+  word choice, then autocorrect, then suffix choice (13.2). The first one
+  that changes the word ends the search.
 - **Whole-text converters.** `convert_with` and the website also choose the
   word before a new line and the last word of the text. Autocorrect does
   not run there. So `uvul` alone gives `өвөл`, but `delgur` stays `дэлгүр`
@@ -776,6 +780,85 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
 - **Capitals.** A word with only its first letter in capitals keeps that
   form: `Udur` gives `Өдөр`. A word in all capitals stays in all capitals:
   `UVUL` gives `ӨВӨЛ`. Other mixed case stays as typed.
+
+### 13.2 Suffix choice (issue #52)
+
+Suffix choice is a smart feature. It picks the case suffix of a word with
+the word list. It is on in smart mode and off in classic mode.
+
+- **Switch.** `Options::suffix_choice` (config `[options] suffix_choice`). It
+  needs `Options::words`. Without a list, nothing changes.
+  `Config::needs_word_list()` is true when it is on. The web converter has
+  no switch yet. The config key works in every shell.
+- **When it runs.** Once per word, at Space or punctuation, with the same
+  skip rules as autocorrect: the word has 3 to 16 letters, a capital after
+  the first letter stops it, and the rejected set and the personal
+  dictionary (section 14) keep a word as typed. Only Space arms the undo.
+  Enter and the end of the text do not run it. Backspace right after the
+  Space undoes it, and the word goes into the rejected set.
+- **Order.** Word choice, then autocorrect, then suffix choice. The first one
+  that changes the word ends the search.
+- **Cases.** The word has a stem of at least 2 letters and one suffix:
+
+  | Case | Suffixes | Forms with hidden н | Forms with г |
+  | --- | --- | --- | --- |
+  | Genitive | `ийн` `ын` | `ний` `ны` `н` | `гийн` |
+  | Accusative | `ийг` `ыг` | none | `гийг` `г` |
+  | Ablative | `аас` `оос` `ээс` `өөс` | `наас` `ноос` `нээс` `нөөс` | `гаас` `гоос` `гээс` `гөөс` |
+  | Comitative | `тай` `той` `тэй` | none | none |
+
+- **Guard G1.** A one-letter suffix (`н`, `г`) is never read from the typed
+  word. It is a candidate only when the typed word is not in the list. So
+  `нэгийг` has no stem `нэ`.
+- **Guard G2.** A form with `г`, and a one-letter suffix, needs a stem that
+  ends in a long vowel, a diphthong, or a vowel and `й` (`тоо`, `ширээ`,
+  `ай`). `я`, `е`, `ё` and `ю` do not count as the first letter of the pair,
+  so `ая` is not long. After other stems the `г` or `н` belongs to the stem:
+  `зарлагийн` becomes `зарлагын`, not `зарлан`, and `аягийг` does not become
+  `аяыг`.
+- **Step 1, the other forms.** The search tries each reading of the typed
+  word. For each stem it asks the list for the stem with every other suffix
+  of the same case. All harmony variants are candidates. All candidates share
+  one tally. The winner has a count of at least 50, at least 3 times the next
+  candidate, and at least 50 times the typed word (0 if unlisted). This is the
+  rule of word choice. If a candidate is listed and none wins, the word stays.
+- **Common word stays.** A typed word with a count of 50 or more always
+  stays, so `сарны` (324) stays against `сарын` (44902). `усын` (12) still
+  becomes `усны` (3131).
+- **Step 2, hidden н and г.** This step runs only when the typed word and
+  all candidates are unlisted. It looks at other listed forms of the stem.
+  The stem must be a listed word itself: `оюутны` is not `оюут` + `ны`.
+  Evidence for hidden н: `S` + `ны` or `ний` after a consonant, or
+  `S` + `н` + an ablative suffix. Evidence for `г`: the stem ends in a long vowel
+  and `S` + `гийн`, `гийг` or `г` + an ablative suffix is listed. The score of
+  a type is its highest count. A type wins with a score of 50 or more, and 3
+  times the other type. The result keeps the typed vowels: `усаас` gives
+  `уснаас`, `баанаас` gives `баагаас`. The accusative gets no hidden н. The
+  comitative has no step 2.
+- **Guard G3.** In step 2, a form `S` + `г` (or `S` + `н`) is no evidence when
+  `S` + `г` (or `S` + `н`) is itself a listed word. Then the `г` or `н` most
+  likely belongs to the stem: `багийн` is `баг` + `ийн`, not `ба` + `гийн`.
+- **Genitive target.** A typed `гийн` has no vowel to keep. Step 2 then takes
+  `ны` after a back stem vowel (а, о, у) and `ний` after a front one. The
+  vowel и does not count: `тоо` gives `тооны`.
+- **Hidden н stays.** The search never takes a hidden н out of a listed word.
+  When the typed word is listed and has the н form (`ны`, `ний`, `наас`,
+  `ноос`, `нээс`, `нөөс`), it does not change to the plain form. So `сарнаас`
+  and `эдний` stay. `усын` still becomes `усны`, and `хэлийн` becomes `хэлний`.
+- **One meaning.** Some stems take hidden н in only one meaning (`сарын` and
+  `сарны`, `цагийн` and `цагны`). Both forms are listed, so the 50 times rule
+  of step 1 keeps a typed `цагны` (43), because `цагийн` (1901) is not 50
+  times bigger.
+- **Forcing keys.** A word stays as typed when its last 5 raw keys hold `y`,
+  `iii` or `ii'` (section 4.2). These keys force ы or ий, so `surguulyn` stays
+  `сургуулын` even when the list has `сургуулийн`.
+- **Not covered.** Changes of the stem (`ажлын` for `ажилын`), stems the list
+  does not know, other cases, verb suffixes and words with two suffixes.
+- **Case of letters.** A leading capital stays (`Hotaas` gives `Хотоос`). A
+  word in all capitals stays as typed.
+- **Cost.** About 80 lookups at most, once per word. The buffers are
+  reused, so only the result allocates. A release-only test holds the 99th
+  percentile under 1 millisecond.
 
 ## 14. Personal dictionary
 
