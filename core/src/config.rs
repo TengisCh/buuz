@@ -80,6 +80,7 @@ pub struct Config {
     double_v: Option<bool>,
     habit_keys: Option<bool>,
     word_choice: Option<bool>,
+    suffix_choice: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -511,13 +512,14 @@ impl Config {
     }
 
     /// Whether the shell must load the word list and set [`Options::words`]:
-    /// true when completion, autocorrect or word choice is on (the override,
+    /// true when completion, autocorrect, word choice or suffix choice is on (the override,
     /// else the preset; autocorrect is off in both presets). `options()` cannot load
     /// data, so shells read this first.
     pub fn needs_word_list(&self) -> bool {
         self.completion.unwrap_or(self.preset == Preset::Smart)
             || self.autocorrect.unwrap_or(false)
             || self.word_choice.unwrap_or(self.preset == Preset::Smart)
+            || self.suffix_choice.unwrap_or(self.preset == Preset::Smart)
     }
 
     /// User abbreviations in file order, with lowercase keys. They go on top
@@ -572,6 +574,16 @@ impl Config {
     /// Set or clear the word choice override.
     pub fn set_word_choice(&mut self, value: Option<bool>) {
         self.word_choice = value;
+    }
+
+    /// Override for [`Options::suffix_choice`].
+    pub fn suffix_choice(&self) -> Option<bool> {
+        self.suffix_choice
+    }
+
+    /// Set or clear the suffix choice override.
+    pub fn set_suffix_choice(&mut self, value: Option<bool>) {
+        self.suffix_choice = value;
     }
 
     /// Set or clear the habit keys override.
@@ -722,6 +734,7 @@ impl Config {
                         | "double_v"
                         | "habit_keys"
                         | "word_choice"
+                        | "suffix_choice"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -775,7 +788,9 @@ impl Config {
                         "learning" => &mut config.learning,
                         "double_v" => &mut config.double_v,
                         "habit_keys" => &mut config.habit_keys,
-                        _ => &mut config.word_choice,
+                        "word_choice" => &mut config.word_choice,
+                        "suffix_choice" => &mut config.suffix_choice,
+                        _ => unreachable!("unknown option keys are skipped above"),
                     };
                     if slot.is_some() {
                         return Err(dup(line, &key));
@@ -835,6 +850,7 @@ impl Config {
             ("double_v", self.double_v),
             ("habit_keys", self.habit_keys),
             ("word_choice", self.word_choice),
+            ("suffix_choice", self.suffix_choice),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -902,6 +918,7 @@ impl Config {
             double_v: self.double_v.unwrap_or(base.double_v),
             habit_keys: self.habit_keys.unwrap_or(base.habit_keys),
             word_choice: self.word_choice.unwrap_or(base.word_choice),
+            suffix_choice: self.suffix_choice.unwrap_or(base.suffix_choice),
         }
     }
 }

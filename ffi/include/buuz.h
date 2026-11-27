@@ -49,7 +49,7 @@ enum {
 typedef struct BuuzOutcome {
     bool consumed;          /* false: pass the key on to the application */
     bool rejected;          /* the composition is full */
-    bool corrected;         /* word choice or autocorrect changed the commit */
+    bool corrected;         /* word choice, autocorrect or suffix choice changed it */
     uint32_t delete_before; /* in Unicode scalars */
     const char *commit;     /* UTF-8 or NULL; valid until the next call */
     size_t commit_len;      /* bytes, without the NUL */

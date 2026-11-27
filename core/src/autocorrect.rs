@@ -22,7 +22,7 @@ pub(crate) const MIN_LETTERS: usize = 3;
 pub(crate) const MAX_LETTERS: usize = 16;
 
 /// The smallest count a winner needs.
-const MIN_COUNT: u32 = 50;
+pub(crate) const MIN_COUNT: u32 = 50;
 
 /// The winner must be this many times more frequent than the next candidate.
 const CLEAR_FACTOR: u32 = 3;
@@ -34,21 +34,21 @@ pub(crate) const MAX_REJECTED: usize = 256;
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Scratch {
     /// The word in lower case.
-    word: Vec<char>,
+    pub(crate) word: Vec<char>,
     /// One edit buffer for each level of edits.
-    level: [Vec<char>; 2],
+    pub(crate) level: [Vec<char>; 2],
     /// The best candidate so far.
-    best: Vec<char>,
+    pub(crate) best: Vec<char>,
     /// The candidate as text, for the lookup.
-    text: String,
+    pub(crate) text: String,
     /// The candidate the user used most, for a tie.
     liked: Vec<char>,
 }
 
 /// The best candidate so far and the count of the next one.
-struct Tally {
-    top: u32,
-    second: u32,
+pub(crate) struct Tally {
+    pub(crate) top: u32,
+    pub(crate) second: u32,
 }
 
 /// The corrected word for `comp`, or `None` to leave it as typed. `comp` is
@@ -117,6 +117,16 @@ pub(crate) fn correct(
 /// typed when that word is listed too (`мөн` 20067 against `мон` 114; but
 /// `өөрийн` is only 12 times `уурын`, so `uuriin` stays).
 const PLAIN_FACTOR: u32 = 50;
+
+/// Whether the best candidate wins: it has the minimum count, is
+/// `CLEAR_FACTOR` times the next candidate, and is `PLAIN_FACTOR` times the
+/// word as typed (`plain`, 0 if unlisted). Word choice and suffix choice
+/// share this rule.
+pub(crate) fn clear_winner(top: u32, second: u32, plain: u32) -> bool {
+    top >= MIN_COUNT
+        && u64::from(top) >= u64::from(CLEAR_FACTOR) * u64::from(second)
+        && u64::from(top) >= u64::from(PLAIN_FACTOR) * u64::from(plain)
+}
 
 /// The most letters in a word that `choose` varies. Each `у` or `ү` has 3
 /// choices, each `о` has 2, so 5 letters give at most 243 lookups.
@@ -228,9 +238,7 @@ pub(crate) fn choose(
             break;
         }
     }
-    let clear = tally.top >= MIN_COUNT
-        && u64::from(tally.top) >= u64::from(CLEAR_FACTOR) * u64::from(tally.second)
-        && u64::from(tally.top) >= u64::from(PLAIN_FACTOR) * u64::from(plain);
+    let clear = clear_winner(tally.top, tally.second, plain);
     // No clear winner: the word the user used most breaks a tie between
     // candidates of similar rank. It never beats a clear winner.
     // Similar rank: within `CLEAR_FACTOR` of the word as typed when it is
@@ -364,7 +372,13 @@ fn note_use(
 }
 
 /// Look `cand` up and keep the best two distinct candidates.
-fn visit(words: &WordList, cand: &[char], text: &mut String, best: &mut Vec<char>, t: &mut Tally) {
+pub(crate) fn visit(
+    words: &WordList,
+    cand: &[char],
+    text: &mut String,
+    best: &mut Vec<char>,
+    t: &mut Tally,
+) {
     text.clear();
     text.extend(cand.iter());
     let Some(count) = words.count(text) else {

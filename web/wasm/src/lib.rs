@@ -172,6 +172,7 @@ pub struct ConfigReport {
     double_v: bool,
     habit_keys: bool,
     word_choice: bool,
+    suffix_choice: bool,
 }
 
 #[wasm_bindgen]
@@ -229,6 +230,12 @@ impl ConfigReport {
     pub fn word_choice(&self) -> bool {
         self.word_choice
     }
+
+    /// Suffix choice (the case suffix by the word list) is on after the preset and overrides.
+    #[wasm_bindgen(getter)]
+    pub fn suffix_choice(&self) -> bool {
+        self.suffix_choice
+    }
 }
 
 /// The default config (smart preset, no overrides) as text.
@@ -254,6 +261,7 @@ pub fn config_normalize(text: &str) -> Result<ConfigReport, String> {
         double_v: o.double_v,
         habit_keys: o.habit_keys,
         word_choice: o.word_choice,
+        suffix_choice: o.suffix_choice,
     })
 }
 
@@ -293,7 +301,7 @@ pub fn config_remove_key(text: &str, key: &str) -> Result<String, String> {
     Ok(config.to_text())
 }
 
-/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys` or `word_choice` and return the new canonical
+/// Switch `smart_vowels`, `abbreviations`, `completion`, `autocorrect`, `double_v`, `habit_keys`, `word_choice` or `suffix_choice` and return the new canonical
 /// text. A value equal to the preset's own is not written, so the default
 /// config stays free of overrides.
 #[wasm_bindgen]
@@ -314,6 +322,7 @@ pub fn config_set_option(text: &str, name: &str, value: bool) -> Result<String, 
         "double_v" => config.set_double_v((value != base.double_v).then_some(value)),
         "habit_keys" => config.set_habit_keys((value != base.habit_keys).then_some(value)),
         "word_choice" => config.set_word_choice((value != base.word_choice).then_some(value)),
+        "suffix_choice" => config.set_suffix_choice((value != base.suffix_choice).then_some(value)),
         _ => return Err(tag("unknown_option", 0, name)),
     }
     Ok(config.to_text())
@@ -346,14 +355,14 @@ fn options_of(config_text: &str) -> Result<buuz_core::Options, String> {
 }
 
 /// Transliterate with the options of a config text. The error is a tagged
-/// string (see above). With autocorrect or word choice on, the loaded word list (`load_word_list`)
+/// string (see above). With autocorrect, word choice or suffix choice on, the loaded word list (`load_word_list`)
 /// goes into the options, so a word that Space or punctuation ends is
 /// corrected as in the core (sections 13 and 13.1). A newline does not
 /// correct. Without a list, nothing changes.
 #[wasm_bindgen]
 pub fn convert_with_config(input: &str, config_text: &str) -> Result<String, String> {
     let mut opts = options_of(config_text)?;
-    if opts.autocorrect || opts.word_choice {
+    if opts.autocorrect || opts.word_choice || opts.suffix_choice {
         opts.words = WORDS.with(|w| w.borrow().clone());
         opts.user = user_snapshot();
     }
@@ -1034,6 +1043,30 @@ mod tests {
         assert!(!super::config_normalize(&classic).unwrap().double_v());
         let classic_on = super::config_set_option(&classic, "double_v", true).unwrap();
         assert!(super::config_normalize(&classic_on).unwrap().double_v());
+    }
+
+    #[test]
+    fn suffix_choice_option_is_switchable_and_reported() {
+        let cfg = super::default_config_text();
+        assert!(super::config_normalize(&cfg).unwrap().suffix_choice());
+        let off = super::config_set_option(&cfg, "suffix_choice", false).unwrap();
+        assert!(off.contains("suffix_choice = false"));
+        assert!(!super::config_normalize(&off).unwrap().suffix_choice());
+        let classic = super::config_set_classic(&cfg, true).unwrap();
+        assert!(!super::config_normalize(&classic).unwrap().suffix_choice());
+    }
+
+    #[test]
+    fn suffix_choice_converts_with_the_loaded_list() {
+        let cfg = super::default_config_text();
+        let no_choice = super::config_set_option(&cfg, "word_choice", false).unwrap();
+        super::load_word_list("усны\t3131\nусын\t12\n").unwrap();
+        assert_eq!(
+            super::convert_with_config("usiin ", &no_choice).unwrap(),
+            "усны "
+        );
+        let off = super::config_set_option(&no_choice, "suffix_choice", false).unwrap();
+        assert_eq!(super::convert_with_config("usiin ", &off).unwrap(), "усын ");
     }
 
     #[test]

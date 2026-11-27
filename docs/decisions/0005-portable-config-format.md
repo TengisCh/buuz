@@ -125,6 +125,7 @@ learning = true         # learns words you use (personal dictionary, stays on th
 double_v = true         # the key pair vv gives үү
 habit_keys = true       # the key pairs ts and zh give ц and ж
 word_choice = true      # the word list picks о or ө, у or ү or ө
+suffix_choice = true    # the word list picks the case ending, as in хотоос (needs the word list)
 
 # Added to the built-in list. Keys are not case sensitive.
 [abbreviations]
