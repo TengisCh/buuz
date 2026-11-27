@@ -63,3 +63,21 @@ node --test tools/wordlist/test
 ```
 
 It runs the builder on `test/fixture.xml`, a tiny made-up dump.
+
+## Suffix review table
+
+`suffixes.mjs` mines case-suffix patterns from `mn.txt` (issue #52). A native
+speaker reviews the result. Node only, no dependency.
+
+```sh
+node tools/wordlist/suffixes.mjs data/wordlist/mn.txt > suffix-review.tsv
+```
+
+The script finds listed words that are a listed stem plus a suffix variant. It
+covers the genitive, accusative, ablative and comitative families. It groups
+the pairs by family, stem class and gender. Each row gives the variant, the
+number of pairs, the weight (sum of word counts), the share of the weight in
+the group and up to three examples.
+
+Do not commit the TSV. Make a new one when you need it. The family tables in
+`suffixes.mjs` must stay the same as `core/src/suffix_choice.rs`.
