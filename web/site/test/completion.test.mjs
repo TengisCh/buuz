@@ -132,3 +132,17 @@ test("word choice: the converter picks ө or ү with the list, and the switch tu
   const classicOn = config_set_option(classic, "word_choice", true);
   assert.equal(switchesOf(classicOn).classicWithFeatures, true);
 });
+
+test("suffix choice: the converter fixes the case ending with the list, and the switch turns it off", () => {
+  assert.equal(switchesOf(cfg).suffixChoice, true);
+  load_word_list("# t\nус\t3038\nусны\t3131\nусын\t12\n");
+  const base = config_set_option(cfg, "word_choice", false);
+  assert.equal(convert_with_config("usiin ", base), "усны ");
+  const off = config_set_option(base, "suffix_choice", false);
+  assert.equal(switchesOf(off).suffixChoice, false);
+  assert.equal(convert_with_config("usiin ", off), "усын ");
+  const classic = config_set_classic(cfg, true);
+  assert.equal(switchesOf(classic).suffixChoice, false);
+  const classicOn = config_set_option(classic, "suffix_choice", true);
+  assert.equal(switchesOf(classicOn).classicWithFeatures, true);
+});
