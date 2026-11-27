@@ -26,6 +26,7 @@ use std::sync::Arc;
 use crate::abbrev::Abbreviations;
 use crate::autocorrect::{self, Scratch};
 use crate::keys::KeyMap;
+use crate::rounding;
 use crate::rules::{
     rules, to_lower, Rule, RuleSet, GUI_STEMS, II_FINAL_STEMS, KEEP_II, X_AC, X_DV, X_F, X_HK,
     X_II, X_M, X_MF, X_MM,
@@ -192,6 +193,13 @@ pub struct Options {
     /// with `words` set. Backspace right after the Space undoes it. `true` in
     /// smart mode, `false` in classic mode.
     pub suffix_choice: bool,
+    /// Rounding harmony: when Space or punctuation ends a word whose first
+    /// vowel is `о` or `ё` (or `ө`), change an `а` after it to `о` (an `э` to
+    /// `ө`) when the word list clearly prefers it (`bolsan` gives `болсон`,
+    /// `ogsen` gives `өгсөн`). Active only with `words` set. Backspace right
+    /// after the Space undoes it. `true` in smart mode, `false` in classic
+    /// mode.
+    pub rounding_harmony: bool,
 }
 
 impl Default for Options {
@@ -211,6 +219,7 @@ impl Default for Options {
             habit_keys: true,
             word_choice: true,
             suffix_choice: true,
+            rounding_harmony: true,
         }
     }
 }
@@ -235,6 +244,7 @@ impl Options {
             habit_keys: true,
             word_choice: true,
             suffix_choice: true,
+            rounding_harmony: true,
         }
     }
 
@@ -256,6 +266,7 @@ impl Options {
             habit_keys: false,
             word_choice: false,
             suffix_choice: false,
+            rounding_harmony: false,
         }
     }
 }
@@ -1176,7 +1187,10 @@ impl Composer {
         }
         let words = match &self.opts.words {
             Some(w)
-                if self.opts.autocorrect || self.opts.word_choice || self.opts.suffix_choice =>
+                if self.opts.autocorrect
+                    || self.opts.word_choice
+                    || self.opts.suffix_choice
+                    || self.opts.rounding_harmony =>
             {
                 w
             }
@@ -1220,10 +1234,22 @@ impl Composer {
             }
         }
         if self.opts.suffix_choice {
-            return suffix_choice::choose(
+            let chosen = suffix_choice::choose(
                 words,
                 &self.comp,
                 &self.read,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+            if chosen.is_some() {
+                return chosen;
+            }
+        }
+        if self.opts.rounding_harmony {
+            return rounding::choose(
+                words,
+                &self.comp,
                 &self.rejected,
                 self.opts.user.as_deref(),
                 &mut self.fix,
@@ -1251,23 +1277,41 @@ impl Composer {
         }
     }
 
-    /// Word choice for a word that the whole-text converter ends without a
-    /// Space or punctuation: at a new line or at the end of the text. Only
-    /// word choice runs here, not autocorrect, so a word that is still being
-    /// typed is not spelled again. On a choice the buffer is cleared.
+    /// Word choice and rounding harmony for a word that the whole-text
+    /// converter ends without a Space or punctuation: at a new line or at the
+    /// end of the text. Autocorrect and suffix choice do not run here, so a
+    /// word that is still being typed is not spelled again. On a choice the
+    /// buffer is cleared.
     fn choose_at_end(&mut self) -> Option<String> {
-        let words = self.opts.words.as_ref().filter(|_| self.opts.word_choice)?;
+        let words = self
+            .opts
+            .words
+            .as_ref()
+            .filter(|_| self.opts.word_choice || self.opts.rounding_harmony)?;
         if self.no_correct || self.latin || self.run_latin || self.reseeded || self.comp.is_empty()
         {
             return None;
         }
-        let chosen = autocorrect::choose(
-            words,
-            &self.comp,
-            &self.rejected,
-            self.opts.user.as_deref(),
-            &mut self.fix,
-        )?;
+        let mut chosen = None;
+        if self.opts.word_choice {
+            chosen = autocorrect::choose(
+                words,
+                &self.comp,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+        }
+        if chosen.is_none() && self.opts.rounding_harmony {
+            chosen = rounding::choose(
+                words,
+                &self.comp,
+                &self.rejected,
+                self.opts.user.as_deref(),
+                &mut self.fix,
+            );
+        }
+        let chosen = chosen?;
         self.clear_buffer();
         Some(chosen)
     }

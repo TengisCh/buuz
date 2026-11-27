@@ -81,6 +81,7 @@ pub struct Config {
     habit_keys: Option<bool>,
     word_choice: Option<bool>,
     suffix_choice: Option<bool>,
+    rounding_harmony: Option<bool>,
     abbreviation_entries: Vec<(String, String)>,
     keys: Vec<(String, String)>,
 }
@@ -512,7 +513,7 @@ impl Config {
     }
 
     /// Whether the shell must load the word list and set [`Options::words`]:
-    /// true when completion, autocorrect, word choice or suffix choice is on (the override,
+    /// true when completion, autocorrect, word choice, suffix choice or rounding harmony is on (the override,
     /// else the preset; autocorrect is off in both presets). `options()` cannot load
     /// data, so shells read this first.
     pub fn needs_word_list(&self) -> bool {
@@ -520,6 +521,9 @@ impl Config {
             || self.autocorrect.unwrap_or(false)
             || self.word_choice.unwrap_or(self.preset == Preset::Smart)
             || self.suffix_choice.unwrap_or(self.preset == Preset::Smart)
+            || self
+                .rounding_harmony
+                .unwrap_or(self.preset == Preset::Smart)
     }
 
     /// User abbreviations in file order, with lowercase keys. They go on top
@@ -584,6 +588,16 @@ impl Config {
     /// Set or clear the suffix choice override.
     pub fn set_suffix_choice(&mut self, value: Option<bool>) {
         self.suffix_choice = value;
+    }
+
+    /// Override for [`Options::rounding_harmony`].
+    pub fn rounding_harmony(&self) -> Option<bool> {
+        self.rounding_harmony
+    }
+
+    /// Set or clear the rounding harmony override.
+    pub fn set_rounding_harmony(&mut self, value: Option<bool>) {
+        self.rounding_harmony = value;
     }
 
     /// Set or clear the habit keys override.
@@ -735,6 +749,7 @@ impl Config {
                         | "habit_keys"
                         | "word_choice"
                         | "suffix_choice"
+                        | "rounding_harmony"
                 )
             {
                 warnings.push(ConfigWarning::UnknownOption { line, key });
@@ -790,6 +805,7 @@ impl Config {
                         "habit_keys" => &mut config.habit_keys,
                         "word_choice" => &mut config.word_choice,
                         "suffix_choice" => &mut config.suffix_choice,
+                        "rounding_harmony" => &mut config.rounding_harmony,
                         _ => unreachable!("unknown option keys are skipped above"),
                     };
                     if slot.is_some() {
@@ -851,6 +867,7 @@ impl Config {
             ("habit_keys", self.habit_keys),
             ("word_choice", self.word_choice),
             ("suffix_choice", self.suffix_choice),
+            ("rounding_harmony", self.rounding_harmony),
         ];
         if flags.iter().any(|(_, v)| v.is_some()) {
             s.push_str("\n[options]\n");
@@ -919,6 +936,7 @@ impl Config {
             habit_keys: self.habit_keys.unwrap_or(base.habit_keys),
             word_choice: self.word_choice.unwrap_or(base.word_choice),
             suffix_choice: self.suffix_choice.unwrap_or(base.suffix_choice),
+            rounding_harmony: self.rounding_harmony.unwrap_or(base.rounding_harmony),
         }
     }
 }

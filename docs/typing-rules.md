@@ -299,6 +299,8 @@ its own switch inside it. On the web converter the "Mode" switch under
 - **ий vs ы after г**, and stems that end in и beyond the short list above.
 - **Suffix spelling** (dropped vowels, ь before a suffix: `har'iin` stays
   харьийн). The suffix -гүй is the exception (section 4.4).
+- **Rounding harmony in a word with a first о or ө** (`bolsan`, `ogsen`).
+  The word list handles it at Space, not the harmony rule. See section 13.3.
 
 Background and sources: [issue #7](https://github.com/TengisCh/buuz/issues/7).
 
@@ -687,7 +689,8 @@ device. Stages 1 and 2 are free (`docs/architecture.md` section 7).
   50, and a count at least 3 times the next candidate's. A single candidate
   needs only the count of 50. Otherwise the word stays as typed.
 - **Order.** Word choice (13.1) runs first, then autocorrect, then suffix
-  choice (13.2). The first one that changes the word ends the search.
+  choice (13.2), then rounding harmony (13.3). The first one that changes
+  the word ends the search.
 - **Case.** A leading capital stays (`Хуухэд` gives `Хүүхэд`).
 - **Undo.** Backspace right after the Space reopens the word with its raw
   keys (section 8) and shows the typed conversion. The word goes into the
@@ -771,8 +774,8 @@ fewer kinds of edit. It is on in smart mode and off in classic mode.
   ending (`ajildaa` stays ажилдаа). A listed word never splits
   (`тиймдээ`). Backspace right after the Space undoes the split.
 - **Autocorrect.** When both are on, word choice runs first. The order is
-  word choice, then autocorrect, then suffix choice (13.2). The first one
-  that changes the word ends the search.
+  word choice, then autocorrect, then suffix choice (13.2), then rounding
+  harmony (13.3). The first one that changes the word ends the search.
 - **Whole-text converters.** `convert_with` and the website also choose the
   word before a new line and the last word of the text. Autocorrect does
   not run there. So `uvul` alone gives `өвөл`, but `delgur` stays `дэлгүр`
@@ -789,15 +792,16 @@ the word list. It is on in smart mode and off in classic mode.
 - **Switch.** `Options::suffix_choice` (config `[options] suffix_choice`). It
   needs `Options::words`. Without a list, nothing changes.
   `Config::needs_word_list()` is true when it is on. The web converter has
-  no switch yet. The config key works in every shell.
+  no switch yet. The config key works in every shell. Rounding harmony
+  (13.3) can still round the suffix when this switch is off.
 - **When it runs.** Once per word, at Space or punctuation, with the same
   skip rules as autocorrect: the word has 3 to 16 letters, a capital after
   the first letter stops it, and the rejected set and the personal
   dictionary (section 14) keep a word as typed. Only Space arms the undo.
   Enter and the end of the text do not run it. Backspace right after the
   Space undoes it, and the word goes into the rejected set.
-- **Order.** Word choice, then autocorrect, then suffix choice. The first one
-  that changes the word ends the search.
+- **Order.** Word choice, then autocorrect, then suffix choice, then
+  rounding harmony. The first one that changes the word ends the search.
 - **Cases.** The word has a stem of at least 2 letters and one suffix:
 
   | Case | Suffixes | Forms with hidden н | Forms with г |
@@ -859,6 +863,59 @@ the word list. It is on in smart mode and off in classic mode.
 - **Cost.** About 80 lookups at most, once per word. The buffers are
   reused, so only the result allocates. A release-only test holds the 99th
   percentile under 1 millisecond.
+
+### 13.3 Rounding harmony (issue #141)
+
+Rounding harmony is a smart feature. After a first syllable with о or ө,
+the word list changes the vowel of a later syllable. `bolsan` gives
+`болсон`. It is on in smart mode and off in classic mode.
+
+- **Switch.** `Options::rounding_harmony` (config `[options]
+  rounding_harmony`). It needs `Options::words`. Without a list, nothing
+  changes. `Config::needs_word_list()` is true when it is on. The web
+  converter has no switch yet. The config key works in every shell.
+- **Overlap with suffix choice.** Rounding harmony also rounds an ablative
+  or a comitative suffix. With suffix choice off, `hotaas` still gives
+  `хотоос`. To keep `хотаас`, turn both switches off.
+- **When it runs.** Once per word, at Space or punctuation, with the same
+  skip rules as word choice: the word has 3 to 16 letters, a capital after
+  the first letter stops it, and the rejected set and the personal
+  dictionary (section 14) keep a word as typed. Only Space arms the undo.
+- **Order.** Word choice, then autocorrect, then suffix choice, then
+  rounding harmony. The first one that changes the word ends the search.
+- **Candidates.** Find the first vowel of the lower-cased word (а э и о у ү
+  ө е ё ю я ы).
+  - After a first `о` or `ё`, each `а` may become `о`.
+  - After a first `ө`, each `э` may become `ө`.
+  - After any other first vowel, there are no candidates.
+  - The search starts after the first vowel and the `о`, `ё` or `ө` letters
+    right after it (`оо`, `өө`).
+  - The search stops at the first `у`, `ү` or `ю`. These letters block
+    rounding: `togluulsan` stays `тоглуулсан`.
+  - A word with more than 6 such letters stays as typed.
+  - Every non-empty combination of these letters is a candidate, at most 63.
+- **Guards.** After a first `ө`, the two `э` of a final `жээ` or `чээ` and
+  the `э` of a final `тэй` never change. So `өгчээ` and `төстэй` stay.
+- **Choice.** All candidates share one tally. The winner has a count of at
+  least 50, at least 3 times the next candidate, and at least 50 times the
+  typed word (0 if unlisted). This is the rule of word choice. A test on the
+  word list changed one listed word: `олан` (17) became `олон`.
+- **Whole-text converters.** `convert_with` and the website also run it on
+  the word before a new line and on the last word of the text, after word
+  choice. Autocorrect and suffix choice do not run there.
+- **Capitals.** A leading capital stays (`Bolsan` gives `Болсон`). A word in
+  all capitals stays as typed.
+- **Undo.** Backspace right after the Space reopens the typed word
+  (`болсан`) and puts it into the rejected set. Space then keeps it.
+  Punctuation has no undo.
+- **Cost.** At most 63 lookups, once per word. The buffers are reused, so
+  only the result allocates. A release-only test holds the worst word under
+  1 millisecond.
+- **Not covered.**
+  - A rule per key. A test without the list changed 1,151 listed words
+    (`компани`, `доллар`, `Чойбалсан`, `төстэй`), so the rule needs the list.
+  - A change of `о` to `а` (or `ө` to `э`) after `у` or `ү`.
+  - Word choice does not try `ө` to `о`: `boljee` gives `бөлжээ`.
 
 ## 14. Personal dictionary
 

@@ -29,6 +29,7 @@ mod chat_words;
 mod composer;
 mod config;
 mod keys;
+mod rounding;
 mod rules;
 mod scheme;
 mod suffix_choice;
