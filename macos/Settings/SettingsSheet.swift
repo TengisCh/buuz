@@ -161,7 +161,7 @@ struct TypingPage: View {
         }
         TitledSection(m.t("typing.preview"), hint: m.t("typing.preview.hint")) {
             SettingsGroup {
-                previewRow("gertoo", m.preview("gertoo"))
+                previewRow("eruul", m.preview("eruul"))
                 previewRow("svv", m.preview("svv"))
                 previewRow("tsai", m.preview("tsai"))
                 previewRow("bn", m.preview("bn"))

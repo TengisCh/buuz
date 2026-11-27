@@ -422,7 +422,7 @@ Top to bottom, 32 pt between items (12 between the hero and the tiles):
 | w | `wg` → үг | `cheat.w` | |
 | ' | `mor'` → морь | `cheat.soft` | |
 | " | `"` → ъ | `cheat.hard` | |
-| o u | `gertoo` → гэртөө | `cheat.harmony` | yes |
+| o u | `eruul` → эрүүл | `cheat.harmony` | yes |
 | v v | `svv` → сүү | `cheat.vv` | yes |
 | t s | `tsai` → цай | `cheat.ts` | yes |
 | z h | `zhims` → жимс | `cheat.zh` | yes |
@@ -516,7 +516,7 @@ Header `settings.typing.title`, `typing.subtitle`.
 
 Preview section (before Coming soon): `typing.preview`, the hint
 `typing.preview.hint`, then a group of five 44 pt rows, Latin at the left
-and the result at the right: `gertoo`, `svv`, `tsai`, `bn`, `zoom ⎋`.
+and the result at the right: `eruul`, `svv`, `tsai`, `bn`, `zoom ⎋`.
    Compute the result with the engine (`Engine` with the current config
    text), not with a fixed table.
 
@@ -657,7 +657,7 @@ them, and collapse runs of spaces.
 | Lesson | Keys | Target | Pass condition |
 | --- | --- | --- | --- |
 | 1 First words | `sain baina uu` | сайн байна уу | `committed` contains "сайн байна уу" |
-| 2 Vowels match | `gertoo teruu` | гэртөө тэрүү | `committed` contains "гэртөө" and "тэрүү" |
+| 2 Vowels match | `eruul mend` | эрүүл мэнд | `committed` contains "эрүүл" and "мэнд" |
 | 3 q and w | `qndqr wg` | өндөр үг | `committed` contains "өндөр" and "үг" |
 | 4 Soft sign | `mor' hon'` | морь хонь | `committed` contains "морь" and "хонь" |
 | 5 Space and Enter | `nom` ⏎ | ном | Return was pressed in the field, `committed` contains "ном", and there is no marked text. The almost state is "ном" still marked: show `lesson5.close`. |
@@ -809,7 +809,7 @@ New keys (202):
 | `typing.group.latin` | Latin words | Латин үг |
 | `typing.group.soon` | Coming soon | Удахгүй |
 | `typing.smartVowels` | Smart vowels | Ухаалаг эгшиг |
-| `typing.smartVowels.hint` | o and u match the word: gertoo → гэртөө | o, u үгэндээ зохицно: gertoo → гэртөө |
+| `typing.smartVowels.hint` | o and u match the word: eruul → эрүүл | o, u үгэндээ зохицно: eruul → эрүүл |
 | `typing.autocorrect` | Autocorrect | Автомат засвар |
 | `typing.autocorrect.hint` | хуухэд → хүүхэд at Space. Off by default. | Space дарахад хуухэд → хүүхэд. Анхдагчаар унтраалттай. |
 | `typing.doubleV` | vv for үү | vv-ээр үү бичих |

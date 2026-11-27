@@ -688,7 +688,8 @@ do {
     func pv(_ keys: String, esc: Bool = false, config: String? = nil) -> String {
         Preview.result(keys: keys, escapeBeforeSpace: esc, config: config, words: words)
     }
-    expect(pv("gertoo"), "гэртөө", "vowels match")
+    expect(pv("eruul"), "эрүүл", "vowels match")
+    expect(pv("delguur"), "дэлгүүр", "vowels match in a second word")
     expect(pv("svv"), "сүү", "double v")
     expect(pv("tsai"), "цай", "habit ts")
     expect(pv("bn"), "байна", "abbreviation")
@@ -745,8 +746,8 @@ do {
 
     // Lessons 2 to 4, 8: all words needed.
     c = LessonChecker(lesson: 2)
-    c.feed(text("гэртөө ")); expect(c.passed, false, "needs both words")
-    c.feed(text("гэртөө тэрүү ")); expect(c.passed, true, "lesson 2")
+    c.feed(text("эрүүл ")); expect(c.passed, false, "needs both words")
+    c.feed(text("эрүүл мэнд ")); expect(c.passed, true, "lesson 2")
     c = LessonChecker(lesson: 3)
     c.feed(text("өндөр үг ")); expect(c.passed, true, "lesson 3")
     c = LessonChecker(lesson: 4)
@@ -829,11 +830,11 @@ do {
 
     // Wrong keyboard beats latin and almost but not success.
     c = LessonChecker(lesson: 2)
-    c.feed(text("gertoo", marked: "gertoo"))
+    c.feed(text("eruul", marked: "eruul"))
     expect(state(c, buuz: false), .wrongKeyboard, "wrong keyboard first")
     c.reset()
     expect(c.passed, false, "reset clears the lesson")
-    expect(LessonChecker.mismatch(got: "гэрт", target: "гэртөө").map { $0.ok }, [true, true, true, true], "all letters in target")
+    expect(LessonChecker.mismatch(got: "эрү", target: "эрүүл").map { $0.ok }, [true, true, true], "all letters in target")
     expect(LessonChecker.mismatch(got: "гзр", target: "гэр").map { $0.ok }, [true, false, true], "wrong letter is flagged")
 }
 
